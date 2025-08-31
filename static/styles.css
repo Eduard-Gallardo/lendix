@@ -1,0 +1,58 @@
+/* Estilos personalizados para LibraTech */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap');
+
+body {
+    font-family: 'Open Sans', sans-serif;
+}
+
+.font-serif {
+    font-family: 'Merriweather', serif;
+}
+
+/* Transiciones suaves para elementos interactivos */
+a, button {
+    transition: all 0.3s ease;
+}
+
+/* Efecto de elevación para las tarjetas de libro */
+.shadow-md {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Personalización de la barra de desplazamiento */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2d5c3b;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #1e3e29;
+}
+
+/* Mejoras de accesibilidad para enfoque */
+button:focus, a:focus, input:focus, select:focus {
+    outline: 2px solid #2d5c3b;
+    outline-offset: 2px;
+}
+
+/* Animación sutil para la carga de elementos */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.bg-white {
+    animation: fadeIn 0.5s ease-out;
+}

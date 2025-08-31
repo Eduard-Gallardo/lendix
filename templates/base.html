@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibraTech - Catálogo de Biblioteca</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="url_for('static', filename='styles.css')">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Header -->
+    <header class="bg-green-800 text-white shadow-lg">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="text-2xl font-bold font-serif mr-2">
+                    <i class="fas fa-book-open mr-2"></i>LibraTech
+                </div>
+            </div>
+            
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-green-200 transition duration-300">Inicio</a>
+                <a href="#" class="hover:text-green-200 transition duration-300">Catálogo</a>
+                <a href="#" class="hover:text-green-200 transition duration-300">Préstamos</a>
+            </div>
+            
+            <div class="relative">
+                <button id="profileBtn" class="flex items-center focus:outline-none">
+                    <div class="w-10 h-10 rounded-full bg-green-700 flex items-center justify-center">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                </button>
+                
+                <div id="profileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 text-gray-800 z-50 hidden">
+                    <a href="{{ url_for('login.login') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
+                        <i class="fas fa-sign-in-alt mr-2 text-green-700"></i>Login
+                    </a>
+                    <a href="{{ url_for('registro.registro_usuario') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
+                        <i class="fas fa-user-plus mr-2 text-green-700"></i>Registro
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    {% block content %}
+    {% endblock %}
+    
+    <!-- Footer -->
+    <footer class="bg-green-900 text-white py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="text-2xl font-bold font-serif">
+                        <i class="fas fa-book-open mr-2"></i>LibraTech
+                    </div>
+                    <p class="text-green-200 text-sm mt-1">Tu biblioteca digital de confianza</p>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <a href="#" class="text-green-200 hover:text-white transition duration-300">
+                        <i class="fab fa-facebook-f text-lg"></i>
+                    </a>
+                    <a href="#" class="text-green-200 hover:text-white transition duration-300">
+                        <i class="fab fa-twitter text-lg"></i>
+                    </a>
+                    <a href="#" class="text-green-200 hover:text-white transition duration-300">
+                        <i class="fab fa-instagram text-lg"></i>
+                    </a>
+                    <a href="#" class="text-green-200 hover:text-white transition duration-300">
+                        <i class="fab fa-linkedin-in text-lg"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="border-t border-green-800 mt-6 pt-6 text-sm text-center text-green-300">
+                <p>© 2025 LibraTech. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // JavaScript para el menú desplegable del perfil
+        document.getElementById('profileBtn').addEventListener('click', function() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Cerrar el menú al hacer clic fuera de él
+        document.addEventListener('click', function(event) {
+            const profileBtn = document.getElementById('profileBtn');
+            const profileMenu = document.getElementById('profileMenu');
+            
+            if (!profileBtn.contains(event.target) && !profileMenu.contains(event.target)) {
+                profileMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
