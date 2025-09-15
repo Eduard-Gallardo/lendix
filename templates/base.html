@@ -15,14 +15,14 @@
         <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center">
                 <div class="text-2xl font-bold font-serif mr-2">
-                    <i class="fas fa-book-open mr-2"></i>LibraTech
+                    <i class="fas fa-book-open mr-2"></i><a href="/">LibraTech</a>
                 </div>
             </div>
             
             <div class="hidden md:flex space-x-6">
-                <a href="#" class="hover:text-green-200 transition duration-300">Inicio</a>
-                <a href="#" class="hover:text-green-200 transition duration-300">Catálogo</a>
-                <a href="#" class="hover:text-green-200 transition duration-300">Préstamos</a>
+                <a href="/" class="hover:text-green-200 transition duration-300">Inicio</a>
+                <a href="{{url_for('catalogo.catalogo')}}" class="hover:text-green-200 transition duration-300">Catálogo</a>
+                <a href="{{url_for('prestamos.prestamos')}}" class="hover:text-green-200 transition duration-300">Préstamos</a>
             </div>
             
             <div class="relative">

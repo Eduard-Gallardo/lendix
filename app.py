@@ -3,6 +3,7 @@ from routes.admin import admin_bp
 from routes.login import login_bp
 from routes.registro import registro_bp
 from routes.prestamos import prestamos_bp
+from routes.catalogo import catalogo_bp
 
 app = Flask(__name__)
 app.secret_key = 'super'
@@ -33,3 +34,5 @@ app.register_blueprint(login_bp, url_prefix='/login')
 app.register_blueprint(registro_bp, url_prefix='/registro')
 
 app.register_blueprint(prestamos_bp, url_prefix='/prestamos')
+
+app.register_blueprint(catalogo_bp, url_prefix='/catalogo')

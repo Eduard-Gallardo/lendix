@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from routes.login import login_required
 from utils.db import get_db_connection
 
-prestamos_bp = Blueprint('prestamos', __name__)
+prestamos_bp = Blueprint('prestamos', __name__, template_folder='templates')
 
 @prestamos_bp.route('/prestamos', methods=['GET', 'POST'])
 @login_required
@@ -14,7 +14,7 @@ def prestamos():
         
         conn = get_db_connection()
         conn.execute('INSERT INTO catalogo (implemento, descripcion, disponibilidad) VALUES (?, ?, ?)',
-                     (implemento, descripcion, disponibilidad))
+                    (implemento, descripcion, disponibilidad))
         conn.commit()
         conn.close()
         
@@ -25,4 +25,4 @@ def prestamos():
     catalogo_items = conn.execute('SELECT * FROM catalogo').fetchall()
     conn.close()
     
-    return render_template('prestamos.html', catalogo=catalogo_items)
+    return render_template('views/prestamos.html', catalogo=catalogo_items)

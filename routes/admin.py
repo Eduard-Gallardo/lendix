@@ -13,7 +13,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Crear directorio de uploads si no existe
 def ensure_upload_folder():
@@ -34,10 +34,10 @@ def panel_administracion():
     conn.close()
     
     return render_template('admin/panel_administrador.html', 
-                         total_implementos=total_implementos,
-                         total_usuarios=total_usuarios,
-                         total_reservas=total_reservas,
-                         implementos=implementos)
+                    total_implementos=total_implementos,
+                    total_usuarios=total_usuarios,
+                    total_reservas=total_reservas,
+                    implementos=implementos)
 
 @admin_bp.route('/admin/catalogo')
 def ver_catalogo():
