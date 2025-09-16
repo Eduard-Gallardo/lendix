@@ -6,7 +6,7 @@
 <!-- Hero Section -->
 <section class="relative bg-cover bg-center bg-no-repeat h-screen" style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80');">
     <div class="absolute inset-0 bg-white/75 sm:bg-transparent sm:bg-gradient-to-r sm:from-white/95 sm:to-white/25"></div>
-  
+
     <div class="relative mx-auto max-w-screen-xl px-4 py-32 sm:px-6 lg:flex lg:h-screen lg:items-center lg:px-8">
         <div class="max-w-xl text-center sm:text-left">
             <h1 class="text-3xl font-serif font-extrabold text-white sm:text-5xl">
@@ -15,7 +15,7 @@
                     LibraTech
                 </strong>
             </h1>
-  
+
             <p class="mt-4 max-w-lg text-lg text-gray-100 sm:text-xl">
                 Tu plataforma digital para gestionar recursos bibliotecarios. Descubre, reserva y disfruta de nuestro extenso catálogo de implementos.
             </p>
@@ -75,7 +75,7 @@
                     <div class="carousel-slide min-w-full">
                         <div class="relative h-96">
                             <img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                 alt="Biblioteca moderna" class="w-full h-full object-cover">
+                                alt="Biblioteca moderna" class="w-full h-full object-cover">
                             <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                                 <div class="text-center text-white p-6">
                                     <h3 class="text-2xl font-bold mb-2">Salas de Estudio</h3>
@@ -89,7 +89,7 @@
                     <div class="carousel-slide min-w-full">
                         <div class="relative h-96">
                             <img src="https://images.unsplash.com/photo-1568667256549-094345857637?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                 alt="Tecnología disponible" class="w-full h-full object-cover">
+                                alt="Tecnología disponible" class="w-full h-full object-cover">
                             <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                                 <div class="text-center text-white p-6">
                                     <h3 class="text-2xl font-bold mb-2">Recursos Tecnológicos</h3>
@@ -103,7 +103,7 @@
                     <div class="carousel-slide min-w-full">
                         <div class="relative h-96">
                             <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                 alt="Colección de libros" class="w-full h-full object-cover">
+                                alt="Colección de libros" class="w-full h-full object-cover">
                             <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                                 <div class="text-center text-white p-6">
                                     <h3 class="text-2xl font-bold mb-2">Amplia Colección</h3>
@@ -117,7 +117,7 @@
                     <div class="carousel-slide min-w-full">
                         <div class="relative h-96">
                             <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                 alt="Espacios colaborativos" class="w-full h-full object-cover">
+                                alt="Espacios colaborativos" class="w-full h-full object-cover">
                             <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                                 <div class="text-center text-white p-6">
                                     <h3 class="text-2xl font-bold mb-2">Áreas Colaborativas</h3>
@@ -183,11 +183,11 @@
             <a href="{{ url_for('registro.registro_usuario') }}" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
                 Crear Cuenta
             </a>
-            <a href="{{ url_for('admin.ver_catalogo') }}" class="border border-green-600 text-green-600 px-8 py-3 rounded-lg hover:bg-green-600 hover:text-white transition-colors">
+            <a href="{{ url_for('catalogo.catalogo') }}" class="border border-green-600 text-green-600 px-8 py-3 rounded-lg hover:bg-green-600 hover:text-white transition-colors">
                 Explorar Catálogo
             </a>
             {% else %}
-            <a href="{{ url_for('admin.ver_catalogo') }}" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
+            <a href="{{ url_for('catalogo.catalogo') }}" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
                 Ver Catálogo
             </a>
             

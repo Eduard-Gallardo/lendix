@@ -1,5 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
 
+<main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-serif font-bold text-green-800 mb-2">Préstamos</h1>
+    <p class="text-gray-600 mb-8">Descubre los préstamos realizados</p>
+
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {% for item in prestamos %}
+    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
+        <!-- Imagen o ícono -->
+        <div class="h-48 bg-green-100 flex items-center justify-center">
+            {% if item['imagen_url'] %}
+                <img src="{{ item['imagen_url'] }}" alt="{{ item['implemento'] }}" class="h-full w-full object-cover">
+            {% else %}
+                <i class="fas fa-book text-6xl text-green-700"></i>
+            {% endif %}
+        </div>
+        
+        <!-- Información -->
+        <div class="p-4">
+            <h3 class="font-serif font-bold text-lg mb-1">{{ item['implemento'] }}</h3>
+            <p class="text-gray-600 text-sm mb-2">{{ item['descripcion'] }}</p>
+            
+            <div class="flex justify-between items-center">
+                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{{ item['categoria'] }}</span>
+                <span class="{% if item['disponibilidad'] == 1 %}text-green-700{% else %}text-red-600{% endif %} font-semibold">
+                    {% if item['disponibilidad'] == 1 %}Disponible{% else %}Prestado{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p class="col-span-4 text-center text-gray-500">No se encontraron prestamos registrados.</p>
+    {% endfor %}
+</div>
+</main>
 
 {% endblock %}
