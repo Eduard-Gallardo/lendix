@@ -34,36 +34,76 @@
     </div>
 </form>
 
-<!-- Grid dinámico de implementos -->
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     {% for item in catalogo %}
-    <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-300">
-        <!-- Imagen o ícono -->
-        <div class="h-48 bg-green-100 flex items-center justify-center">
-            {% if item['imagen_url'] %}
-                <img src="{{ item['imagen_url'] }}" alt="{{ item['implemento'] }}" class="h-full w-full object-cover">
-            {% else %}
-                <i class="fas fa-book text-6xl text-green-700"></i>
-            {% endif %}
-        </div>
-        
-        <!-- Información -->
-        <div class="p-4">
-            <h3 class="font-serif font-bold text-lg mb-1">{{ item['implemento'] }}</h3>
-            <p class="text-gray-600 text-sm mb-2">{{ item['descripcion'] }}</p>
-            
-            <div class="flex justify-between items-center">
-                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{{ item['categoria'] }}</span>
-                <span class="{% if item['disponibilidad'] == 1 %}text-green-700{% else %}text-red-600{% endif %} font-semibold">
-                    {% if item['disponibilidad'] == 1 %}Disponible{% else %}Prestado{% endif %}
-                </span>
+    <div x-data="{ open: false, action: '' }">
+        <!-- Tarjeta del implemento -->
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
+            @click="open = true; action = ''">
+            <div class="h-48 bg-green-100 flex items-center justify-center">
+                {% if item['imagen_url'] %}
+                    <img src="{{ item['imagen_url'] }}" class="h-full w-full object-cover">
+                {% else %}
+                    <i class="fas fa-box text-6xl text-green-700"></i>
+                {% endif %}
+            </div>
+            <div class="p-4">
+                <h3 class="font-serif font-bold text-lg mb-1">{{ item['implemento'] }}</h3>
+                <p class="text-gray-600 text-sm mb-2">{{ item['descripcion'] }}</p>
             </div>
         </div>
+
+        <!-- Modal -->
+        <dialog x-show="open" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" x-cloak>
+            <div class="bg-white rounded-lg shadow-lg w-96 p-6" @click.away="open = false">
+                <div x-show="action === ''">
+                    <h2 class="text-xl font-bold mb-4">¿Qué desea hacer con el implemento?</h2>
+                    <div class="space-y-3">
+                        <button @click="action = 'prestamo'" class="w-full bg-blue-600 text-white px-4 py-2 rounded">Préstamo</button>
+                        <button @click="action = 'reserva'" class="w-full bg-yellow-600 text-white px-4 py-2 rounded">Reserva</button>
+                        <button @click="open = false" class="w-full bg-gray-300 px-4 py-2 rounded">Cancelar</button>
+                    </div>
+                </div>
+
+                <form x-show="action === 'prestamo'" action="{{ url_for('catalogo.prestar', id=item['id']) }}" method="post" class="space-y-3">
+                    <h2 class="text-lg font-bold">Préstamo</h2>
+                    <input type="text" name="nombre" placeholder="Nombre" class="w-full border p-2 rounded">
+                    <input type="text" name="instructor" placeholder="Instructor" class="w-full border p-2 rounded">
+                    <select name="jornada" class="w-full border p-2 rounded">
+                        <option value="Mañana">Mañana</option>
+                        <option value="Tarde">Tarde</option>
+                        <option value="Noche">Noche</option>
+                    </select>
+                    <input type="text" name="ambiente" placeholder="Nº Ambiente" class="w-full border p-2 rounded">
+
+                    <div class="flex justify-between">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Prestar</button>
+                        <button type="button" @click="action = ''" class="bg-gray-300 px-4 py-2 rounded">Atrás</button>
+                    </div>
+                </form>
+
+                <form x-show="action === 'reserva'" action="{{ url_for('catalogo.reservar', id=item['id']) }}" method="post" class="space-y-3">
+                    <h2 class="text-lg font-bold">Reserva</h2>
+                    <input type="text" name="nombre" placeholder="Nombre" class="w-full border p-2 rounded">
+                    <input type="text" name="lugar" placeholder="Lugar" class="w-full border p-2 rounded">
+                    <input type="datetime-local" name="hora_inicio" class="w-full border p-2 rounded">
+                    <input type="datetime-local" name="hora_fin" class="w-full border p-2 rounded">
+
+                    <div class="flex justify-between">
+                        <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded">Reservar</button>
+                        <button type="button" @click="action = ''" class="bg-gray-300 px-4 py-2 rounded">Atrás</button>
+                    </div>
+                </form>
+
+            </div>
+        </dialog>
     </div>
     {% else %}
     <p class="col-span-4 text-center text-gray-500">No se encontraron implementos en el catálogo.</p>
     {% endfor %}
 </div>
+
     </main>
 
 {% endblock %}

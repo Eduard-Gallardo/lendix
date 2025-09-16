@@ -41,11 +41,15 @@ def init_db():
                 fk_modelo INTEGER NOT NULL,
                 fecha_prestamo TEXT NOT NULL,
                 fecha_devolucion TEXT NOT NULL,
+                nombre TEXT NOT NULL,
+                instructor TEXT,
+                jornada TEXT,
+                ambiente TEXT,
                 FOREIGN KEY (fk_usuario) REFERENCES usuarios(id),
                 FOREIGN KEY (fk_modelo) REFERENCES catalogo(id)                
             )
         ''')
-        
+
         # Tabla reservas
         conn.execute('''
             CREATE TABLE IF NOT EXISTS reservas (
@@ -55,11 +59,12 @@ def init_db():
                 fecha_reserva TIMESTAMP NOT NULL,
                 fecha_inicio TIMESTAMP NOT NULL,
                 fecha_fin TIMESTAMP NOT NULL,
+                nombre TEXT NOT NULL,
+                lugar TEXT,
                 estado TEXT DEFAULT 'pendiente',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (fk_usuario) REFERENCES usuarios(id),
                 FOREIGN KEY (fk_implemento) REFERENCES catalogo(id)
             )
         ''')
-
     conn.close()
