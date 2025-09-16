@@ -55,13 +55,13 @@
         </div>
 
         <!-- Modal -->
-        <dialog x-show="open" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" x-cloak>
+        <dialog x-show="open" class="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50" x-cloak>
             <div class="bg-white rounded-lg shadow-lg w-96 p-6" @click.away="open = false">
                 <div x-show="action === ''">
                     <h2 class="text-xl font-bold mb-4">¿Qué desea hacer con el implemento?</h2>
                     <div class="space-y-3">
-                        <button @click="action = 'prestamo'" class="w-full bg-blue-600 text-white px-4 py-2 rounded">Préstamo</button>
-                        <button @click="action = 'reserva'" class="w-full bg-yellow-600 text-white px-4 py-2 rounded">Reserva</button>
+                        <button @click="action = 'prestamo'" class="w-full bg-green-600 text-white px-4 py-2 rounded">Préstamo</button>
+                        <button @click="action = 'reserva'" class="w-full bg-yellow-900 text-white px-4 py-2 rounded">Reserva</button>
                         <button @click="open = false" class="w-full bg-gray-300 px-4 py-2 rounded">Cancelar</button>
                     </div>
                 </div>
@@ -78,7 +78,7 @@
                     <input type="text" name="ambiente" placeholder="Nº Ambiente" class="w-full border p-2 rounded">
 
                     <div class="flex justify-between">
-                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Prestar</button>
+                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Prestar</button>
                         <button type="button" @click="action = ''" class="bg-gray-300 px-4 py-2 rounded">Atrás</button>
                     </div>
                 </form>
@@ -91,7 +91,7 @@
                     <input type="datetime-local" name="hora_fin" class="w-full border p-2 rounded">
 
                     <div class="flex justify-between">
-                        <button type="submit" class="bg-yellow-600 text-white px-4 py-2 rounded">Reservar</button>
+                        <button type="submit" class="bg-yellow-900 text-white px-4 py-2 rounded">Reservar</button>
                         <button type="button" @click="action = ''" class="bg-gray-300 px-4 py-2 rounded">Atrás</button>
                     </div>
                 </form>

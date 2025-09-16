@@ -7,22 +7,14 @@ prestamos_bp = Blueprint('prestamos', __name__, template_folder='templates')
 @prestamos_bp.route('/prestamos', methods=['GET', 'POST'])
 @login_required
 def prestamos():
-    if request.method == 'POST':
-        implemento = request.form['implemento']
-        descripcion = request.form['descripcion']
-        disponibilidad = request.form['disponibilidad']
-        
-        conn = get_db_connection()
-        conn.execute('INSERT INTO catalogo (implemento, descripcion, disponibilidad) VALUES (?, ?, ?)',
-                    (implemento, descripcion, disponibilidad))
-        conn.commit()
-        conn.close()
-        
-        flash('Implemento agregado al catálogo exitosamente.', 'success')
-        return redirect(url_for('prestamos.prestamos'))
-    
     conn = get_db_connection()
-    catalogo_items = conn.execute('SELECT * FROM catalogo').fetchall()
+    prestamos_items = conn.execute('''
+        SELECT p.id, u.nombre AS usuario, c.implemento, p.fecha_prestamo, p.fecha_devolucion, p.instructor, p.jornada, p.ambiente
+        FROM prestamos p
+        JOIN usuarios u ON p.fk_usuario = u.id
+        JOIN catalogo c ON p.fk_modelo = c.id
+        ORDER BY p.fecha_prestamo DESC
+    ''').fetchall()
     conn.close()
     
-    return render_template('views/prestamos.html', catalogo=catalogo_items)
+    return render_template('views/prestamos.html', prestamos=prestamos_items)
