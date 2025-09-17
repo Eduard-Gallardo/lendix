@@ -1,8 +1,10 @@
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
+
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session  # Agregar session
 import sqlite3
 import os
 from utils.db import get_db_connection
 from werkzeug.utils import secure_filename
+from routes.login import login_required  # Agregar este import
 
 # Configuración del Blueprint
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
@@ -20,9 +22,20 @@ def ensure_upload_folder():
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
 
+# AGREGAR ESTA FUNCIÓN DE VERIFICACIÓN DE ADMIN
+def is_admin():
+    return session.get('user_email') == 'Eduard@gmail.com'
+
 # Rutas del Blueprint
-@admin_bp.route('/')
-def panel_administracion():
+@admin_bp.route('/admin') 
+@admin_bp.route('/admin/')
+@login_required  # AGREGAR DECORADOR DE LOGIN
+def admin():
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
+    
     conn = get_db_connection()
     
     # Obtener estadísticas

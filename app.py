@@ -11,11 +11,12 @@ app.secret_key = 'super'
 # Configuración de la sesión
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
+app.config['PERMANENT_SESSION_LIFETIME'] = 36  # 36 segundos
 
 @app.route('/')
 def index():
     return render_template('views/index.html')
+
 @app.context_processor
 def inject_user():
     return dict(
@@ -27,14 +28,11 @@ def inject_user():
         }
     )
 
+# QUITA el url_prefix='/admin' para el blueprint de admin
 app.register_blueprint(admin_bp, url_prefix='/admin')
-
 app.register_blueprint(login_bp, url_prefix='/login')
-
 app.register_blueprint(registro_bp, url_prefix='/registro')
-
 app.register_blueprint(prestamos_bp, url_prefix='/prestamos')
-
 app.register_blueprint(reservas_bp, url_prefix='/reservas')
-
 app.register_blueprint(catalogo_bp, url_prefix='/catalogo')
+

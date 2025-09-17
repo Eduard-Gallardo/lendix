@@ -39,7 +39,12 @@ def login():
                 session.permanent = True
             
             flash(f'¡Bienvenido de nuevo, {usuario["nombre"]}!', 'success')
-            return redirect(url_for('index'))
+            
+            # REDIRECCIÓN ESPECÍFICA PARA Eduard@gmail.com
+            if email == 'Eduard@gmail.com':
+                return redirect(url_for('admin.admin'))
+            else:
+                return redirect(url_for('index'))
         else:
             # Login fallido
             flash('Credenciales incorrectas. Por favor, intente nuevamente.', 'error')
