@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-serif font-bold text-green-800 mb-2">Préstamos y Reservas</h1>
+    <p class="text-gray-600 mb-8">Consulta los préstamos y reservas realizados</p>
+
+    <!-- prestamos -->
+    <div class="bg-white p-4 rounded-lg shadow mb-8">
+        <h2 class="text-xl font-bold mb-4">Préstamos</h2>
+        <table class="min-w-full table-auto">
+            <thead>
+                <tr class="bg-green-100">
+                    <th class="px-4 py-2 text-left">Usuario</th>
+                    <th class="px-4 py-2 text-left">Implemento</th>
+                    <th class="px-4 py-2 text-left">Instructor</th>
+                    <th class="px-4 py-2 text-left">Jornada</th>
+                    <th class="px-4 py-2 text-left">Ambiente</th>
+                    <th class="px-4 py-2 text-left">Fecha de Préstamo</th>
+                    <th class="px-4 py-2 text-left">Fecha de Devolución</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prestamo in prestamos %}
+                <tr class="border-b hover:bg-green-50">
+                    <td class="px-4 py-2">{{ prestamo.usuario }}</td>
+                    <td class="px-4 py-2">{{ prestamo.implemento }}</td>
+                    <td class="px-4 py-2">{{ prestamo.instructor }}</td>
+                    <td class="px-4 py-2">{{ prestamo.jornada }}</td>
+                    <td class="px-4 py-2">{{ prestamo.ambiente }}</td>
+                    <td class="px-4 py-2">{{ prestamo.fecha_prestamo }}</td>
+                    <td class="px-4 py-2">{{ prestamo.fecha_devolucion }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-4 py-2 text-center text-gray-600">No hay préstamos registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- reservas -->
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-xl font-bold mb-4">Reservas</h2>
+        <table class="min-w-full table-auto">
+            <thead>
+                <tr class="bg-green-100">
+                    <th class="px-4 py-2 text-left">Usuario</th>
+                    <th class="px-4 py-2 text-left">Implemento</th>
+                    <th class="px-4 py-2 text-left">Lugar</th>
+                    <th class="px-4 py-2 text-left">Fecha de Reserva</th>
+                    <th class="px-4 py-2 text-left">Fecha Inicio</th>
+                    <th class="px-4 py-2 text-left">Fecha Fin</th>
+                    <th class="px-4 py-2 text-left">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reserva in reservas %}
+                <tr class="border-b hover:bg-green-50">
+                    <td class="px-4 py-2">{{ reserva.usuario }}</td>
+                    <td class="px-4 py-2">{{ reserva.implemento }}</td>
+                    <td class="px-4 py-2">{{ reserva.lugar }}</td>
+                    <td class="px-4 py-2">{{ reserva.fecha_reserva }}</td>
+                    <td class="px-4 py-2">{{ reserva.fecha_inicio }}</td>
+                    <td class="px-4 py-2">{{ reserva.fecha_fin }}</td>
+                    <td class="px-4 py-2">
+                        {% if reserva.estado == 'pendiente' %}
+                            <span class="text-yellow-700 font-semibold">{{ reserva.estado }}</span>
+                        {% elif reserva.estado == 'aprobada' %}
+                            <span class="text-green-600 font-semibold">{{ reserva.estado }}</span>
+                        {% else %}
+                            <span class="text-gray-600">{{ reserva.estado }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-4 py-2 text-center text-gray-600">No hay reservas registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</main>
+
+{% endblock %}
