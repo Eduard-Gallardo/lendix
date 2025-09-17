@@ -7,33 +7,9 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-            background-size: cover;
-        }
-        
-        .font-serif {
-            font-family: 'Merriweather', serif;
-        }
-        
-        .login-container {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.85);
-        }
-        
-        .btn-primary {
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 login " >
     <div class="max-w-md w-full space-y-8 p-10 login-container rounded-xl shadow-2xl">
         <div>
             <div class="flex justify-center">
@@ -145,37 +121,7 @@
     </div>
 
     <script>
-        // Funcionalidad básica para el formulario
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const button = document.querySelector('button[type="submit"]');
-            
-            if(email && password) {
-                // Mostrar estado de carga
-                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Iniciando sesión...';
-                button.disabled = true;
-            }
-        });
-
-        // Rellenar automáticamente si hay datos en sessionStorage (opcional)
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedEmail = sessionStorage.getItem('rememberedEmail');
-            if (savedEmail) {
-                document.getElementById('email').value = savedEmail;
-                document.getElementById('remember-me').checked = true;
-            }
-        });
-
-        // Guardar email si "Recordarme" está marcado
-        document.getElementById('remember-me').addEventListener('change', function() {
-            const email = document.getElementById('email').value;
-            if (this.checked && email) {
-                sessionStorage.setItem('rememberedEmail', email);
-            } else {
-                sessionStorage.removeItem('rememberedEmail');
-            }
-        });
+        
     </script>
 </body>
 </html>
