@@ -34,6 +34,27 @@
     </div>
 </form>
 
+<!-- Formulario para agregar implementos solo admins -->
+{% if session.get('rol') == 'admin' %}
+<form action="{{ url_for('catalogo.catalogo') }}" method="post" class="bg-white p-4 rounded-lg shadow mb-8">
+  <h2 class="text-lg font-bold mb-2">Agregar Implemento</h2>
+  <input type="text" name="implemento" placeholder="Nombre implemento" class="border p-2 rounded w-full mb-2">
+  <input type="text" name="descripcion" placeholder="Descripción" class="border p-2 rounded w-full mb-2">
+  <input type="text" name="imagen_url" placeholder="URL imagen" class="border p-2 rounded w-full mb-2">
+  <select name="categoria" class="border p-2 rounded w-full mb-2">
+      <option value="Libros">Libros</option>
+      <option value="Computadores">Computadores</option>
+      <option value="Mouses">Mouses</option>
+      <option value="Teclados">Teclados</option>
+      <option value="Otros">Otros</option>
+  </select>
+  <select name="disponibilidad" class="border p-2 rounded w-full mb-2">
+      <option value="1">Disponible</option>
+      <option value="0">No disponible</option>
+  </select>
+  <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded">Agregar</button>
+</form>
+{% endif %}
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     {% for item in catalogo %}
@@ -43,11 +64,24 @@
             @click="open = true; action = ''">
             <div class="h-48 bg-green-100 flex items-center justify-center">
                 {% if item['imagen_url'] %}
+                    <!-- Si hay URL personalizada, mostrarla -->
                     <img src="{{ item['imagen_url'] }}" class="h-full w-full object-cover">
                 {% else %}
-                    <i class="fas fa-box text-6xl text-green-700"></i>
+                    <!-- Si no hay URL personalizada, usar imagen por categoría -->
+                    {% if item['categoria'] == 'Libros' %}
+                        <img src="{{ url_for('static', filename='img/libro.jpg') }}" class="h-full w-full object-cover">
+                    {% elif item['categoria'] == 'Computadores' %}
+                        <img src="{{ url_for('static', filename='img/computador.jpg') }}" class="h-full w-full object-cover">
+                    {% elif item['categoria'] == 'Mouses' %}
+                        <img src="{{ url_for('static', filename='img/mouse.jpg') }}" class="h-full w-full object-cover">
+                    {% elif item['categoria'] == 'Teclados' %}
+                        <img src="{{ url_for('static', filename='img/teclado.jpg') }}" class="h-full w-full object-cover">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='img/otros.jpg') }}" class="h-full w-full object-cover">
+                    {% endif %}
                 {% endif %}
             </div>
+
             <div class="p-4">
                 <h3 class="font-serif font-bold text-lg mb-1">{{ item['implemento'] }}</h3>
                 <p class="text-gray-600 text-sm mb-2">{{ item['descripcion'] }}</p>
