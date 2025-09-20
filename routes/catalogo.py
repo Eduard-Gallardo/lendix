@@ -10,6 +10,11 @@ catalogo_bp = Blueprint('catalogo', __name__, template_folder='templates')
 @login_required
 def catalogo():
     if request.method == 'POST':
+        # 🔹 Solo admin puede agregar implementos
+        if session.get('rol') != 'admin':
+            flash('No tienes permiso para agregar implementos.', 'error')
+            return redirect(url_for('catalogo.catalogo'))
+
         implemento = request.form['implemento']
         descripcion = request.form['descripcion']
         disponibilidad = request.form['disponibilidad']
@@ -17,8 +22,9 @@ def catalogo():
         imagen_url = request.form['imagen_url']
         
         conn = get_db_connection()
-        conn.execute('INSERT INTO catalogo (implemento, descripcion, disponibilidad, categoria, imagen_url) VALUES (?, ?, ?, ?, ?)',
-                    (implemento, descripcion, disponibilidad, categoria, imagen_url))
+        conn.execute(
+            'INSERT INTO catalogo (implemento, descripcion, disponibilidad, categoria, imagen_url) VALUES (?, ?, ?, ?, ?)',
+            (implemento, descripcion, disponibilidad, categoria, imagen_url))
         conn.commit()
         conn.close()
         
@@ -36,16 +42,28 @@ def catalogo():
 @login_required
 def filtrar_catalogo():
     filtro = request.args.get('filtro', '')
-    
+    categoria = request.args.get('categoria', '')
+
     conn = get_db_connection()
+
+    query = "SELECT * FROM catalogo WHERE 1=1"
+    params = []
+
+    if categoria:
+        query += " AND categoria = ?"
+        params.append(categoria)
+
     if filtro:
-        catalogo_items = conn.execute('SELECT * FROM catalogo WHERE implemento LIKE ? OR descripcion LIKE ?',
-                                    (f'%{filtro}%', f'%{filtro}%')).fetchall()
-    else:
-        catalogo_items = conn.execute('SELECT * FROM catalogo').fetchall()
+        query += " AND (implemento LIKE ? OR descripcion LIKE ?)"
+        params.extend([f'%{filtro}%', f'%{filtro}%'])
+
+    catalogo_items = conn.execute(query, params).fetchall()
     conn.close()
-    
-    return render_template('views/catalogo.html', catalogo=catalogo_items, filtro=filtro)
+
+    return render_template('views/catalogo.html',
+                           catalogo=catalogo_items,
+                           filtro=filtro,
+                           categoria=categoria)
 
 
 # Ruta para registrar préstamo
@@ -104,4 +122,3 @@ def reservar(id):
         conn.close()
 
     return redirect(url_for('catalogo.catalogo'))
-
