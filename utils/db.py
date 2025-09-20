@@ -33,14 +33,14 @@ def init_db():
             )
         ''')
         
-        # Tabla prestamos
+       # Tabla prestamos
         conn.execute('''
             CREATE TABLE IF NOT EXISTS prestamos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fk_usuario INTEGER NOT NULL,
                 fk_modelo INTEGER NOT NULL,
                 fecha_prestamo TEXT NOT NULL,
-                fecha_devolucion TEXT NOT NULL,
+                fecha_devolucion TEXT,
                 nombre TEXT NOT NULL,
                 instructor TEXT,
                 jornada TEXT,
