@@ -1,143 +1,276 @@
 {% extends "base.html" %}
 {% block content %}
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-serif font-bold text-green-800 mb-2">Catálogo de Biblioteca</h1>
-        <p class="text-gray-600 mb-8">Descubre nuestra amplia colección de libros y recursos académicos</p>
-        
-        <!-- Filtros -->
-<form action="{{ url_for('catalogo.filtrar_catalogo') }}" method="get" class="bg-white p-4 rounded-lg shadow mb-8">
-    <div class="flex flex-wrap gap-4">
-        <!-- Filtro por categoría -->
-        <select name="categoria" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent">
-            <option value="">Todas las categorías</option>
-            <option value="Libros" {% if request.args.get('categoria') == 'Libros' %}selected{% endif %}>Libros</option>
-            <option value="Computadores" {% if request.args.get('categoria') == 'Computadores' %}selected{% endif %}>Computadores</option>
-            <option value="Mouses" {% if request.args.get('categoria') == 'Mouses' %}selected{% endif %}>Mouses</option>
-            <option value="Teclados" {% if request.args.get('categoria') == 'Teclados' %}selected{% endif %}>Teclados</option>
-            <option value="Otros" {% if request.args.get('categoria') == 'Otros' %}selected{% endif %}>Otros</option>
-        </select>
-        
-        <!-- Búsqueda -->
-        <div class="relative flex-1 min-w-64">
-            <input type="text" name="filtro" value="{{ request.args.get('filtro', '') }}"
-                placeholder="Buscar en el catálogo..." 
-                class="w-full px-4 py-2 border rounded-lg pl-10 focus:ring-2 focus:ring-green-600 focus:border-transparent">
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-        </div>
-        
-        <!-- Botón -->
-        <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 transition duration-300">
-            <i class="fas fa-filter mr-2"></i>Filtrar
-        </button>
+<main class="container mx-auto px-4 py-8">
+    <!-- Header mejorado -->
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-serif font-bold text-green-800 mb-2">Catálogo de Implementos</h1>
+        <p class="text-gray-600 text-lg">Gestiona los recursos disponibles para préstamos y reservas</p>
     </div>
-</form>
-
-<!-- Formulario para agregar implementos solo admins -->
-{% if session.get('rol') == 'admin' %}
-<form action="{{ url_for('catalogo.catalogo') }}" method="post" class="bg-white p-4 rounded-lg shadow mb-8">
-  <h2 class="text-lg font-bold mb-2">Agregar Implemento</h2>
-  <input type="text" name="implemento" placeholder="Nombre implemento" class="border p-2 rounded w-full mb-2">
-  <input type="text" name="descripcion" placeholder="Descripción" class="border p-2 rounded w-full mb-2">
-  <input type="text" name="imagen_url" placeholder="URL imagen" class="border p-2 rounded w-full mb-2">
-  <select name="categoria" class="border p-2 rounded w-full mb-2">
-      <option value="Libros">Libros</option>
-      <option value="Computadores">Computadores</option>
-      <option value="Mouses">Mouses</option>
-      <option value="Teclados">Teclados</option>
-      <option value="Otros">Otros</option>
-  </select>
-  <select name="disponibilidad" class="border p-2 rounded w-full mb-2">
-      <option value="1">Disponible</option>
-      <option value="0">No disponible</option>
-  </select>
-  <button type="submit" class="bg-green-700 text-white px-4 py-2 rounded">Agregar</button>
-</form>
-{% endif %}
-
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    {% for item in catalogo %}
-    <div x-data="{ open: false, action: '' }">
-        <!-- Información del implemento -->
-        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
-            @click="open = true; action = ''">
-            <div class="h-48 bg-green-100 flex items-center justify-center">
-                {% if item['imagen_url'] %}
-                    <!-- Si hay URL personalizada, mostrarla -->
-                    <img src="{{ item['imagen_url'] }}" class="h-full w-full object-cover">
-                {% else %}
-                    <!-- Si no hay URL personalizada, usar imagen por categoría -->
-                    {% if item['categoria'] == 'Libros' %}
-                        <img src="{{ url_for('static', filename='img/libro.jpg') }}" class="h-full w-full object-cover">
-                    {% elif item['categoria'] == 'Computadores' %}
-                        <img src="{{ url_for('static', filename='img/computador.jpg') }}" class="h-full w-full object-cover">
-                    {% elif item['categoria'] == 'Mouses' %}
-                        <img src="{{ url_for('static', filename='img/mouse.jpg') }}" class="h-full w-full object-cover">
-                    {% elif item['categoria'] == 'Teclados' %}
-                        <img src="{{ url_for('static', filename='img/teclado.jpg') }}" class="h-full w-full object-cover">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='img/otros.jpg') }}" class="h-full w-full object-cover">
-                    {% endif %}
-                {% endif %}
+    
+    <!-- Filtros mejorados -->
+    <form action="{{ url_for('catalogo.filtrar_catalogo') }}" method="get" class="bg-white p-6 rounded-xl shadow-lg mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-filter mr-2 text-green-600"></i>Filtrar Catálogo
+        </h2>
+        <div class="flex flex-wrap gap-4 items-end">
+            <!-- Filtro por categoría -->
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                <select name="categoria" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                    <option value="">Todas las categorías</option>
+                    <option value="Libros" {% if request.args.get('categoria') == 'Libros' %}selected{% endif %}>Libros</option>
+                    <option value="Computadores" {% if request.args.get('categoria') == 'Computadores' %}selected{% endif %}>Computadores</option>
+                    <option value="Mouses" {% if request.args.get('categoria') == 'Mouses' %}selected{% endif %}>Mouses</option>
+                    <option value="Teclados" {% if request.args.get('categoria') == 'Teclados' %}selected{% endif %}>Teclados</option>
+                    <option value="Otros" {% if request.args.get('categoria') == 'Otros' %}selected{% endif %}>Otros</option>
+                </select>
             </div>
-
-            <div class="p-4">
-                <h3 class="font-serif font-bold text-lg mb-1">{{ item['implemento'] }}</h3>
-                <p class="text-gray-600 text-sm mb-2">{{ item['descripcion'] }}</p>
+            
+            <!-- Búsqueda mejorada -->
+            <div class="relative flex-1 min-w-64">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" name="filtro" value="{{ request.args.get('filtro', '') }}"
+                        placeholder="Buscar en el catálogo..." 
+                        class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                </div>
+            </div>
+            
+            <!-- Botón mejorado -->
+            <div>
+                <button type="submit" class="px-6 py-3 bg-green-700 text-white rounded-xl hover:bg-green-600 transition duration-300 flex items-center shadow-md hover:shadow-lg">
+                    <i class="fas fa-filter mr-2"></i>Filtrar
+                </button>
             </div>
         </div>
+    </form>
 
-        <!-- Modal -->
-        <dialog x-show="open" class="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50" x-cloak>
-            <div class="bg-white rounded-lg shadow-lg w-96 p-6" @click.away="open = false">
-                <div x-show="action === ''">
-                    <h2 class="text-xl font-bold mb-4">¿Qué desea hacer con el implemento?</h2>
-                    <div class="space-y-3">
-                        <button @click="action = 'prestamo'" class="w-full bg-green-600 text-white px-4 py-2 rounded">Préstamo</button>
-                        <button @click="action = 'reserva'" class="w-full bg-yellow-900 text-white px-4 py-2 rounded">Reserva</button>
-                        <button @click="open = false" class="w-full bg-gray-300 px-4 py-2 rounded">Cancelar</button>
+    <!-- Formulario para agregar implementos solo admins - Mejorado -->
+    {% if session.get('rol') == 'admin' %}
+    <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-plus-circle mr-2 text-green-600"></i>Agregar Nuevo Implemento
+        </h2>
+        <form action="{{ url_for('catalogo.catalogo') }}" method="post" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del implemento</label>
+                    <input type="text" name="implemento" placeholder="Ej: Laptop Dell" required 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <input type="text" name="descripcion" placeholder="Descripción breve" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">URL de imagen (opcional)</label>
+                    <input type="text" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                    <select name="categoria" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                        <option value="">Seleccionar categoría</option>
+                        <option value="Libros">Libros</option>
+                        <option value="Computadores">Computadores</option>
+                        <option value="Mouses">Mouses</option>
+                        <option value="Teclados">Teclados</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad disponible</label>
+                    <input type="number" name="disponibilidad" min="0" value="1" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                </div>
+            </div>
+            <button type="submit" class="bg-green-700 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300 flex items-center">
+                <i class="fas fa-plus mr-2"></i>Agregar Implemento
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Grid de implementos mejorado -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for item in catalogo %}
+        <div x-data="{ open: false, action: '' }" class="group">
+            <!-- Tarjeta del implemento mejorada -->
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden h-full flex flex-col border border-gray-100 group-hover:border-green-200"
+                @click="open = true; action = ''">
+                
+                <!-- Imagen con overlay de categoría -->
+                <div class="h-48 bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center overflow-hidden relative">
+                    {% if item['imagen_url'] %}
+                        <img src="{{ item['imagen_url'] }}" alt="{{ item['implemento'] }}" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                    {% else %}
+                        {% if item['categoria'] == 'Libros' %}
+                            <img src="{{ url_for('static', filename='img/libro.jpg') }}" alt="Libro" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        {% elif item['categoria'] == 'Computadores' %}
+                            <img src="{{ url_for('static', filename='img/computador.jpg') }}" alt="Computador" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        {% elif item['categoria'] == 'Mouses' %}
+                            <img src="{{ url_for('static', filename='img/mouse.jpg') }}" alt="Mouse" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        {% elif item['categoria'] == 'Teclados' %}
+                            <img src="{{ url_for('static', filename='img/teclado.jpg') }}" alt="Teclado" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='img/otros.jpg') }}" alt="Otros" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        {% endif %}
+                    {% endif %}
+                    <div class="absolute top-3 left-3">
+                        <span class="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-green-800">
+                            {{ item['categoria'] }}
+                        </span>
+                    </div>
+                    <div class="absolute top-3 right-3">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold {% if item['disponibilidad'] > 0 %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {% if item['disponibilidad'] > 0 %}
+                                {{ item['disponibilidad'] }} disponibles
+                            {% else %}
+                                Agotado
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
 
-                <form x-show="action === 'prestamo'" action="{{ url_for('catalogo.prestar', id=item['id']) }}" method="post" class="space-y-3">
-                    <h2 class="text-lg font-bold">Préstamo</h2>
-                    <input type="text" name="nombre" placeholder="Nombre" class="w-full border p-2 rounded">
-                    <input type="text" name="instructor" placeholder="Instructor" class="w-full border p-2 rounded">
-                    <select name="jornada" class="w-full border p-2 rounded">
-                        <option value="Mañana">Mañana</option>
-                        <option value="Tarde">Tarde</option>
-                        <option value="Noche">Noche</option>
-                    </select>
-                    <input type="text" name="ambiente" placeholder="Nº Ambiente" class="w-full border p-2 rounded">
-
-                    <div class="flex justify-between">
-                        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Prestar</button>
-                        <button type="button" @click="action = ''" class="bg-gray-300 px-4 py-2 rounded">Atrás</button>
+                <!-- Contenido de la tarjeta -->
+                <div class="p-5 flex-1 flex flex-col">
+                    <h3 class="font-bold text-lg mb-2 text-gray-800 line-clamp-1">{{ item['implemento'] }}</h3>
+                    <p class="text-gray-600 text-sm mb-4 flex-1 line-clamp-2">{{ item['descripcion'] }}</p>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100">
+                        <span class="inline-flex items-center text-sm text-green-700 font-semibold">
+                            <i class="fas fa-hand-pointer mr-2"></i>Click para gestionar
+                        </span>
                     </div>
-                </form>
-
-                <form x-show="action === 'reserva'" action="{{ url_for('catalogo.reservar', id=item['id']) }}" method="post" class="space-y-3">
-                    <h2 class="text-lg font-bold">Reserva</h2>
-                    <input type="text" name="nombre" placeholder="Nombre" class="w-full border p-2 rounded">
-                    <input type="text" name="lugar" placeholder="Lugar" class="w-full border p-2 rounded">
-                    <input type="datetime-local" name="hora_inicio" class="w-full border p-2 rounded">
-                    <input type="datetime-local" name="hora_fin" class="w-full border p-2 rounded">
-
-                    <div class="flex justify-between">
-                        <button type="submit" class="bg-yellow-900 text-white px-4 py-2 rounded">Reservar</button>
-                        <button type="button" @click="action = ''" class="bg-gray-300 px-4 py-2 rounded">Atrás</button>
-                    </div>
-                </form>
-
+                </div>
             </div>
-        </dialog>
-    </div>
-    {% else %}
-    <p class="col-span-4 text-center text-gray-500">No se encontraron implementos en el catálogo.</p>
-    {% endfor %}
-</div>
 
-    </main>
+            <!-- Modal mejorado -->
+            <div x-show="open" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto" @click.away="open = false">
+                    <div class="p-6">
+                        <!-- Selección de acción -->
+                        <div x-show="action === ''">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-cogs mr-2 text-green-600"></i>Gestionar Implemento
+                            </h2>
+                            <p class="text-gray-600 mb-2">{{ item['implemento'] }}</p>
+                            <p class="text-sm text-gray-500 mb-6">
+                                {% if item['disponibilidad'] > 0 %}
+                                    {{ item['disponibilidad'] }} unidades disponibles
+                                {% else %}
+                                    Sin unidades disponibles
+                                {% endif %}
+                            </p>
+                            <div class="space-y-3">
+                                {% if item['disponibilidad'] > 0 %}
+                                <button @click="action = 'prestamo'" 
+                                    class="w-full bg-green-600 text-white px-4 py-3 rounded-xl flex items-center justify-center hover:bg-green-700 transition duration-300">
+                                    <i class="fas fa-hand-holding mr-2"></i>Registrar Préstamo
+                                </button>
+                                <button @click="action = 'reserva'" 
+                                    class="w-full bg-yellow-600 text-white px-4 py-3 rounded-xl flex items-center justify-center hover:bg-yellow-700 transition duration-300">
+                                    <i class="fas fa-calendar-check mr-2"></i>Registrar Reserva
+                                </button>
+                                {% else %}
+                                <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                                    <i class="fas fa-exclamation-circle text-red-600 text-xl mb-2"></i>
+                                    <p class="text-red-800 font-semibold">Este implemento no está disponible</p>
+                                    <p class="text-red-600 text-sm mt-1">No hay unidades disponibles para préstamo o reserva</p>
+                                </div>
+                                {% endif %}
+                                <button @click="open = false" 
+                                    class="w-full bg-gray-200 text-gray-700 px-4 py-3 rounded-xl flex items-center justify-center hover:bg-gray-300 transition duration-300">
+                                    <i class="fas fa-times mr-2"></i>Cancelar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Formulario de préstamo mejorado -->
+                        <form x-show="action === 'prestamo'" action="{{ url_for('catalogo.prestar', id=item['id']) }}" method="post" class="space-y-4">
+                            <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-hand-holding mr-2 text-green-600"></i>Registrar Préstamo
+                            </h2>
+                            <p class="text-sm text-gray-500 mb-4">Disponibles: {{ item['disponibilidad'] }} unidades</p>
+                            <input type="text" name="nombre" placeholder="Nombre completo *" required 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                            <input type="text" name="instructor" placeholder="Nombre del instructor *" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                            <select name="jornada" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                                <option value="">Seleccionar jornada *</option>
+                                <option value="Mañana">Mañana</option>
+                                <option value="Tarde">Tarde</option>
+                                <option value="Noche">Noche</option>
+                            </select>
+                            <input type="text" name="ambiente" placeholder="Número de ambiente *" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+
+                            <div class="flex justify-between gap-3">
+                                <button type="submit" 
+                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">
+                                    Confirmar
+                                </button>
+                                <button type="button" @click="action = ''" 
+                                    class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-300">
+                                    Atrás
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Formulario de reserva mejorado -->
+                        <form x-show="action === 'reserva'" action="{{ url_for('catalogo.reservar', id=item['id']) }}" method="post" class="space-y-4">
+                            <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-calendar-check mr-2 text-yellow-600"></i>Registrar Reserva
+                            </h2>
+                            <p class="text-sm text-gray-500 mb-4">Disponibles: {{ item['disponibilidad'] }} unidades</p>
+                            <input type="text" name="nombre" placeholder="Nombre completo *" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                            <input type="text" name="lugar" placeholder="Lugar de la reserva *" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y hora de inicio *</label>
+                                <input type="datetime-local" name="hora_inicio" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y hora de fin *</label>
+                                <input type="datetime-local" name="hora_fin" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition-all duration-200">
+                            </div>
+
+                            <div class="flex justify-between gap-3">
+                                <button type="submit" 
+                                    class="flex-1 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-300">
+                                    Confirmar
+                                </button>
+                                <button type="button" @click="action = ''" 
+                                    class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-300">
+                                    Atrás
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-4 text-center py-16">
+            <div class="bg-white rounded-2xl p-8 shadow-md">
+                <i class="fas fa-inbox text-5xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No se encontraron implementos</h3>
+                <p class="text-gray-500">No hay elementos en el catálogo que coincidan con tu búsqueda</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</main>
 
 {% endblock %}

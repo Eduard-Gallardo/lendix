@@ -11,7 +11,7 @@ app.secret_key = 'super'
 # Configuración de la sesión
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['PERMANENT_SESSION_LIFETIME'] = 36  # 36 segundos
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hora
 
 @app.route('/')
 def index():

@@ -6,81 +6,156 @@
     <p class="text-gray-600 mb-8">Consulta los préstamos y reservas realizados</p>
 
     <!-- prestamos -->
-    <div class="bg-white p-4 rounded-lg shadow mb-8">
-        <h2 class="text-xl font-bold mb-4">Préstamos</h2>
-        <table class="min-w-full table-auto">
-            <thead>
-                <tr class="bg-green-100">
-                    <th class="px-4 py-2 text-left">Usuario</th>
-                    <th class="px-4 py-2 text-left">Implemento</th>
-                    <th class="px-4 py-2 text-left">Instructor</th>
-                    <th class="px-4 py-2 text-left">Jornada</th>
-                    <th class="px-4 py-2 text-left">Ambiente</th>
-                    <th class="px-4 py-2 text-left">Fecha de Préstamo</th>
-                    <th class="px-4 py-2 text-left">Fecha de Devolución</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for prestamo in prestamos %}
-                <tr class="border-b hover:bg-green-50">
-                    <td class="px-4 py-2">{{ prestamo.usuario }}</td>
-                    <td class="px-4 py-2">{{ prestamo.implemento }}</td>
-                    <td class="px-4 py-2">{{ prestamo.instructor }}</td>
-                    <td class="px-4 py-2">{{ prestamo.jornada }}</td>
-                    <td class="px-4 py-2">{{ prestamo.ambiente }}</td>
-                    <td class="px-4 py-2">{{ prestamo.fecha_prestamo }}</td>
-                    <td class="px-4 py-2">{{ prestamo.fecha_devolucion }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" class="px-4 py-2 text-center text-gray-600">No hay préstamos registrados.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+        <h2 class="text-xl font-bold mb-6 flex items-center">
+            <i class="fas fa-hand-holding mr-2 text-green-600"></i>Préstamos
+        </h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto">
+                <thead>
+                    <tr class="bg-green-100">
+                        <th class="px-4 py-3 text-left">Usuario</th>
+                        <th class="px-4 py-3 text-left">Implemento</th>
+                        <th class="px-4 py-3 text-left">Instructor</th>
+                        <th class="px-4 py-3 text-left">Jornada</th>
+                        <th class="px-4 py-3 text-left">Ambiente</th>
+                        <th class="px-4 py-3 text-left">Fecha de Préstamo</th>
+                        <th class="px-4 py-3 text-left">Fecha de Devolución</th>
+                        <th class="px-4 py-3 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestamo in prestamos %}
+                    <tr class="border-b hover:bg-green-50 transition-colors duration-200">
+                        <td class="px-4 py-3">{{ prestamo.usuario }}</td>
+                        <td class="px-4 py-3">{{ prestamo.implemento }}</td>
+                        <td class="px-4 py-3">{{ prestamo.instructor }}</td>
+                        <td class="px-4 py-3">{{ prestamo.jornada }}</td>
+                        <td class="px-4 py-3">{{ prestamo.ambiente }}</td>
+                        <td class="px-4 py-3">{{ prestamo.fecha_prestamo }}</td>
+                        <td class="px-4 py-3">
+                            {% if prestamo.fecha_devolucion %}
+                                {{ prestamo.fecha_devolucion }}
+                            {% else %}
+                                <span class="text-red-600 font-semibold flex items-center">
+                                    <i class="fas fa-clock mr-1"></i> Pendiente
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if not prestamo.fecha_devolucion %}
+                            <form action="{{ url_for('prestamos.devolver_prestamo', id=prestamo.id) }}" method="POST" class="inline">
+                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm flex items-center transition duration-200" 
+                                        onclick="return confirm('¿Estás seguro de que deseas registrar la devolución de este implemento?')">
+                                    <i class="fas fa-undo mr-1"></i> Devolver
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-gray-500 text-sm flex items-center">
+                                <i class="fas fa-check-circle mr-1"></i> Devuelto
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-4 py-4 text-center text-gray-600">
+                            <i class="fas fa-inbox text-2xl mb-2"></i>
+                            <p>No hay préstamos registrados.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- reservas -->
-    <div class="bg-white p-4 rounded-lg shadow">
-        <h2 class="text-xl font-bold mb-4">Reservas</h2>
-        <table class="min-w-full table-auto">
-            <thead>
-                <tr class="bg-green-100">
-                    <th class="px-4 py-2 text-left">Usuario</th>
-                    <th class="px-4 py-2 text-left">Implemento</th>
-                    <th class="px-4 py-2 text-left">Lugar</th>
-                    <th class="px-4 py-2 text-left">Fecha de Reserva</th>
-                    <th class="px-4 py-2 text-left">Fecha Inicio</th>
-                    <th class="px-4 py-2 text-left">Fecha Fin</th>
-                    <th class="px-4 py-2 text-left">Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for reserva in reservas %}
-                <tr class="border-b hover:bg-green-50">
-                    <td class="px-4 py-2">{{ reserva.usuario }}</td>
-                    <td class="px-4 py-2">{{ reserva.implemento }}</td>
-                    <td class="px-4 py-2">{{ reserva.lugar }}</td>
-                    <td class="px-4 py-2">{{ reserva.fecha_reserva }}</td>
-                    <td class="px-4 py-2">{{ reserva.fecha_inicio }}</td>
-                    <td class="px-4 py-2">{{ reserva.fecha_fin }}</td>
-                    <td class="px-4 py-2">
-                        {% if reserva.estado == 'pendiente' %}
-                            <span class="text-yellow-700 font-semibold">{{ reserva.estado }}</span>
-                        {% elif reserva.estado == 'aprobada' %}
-                            <span class="text-green-600 font-semibold">{{ reserva.estado }}</span>
-                        {% else %}
-                            <span class="text-gray-600">{{ reserva.estado }}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" class="px-4 py-2 text-center text-gray-600">No hay reservas registradas.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-bold mb-6 flex items-center">
+            <i class="fas fa-calendar-check mr-2 text-yellow-600"></i>Reservas
+        </h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto">
+                <thead>
+                    <tr class="bg-green-100">
+                        <th class="px-4 py-3 text-left">Usuario</th>
+                        <th class="px-4 py-3 text-left">Implemento</th>
+                        <th class="px-4 py-3 text-left">Lugar</th>
+                        <th class="px-4 py-3 text-left">Fecha de Reserva</th>
+                        <th class="px-4 py-3 text-left">Fecha Inicio</th>
+                        <th class="px-4 py-3 text-left">Fecha Fin</th>
+                        <th class="px-4 py-3 text-left">Estado</th>
+                        <th class="px-4 py-3 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reserva in reservas %}
+                    <tr class="border-b hover:bg-green-50 transition-colors duration-200">
+                        <td class="px-4 py-3">{{ reserva.usuario }}</td>
+                        <td class="px-4 py-3">{{ reserva.implemento }}</td>
+                        <td class="px-4 py-3">{{ reserva.lugar }}</td>
+                        <td class="px-4 py-3">{{ reserva.fecha_reserva }}</td>
+                        <td class="px-4 py-3">{{ reserva.fecha_inicio }}</td>
+                        <td class="px-4 py-3">{{ reserva.fecha_fin }}</td>
+                        <td class="px-4 py-3">
+                            {% if reserva.estado == 'pendiente' %}
+                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold flex items-center w-fit">
+                                    <i class="fas fa-clock mr-1"></i> {{ reserva.estado }}
+                                </span>
+                            {% elif reserva.estado == 'aprobada' %}
+                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold flex items-center w-fit">
+                                    <i class="fas fa-check-circle mr-1"></i> {{ reserva.estado }}
+                                </span>
+                            {% elif reserva.estado == 'cancelada' %}
+                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold flex items-center w-fit">
+                                    <i class="fas fa-times-circle mr-1"></i> {{ reserva.estado }}
+                                </span>
+                            {% else %}
+                                <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                    {{ reserva.estado }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-2">
+                                {% if reserva.estado == 'pendiente' and session.get('rol') == 'admin' %}
+                                <form action="{{ url_for('reservas.aprobar_reserva', id=reserva.id) }}" method="POST" class="inline">
+                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center transition duration-200" 
+                                            onclick="return confirm('¿Estás seguro de que deseas aprobar esta reserva?')">
+                                        <i class="fas fa-check mr-1"></i> Aprobar
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if reserva.estado == 'pendiente' or (reserva.estado == 'aprobada' and session.get('rol') == 'admin') %}
+                                <form action="{{ url_for('reservas.cancelar_reserva', id=reserva.id) }}" method="POST" class="inline">
+                                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center transition duration-200" 
+                                            onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?')">
+                                        <i class="fas fa-times mr-1"></i> Cancelar
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if reserva.estado == 'cancelada' or reserva.estado == 'completada' %}
+                                <span class="text-gray-500 text-sm flex items-center">
+                                    <i class="fas fa-lock mr-1"></i> Finalizada
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-4 py-4 text-center text-gray-600">
+                            <i class="fas fa-inbox text-2xl mb-2"></i>
+                            <p>No hay reservas registradas.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
 
