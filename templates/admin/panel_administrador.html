@@ -7,50 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<<<<<<< HEAD
-<body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-green-800 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <i class="fas fa-seedling text-3xl mr-3"></i>
-                <h1 class="text-2xl font-bold">Libratech Admin</h1>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a href="{{ url_for('admin.agregar_implemento') }}" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold">
-                    <i class="fas fa-plus mr-2"></i>Nuevo Implemento
-                </a>
-<<<<<<< HEAD
-                <a href="{{ url_for('index') }}" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold">
-                    <i class="fas fa-home mr-2"></i>Inicio
-=======
-                <!-- En el header del panel_administrador.html, cerca del botón "Nuevo Implemento" -->
-                <a href="{{ url_for('admin.devolucion_prestamos') }}" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold text-white">
-                    <i class="fas fa-undo mr-2"></i>Gestión Devoluciones
->>>>>>> a8fe4a97e41c1173c54b1bb0d0e2d29cffeccc14
-                </a>
-                <div class="relative">
-                    <button id="adminProfileBtn" class="flex items-center space-x-2 focus:outline-none">
-                        <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <span>Administrador</span>
-                    </button>
-                    <div id="adminProfileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 text-gray-800 z-50 hidden">
-                        <div class="px-4 py-2 border-b border-gray-200">
-                            <div class="text-sm font-medium text-gray-900">{{ session.user_nombre }}</div>
-                            <div class="text-xs text-gray-500">{{ session.user_email }}</div>
-                            <div class="text-xs text-green-600 font-medium">Administrador</div>
-                        </div>
-                        <a href="{{ url_for('login.logout') }}" class="block px-4 py-2 hover:bg-red-100 transition duration-150 text-red-600">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-=======
 <body class="bg-gray-100 flex min-h-screen">
   
   <!-- Sidebar -->
@@ -78,7 +34,6 @@
       <span class="text-sm">Administrador</span>
     </div>
   </aside>
->>>>>>> 9dd843d1814051c19743f8e3cdf5a9c94cc2722d
 
   <!-- Contenido principal -->
   <main class="flex-1 ml-64 p-8">
@@ -208,27 +163,6 @@
     <footer class="text-center text-gray-400 mt-12 text-sm">
       <p>© 2025 Libratech - Sistema de Gestión de Implementos</p>
     </footer>
-<<<<<<< HEAD
-
-    <script>
-        // JavaScript para el menú desplegable del perfil de administrador
-        document.getElementById('adminProfileBtn').addEventListener('click', function() {
-            const menu = document.getElementById('adminProfileMenu');
-            menu.classList.toggle('hidden');
-        });
-
-        // Cerrar el menú al hacer clic fuera de él
-        document.addEventListener('click', function(event) {
-            const adminProfileBtn = document.getElementById('adminProfileBtn');
-            const adminProfileMenu = document.getElementById('adminProfileMenu');
-            
-            if (!adminProfileBtn.contains(event.target) && !adminProfileMenu.contains(event.target)) {
-                adminProfileMenu.classList.add('hidden');
-            }
-        });
-    </script>
-=======
   </main>
->>>>>>> 9dd843d1814051c19743f8e3cdf5a9c94cc2722d
 </body>
 </html>
