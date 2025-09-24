@@ -5,6 +5,7 @@ import os
 from utils.db import get_db_connection
 from werkzeug.utils import secure_filename
 from routes.login import login_required  # Agregar este import
+from datetime import datetime, timedelta
 
 # Configuración del Blueprint
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
@@ -249,3 +250,110 @@ def api_estadisticas():
         'total_reservas': total_reservas,
         'reservas_activas': reservas_activas
     })
+
+# 📌 Nueva ruta para gestión de devoluciones de préstamos
+@admin_bp.route('/devolucion_prestamos')
+@login_required
+def devolucion_prestamos():
+    #control de acceso
+
+
+    conn = get_db_connection()
+    
+    try:
+        # Obtener préstamos activos (sin fecha_devolucion)
+        prestamos_activos = conn.execute('''
+            SELECT p.*, u.nombre as usuario_nombre, c.implemento,
+                   julianday('now') - julianday(p.fecha_prestamo) as dias_transcurridos
+            FROM prestamos p
+            JOIN usuarios u ON p.fk_usuario = u.id
+            JOIN catalogo c ON p.fk_modelo = c.id
+            WHERE p.fecha_devolucion IS NULL
+            ORDER BY p.fecha_prestamo DESC
+        ''').fetchall()
+        
+        # Convertir días transcurridos a entero
+        prestamos_con_dias = []
+        for prestamo in prestamos_activos:
+            prestamo_dict = dict(prestamo)
+            prestamo_dict['dias_transcurridos'] = int(prestamo['dias_transcurridos']) if prestamo['dias_transcurridos'] else 0
+            prestamos_con_dias.append(prestamo_dict)
+        
+        # Estadísticas
+        total_prestamos = len(prestamos_con_dias)
+        
+        # Contar implementos únicos prestados
+        implementos_unicos = len(set(p['fk_modelo'] for p in prestamos_con_dias))
+        
+        # Préstamos de hoy
+        hoy = datetime.now().strftime("%Y-%m-%d")
+        prestamos_hoy = conn.execute('''
+            SELECT COUNT(*) as count FROM prestamos 
+            WHERE fecha_prestamo LIKE ? AND fecha_devolucion IS NULL
+        ''', (f'{hoy}%',)).fetchone()['count']
+        
+    except Exception as e:
+        flash(f'Error al cargar préstamos: {str(e)}', 'error')
+        prestamos_con_dias = []
+        total_prestamos = 0
+        implementos_unicos = 0
+        prestamos_hoy = 0
+    finally:
+        conn.close()
+    
+    return render_template('admin/dvprestamos.html',
+                         prestamos_activos=prestamos_con_dias,
+                         total_prestamos=total_prestamos,
+                         total_implementos=implementos_unicos,
+                         prestamos_hoy=prestamos_hoy)
+
+# 📌 Nueva ruta para procesar devolución desde el panel admin
+@admin_bp.route('/devolver_prestamo_admin/<int:id>', methods=['POST'])
+@login_required
+def devolver_prestamo_admin(id):
+
+    #control de acceso
+    
+    conn = get_db_connection()
+    try:
+        # Obtener información completa del préstamo
+        prestamo = conn.execute('''
+            SELECT p.*, c.implemento, c.disponibilidad, u.nombre as usuario_nombre
+            FROM prestamos p
+            JOIN catalogo c ON p.fk_modelo = c.id
+            JOIN usuarios u ON p.fk_usuario = u.id
+            WHERE p.id = ?
+        ''', (id,)).fetchone()
+        
+        if not prestamo:
+            flash('No se encontró el préstamo.', 'error')
+            return redirect(url_for('admin.devolucion_prestamos'))
+        
+        if prestamo['fecha_devolucion'] is not None:
+            flash('Este préstamo ya fue devuelto anteriormente.', 'warning')
+            return redirect(url_for('admin.devolucion_prestamos'))
+        
+        # Registrar la devolución
+        fecha_devolucion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute(
+            'UPDATE prestamos SET fecha_devolucion = ? WHERE id = ?',
+            (fecha_devolucion, id)
+        )
+        
+        # Actualizar disponibilidad del implemento
+        nueva_disponibilidad = prestamo['disponibilidad'] + 1
+        conn.execute(
+            'UPDATE catalogo SET disponibilidad = ? WHERE id = ?',
+            (nueva_disponibilidad, prestamo['fk_modelo'])
+        )
+        
+        conn.commit()
+        
+        flash(f'Devolución registrada exitosamente: {prestamo["implemento"]} devuelto por {prestamo["nombre"]}', 'success')
+        
+    except Exception as e:
+        flash(f'Error al procesar la devolución: {str(e)}', 'error')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('admin.devolucion_prestamos'))
