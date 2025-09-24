@@ -103,7 +103,7 @@
                         <th class="px-4 py-3 text-left text-sm font-semibold">Ambiente</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold">Fecha Préstamo</th>
                         <th class="px-4 py-3 text-left text-sm font-semibold">Estado</th>
-                        <th class="px-4 py-3 text-left text-sm font-semibold">Acciones</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
@@ -137,23 +137,7 @@
                                 </span>
                             {% endif %}
                         </td>
-                        <td class="px-4 py-3">
-                            {% if not prestamo.fecha_devolucion and session.get('rol') == 'admin' %}
-                            <form action="{{ url_for('prestamos.devolver_prestamo', id=prestamo.id) }}" method="POST" class="inline">
-                                <button type="submit" 
-                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm flex items-center gap-1 transition duration-200 shadow-sm"
-                                        onclick="return confirm('¿Estás seguro de registrar la devolución de {{ prestamo.implemento }}?')">
-                                    <i class="fas fa-undo"></i> Devolver
-                                </button>
-                            </form>
-                            {% elif prestamo.fecha_devolucion %}
-                            <span class="text-gray-500 text-sm flex items-center">
-                                <i class="fas fa-check-circle mr-1 text-green-500"></i> Completo
-                            </span>
-                            {% else %}
-                            <span class="text-gray-400 text-sm">Esperando devolución</span>
-                            {% endif %}
-                        </td>
+                    
                     </tr>
                     {% endfor %}
                 </tbody>
