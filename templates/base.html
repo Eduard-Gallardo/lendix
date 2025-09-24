@@ -6,11 +6,11 @@
     <title>LibraTech - Catálogo de Biblioteca</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="url_for('static', filename='styles.css')">
+    <link rel="stylesheet" href="{{url_for('static', filename='styles.css')}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.2/cdn.min.js" defer></script>
 </head>
-<body class="font-sans bg-gray-50">
+<body class="font-sans bg-gray-50" >
     <!-- Header -->
     <header class="bg-green-800 text-white shadow-lg">
         <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -25,27 +25,64 @@
                 <a href="{{url_for('catalogo.catalogo')}}" class="hover:text-green-200 transition duration-300">Catálogo</a>
                 <a href="{{url_for('prestamos.prestamos')}}" class="hover:text-green-200 transition duration-300">Préstamos</a>
             </div>
-            
-            <div class="relative">
-                <button id="profileBtn" class="flex items-center focus:outline-none">
-                    <div class="w-10 h-10 rounded-full bg-green-700 flex items-center justify-center">
-                        <i class="fas fa-user text-xl"></i>
-                    </div>
-                </button>
 
-                
-                
-                <div id="profileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 text-gray-800 z-50 hidden">
-                    <a href="{{ url_for('login.login') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
-                        <i class="fas fa-sign-in-alt mr-2 text-green-700"></i>Login
-                    </a>
-                    <a href="{{ url_for('registro.registro_usuario') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
-                        <i class="fas fa-user-plus mr-2 text-green-700"></i>Registro
-                    </a>
+            <div class="relative" x-data="{ open: false }">
+            <button @click="open = true" class="flex items-center focus:outline-none">
+                <div class="w-10 h-10 rounded-full bg-green-700 flex items-center justify-center">
+                    <i class="fas fa-user text-xl"></i>
+                </div>
+            </button>
+
+            <!-- Modal de perfil -->
+            <div x-show="open" x-cloak 
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0">
+
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+                    <!-- Botón cerrar -->
+                    <button @click="open = false" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                    {% if 'user_id' in session %}
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-20 h-20 rounded-full bg-green-200 flex items-center justify-center mb-3">
+                                <i class="fas fa-user text-3xl text-green-700"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold">{{ session['user_nombre'] }}</h2>
+                            <p class="text-gray-600 mb-4">{{ session['user_email'] }}</p>
+                            <p class="text-gray-600 mb-4">{{ session['user_telefono'] }}</p>
+                            <a href="{{ url_for('login.logout') }}" 
+                            class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition duration-150">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar sesión
+                            </a>
+                        </div>
+                    {% else %}
+
+                        <h2 class="text-xl font-semibold mb-4">Perfil de Usuario</h2>
+                        <p class="mb-4">Inicia sesión o regístrate para acceder a más funciones.</p>
+                        <div class="flex space-x-4">
+                            <a href="{{ url_for('login.login') }}" 
+                            class="flex-1 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 text-center transition duration-150">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                            </a>
+                            <a href="{{ url_for('registro.registro_usuario') }}" 
+                            class="flex-1 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 text-center transition duration-150">
+                            <i class="fas fa-user-plus mr-2"></i>Registro
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
+        </div>
         </nav>
     </header>
+
 
     {% block content %}
     {% endblock %}
@@ -82,23 +119,5 @@
             </div>
         </div>
     </footer>
-
-    <script>
-        // JavaScript para el menú desplegable del perfil
-        document.getElementById('profileBtn').addEventListener('click', function() {
-            const menu = document.getElementById('profileMenu');
-            menu.classList.toggle('hidden');
-        });
-
-        // Cerrar el menú al hacer clic fuera de él
-        document.addEventListener('click', function(event) {
-            const profileBtn = document.getElementById('profileBtn');
-            const profileMenu = document.getElementById('profileMenu');
-            
-            if (!profileBtn.contains(event.target) && !profileMenu.contains(event.target)) {
-                profileMenu.classList.add('hidden');
-            }
-        });
-    </script>
 </body>
 </html>

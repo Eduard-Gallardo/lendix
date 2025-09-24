@@ -5,7 +5,7 @@ from datetime import datetime
 
 catalogo_bp = Blueprint('catalogo', __name__, template_folder='templates')
 
-# 📌 Vista principal del catálogo
+# Vista principal del catálogo
 @catalogo_bp.route('/catalogo', methods=['GET', 'POST'])
 @login_required
 def catalogo():
@@ -56,7 +56,7 @@ def catalogo():
     conn.close()
     return render_template('views/catalogo.html', catalogo=catalogo_items)
 
-# 📌 Filtrar catálogo
+# Filtrar catálogo
 @catalogo_bp.route('/catalogo/filtrar', methods=['GET'])
 @login_required
 def filtrar_catalogo():
@@ -91,7 +91,7 @@ def filtrar_catalogo():
                            categoria=categoria,
                            disponibilidad=disponibilidad)
 
-# 📌 Registrar préstamo - CORREGIDO Y FUNCIONAL
+# Registrar préstamo - CORREGIDO Y FUNCIONAL
 @catalogo_bp.route('/prestar/<int:id>', methods=['POST'])
 @login_required
 def prestar(id):
@@ -127,7 +127,7 @@ def prestar(id):
         # Registrar el préstamo en la base de datos - CORREGIDO: campo 'nombre'
         conn.execute('''
             INSERT INTO prestamos (fk_usuario, fk_modelo, fecha_prestamo, fecha_devolucion, 
-                                  nombre, instructor, jornada, ambiente)
+                                nombre, instructor, jornada, ambiente)
             VALUES (?, ?, ?, NULL, ?, ?, ?, ?)
         ''', (fk_usuario, id, fecha_prestamo, nombre_prestatario, instructor, jornada, ambiente))
 
@@ -146,7 +146,7 @@ def prestar(id):
 
     return redirect(url_for('catalogo.catalogo'))
 
-# 📌 Registrar reserva - FUNCIONAL
+#  Registrar reserva - FUNCIONAL
 @catalogo_bp.route('/reservar/<int:id>', methods=['POST'])
 @login_required
 def reservar(id):
@@ -187,7 +187,7 @@ def reservar(id):
         # Registrar la reserva en la base de datos
         conn.execute('''
             INSERT INTO reservas (fk_usuario, fk_implemento, fecha_reserva, fecha_inicio, 
-                                 fecha_fin, nombre, lugar, estado)
+                                fecha_fin, nombre, lugar, estado)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente')
         ''', (fk_usuario, id, fecha_reserva, fecha_inicio, fecha_fin, nombre, lugar))
 
@@ -206,7 +206,7 @@ def reservar(id):
 
     return redirect(url_for('catalogo.catalogo'))
 
-# 📌 Devolver implemento (solo admin) - FUNCIONAL
+# Devolver implemento (solo admin) - FUNCIONAL
 @catalogo_bp.route('/devolver/<int:id>', methods=['POST'])
 @login_required
 def devolver(id):
@@ -257,7 +257,7 @@ def devolver(id):
 
     return redirect(url_for('catalogo.catalogo'))
 
-# 📌 Cancelar reserva desde el catálogo - FUNCIONAL
+# Cancelar reserva desde el catálogo - FUNCIONAL
 @catalogo_bp.route('/cancelar_reserva_catalogo/<int:id>', methods=['POST'])
 @login_required
 def cancelar_reserva_catalogo(id):
