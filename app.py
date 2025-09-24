@@ -28,7 +28,6 @@ def inject_user():
         }
     )
 
-# QUITA el url_prefix='/admin' para el blueprint de admin
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(login_bp, url_prefix='/login')
 app.register_blueprint(registro_bp, url_prefix='/registro')

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 prestamos_bp = Blueprint('prestamos', __name__, template_folder='templates')
 reservas_bp = Blueprint('reservas', __name__, template_folder='templates')
 
-# 📌 Vista combinada de préstamos y reservas con filtros
+# Vista combinada de préstamos y reservas con filtros
 @prestamos_bp.route('/prestamos', methods=['GET'])
 @login_required
 def prestamos():
@@ -84,13 +84,13 @@ def prestamos():
     conn.close()
 
     return render_template('views/prestamos_reservas.html',
-                           prestamos=prestamos_items,
-                           reservas=reservas_items,
-                           stats=stats,
-                           filtro_estado=filtro_estado,
-                           filtro_dias=filtro_dias)
+                        prestamos=prestamos_items,
+                        reservas=reservas_items,
+                        stats=stats,
+                        filtro_estado=filtro_estado,
+                        filtro_dias=filtro_dias)
 
-# 📌 Procesar devolución de préstamo (CORREGIDO)
+# Procesar devolución de préstamo (CORREGIDO)
 @prestamos_bp.route('/devolver_prestamo/<int:id>', methods=['POST'])
 @login_required
 def devolver_prestamo(id):
@@ -148,7 +148,7 @@ def devolver_prestamo(id):
     return redirect(url_for('prestamos.prestamos'))
 
 
-# 📌 Cancelar reserva (mejorado)
+# Cancelar reserva (mejorado)
 @reservas_bp.route('/cancelar_reserva/<int:id>', methods=['POST'])
 @login_required
 def cancelar_reserva(id):
@@ -206,7 +206,7 @@ def cancelar_reserva(id):
 
     return redirect(url_for('prestamos.prestamos'))
 
-# 📌 Aprobar reserva (solo admin) - Mejorado
+# Aprobar reserva (solo admin) - Mejorado
 @reservas_bp.route('/aprobar_reserva/<int:id>', methods=['POST'])
 @login_required
 def aprobar_reserva(id):
@@ -249,10 +249,10 @@ def aprobar_reserva(id):
             )
             AND id != ?
         ''', (reserva['fk_implemento'], 
-              reserva['fecha_inicio'], reserva['fecha_fin'],
-              reserva['fecha_inicio'], reserva['fecha_fin'],
-              reserva['fecha_inicio'], reserva['fecha_fin'],
-              id)).fetchall()
+            reserva['fecha_inicio'], reserva['fecha_fin'],
+            reserva['fecha_inicio'], reserva['fecha_fin'],
+            reserva['fecha_inicio'], reserva['fecha_fin'],
+            id)).fetchall()
 
         if reservas_conflicto:
             flash('Existe un conflicto de horario con otra reserva aprobada.', 'error')
@@ -277,7 +277,7 @@ def aprobar_reserva(id):
 
     return redirect(url_for('prestamos.prestamos'))
 
-# 📌 Rechazar reserva (solo admin) - Nueva función
+# Rechazar reserva (solo admin) - Nueva función
 @reservas_bp.route('/rechazar_reserva/<int:id>', methods=['POST'])
 @login_required
 def rechazar_reserva(id):
@@ -314,7 +314,7 @@ def rechazar_reserva(id):
 
     return redirect(url_for('prestamos.prestamos'))
 
-# 📌 Exportar datos (nueva función)
+# Exportar datos (nueva función)
 @prestamos_bp.route('/exportar_prestamos', methods=['GET'])
 @login_required
 def exportar_prestamos():
