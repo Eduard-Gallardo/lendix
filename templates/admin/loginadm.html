@@ -52,8 +52,11 @@
         <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
         <div class="relative mt-1">
           <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required
-            class="w-full px-4 py-3 pl-10 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            class="w-full px-4 py-3 pl-10 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
           <i class="fas fa-lock absolute left-3 top-3 text-green-600"></i>
+          <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+            <i id="passwordIcon" class="fas fa-eye"></i>
+          </button>
         </div>
       </div>
 
@@ -83,6 +86,24 @@
       © 2025 Libratech | Panel de Administración
     </p>
   </div>
+
+  <script>
+    // Funcionalidad del ojito para mostrar/ocultar contraseña
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const passwordIcon = document.getElementById('passwordIcon');
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        passwordIcon.classList.remove('fa-eye');
+        passwordIcon.classList.add('fa-eye-slash');
+      } else {
+        passwordInput.type = 'password';
+        passwordIcon.classList.remove('fa-eye-slash');
+        passwordIcon.classList.add('fa-eye');
+      }
+    });
+  </script>
 
 </body>
 </html>
