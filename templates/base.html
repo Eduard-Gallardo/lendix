@@ -31,17 +31,36 @@
                     <div class="w-10 h-10 rounded-full bg-green-700 flex items-center justify-center">
                         <i class="fas fa-user text-xl"></i>
                     </div>
+                    {% if current_user.is_authenticated %}
+                    <span class="ml-2 text-sm hidden md:block">{{ current_user.nombre }}</span>
+                    {% endif %}
                 </button>
 
-                
-                
                 <div id="profileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 text-gray-800 z-50 hidden">
-                    <a href="{{ url_for('login.login') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
-                        <i class="fas fa-sign-in-alt mr-2 text-green-700"></i>Login
-                    </a>
-                    <a href="{{ url_for('registro.registro_usuario') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
-                        <i class="fas fa-user-plus mr-2 text-green-700"></i>Registro
-                    </a>
+                    {% if current_user.is_authenticated %}
+                        <div class="px-4 py-2 border-b border-gray-200">
+                            <div class="text-sm font-medium text-gray-900">{{ current_user.nombre }}</div>
+                            <div class="text-xs text-gray-500">{{ current_user.email }}</div>
+                            {% if session.rol == 'admin' %}
+                            <div class="text-xs text-green-600 font-medium">Administrador</div>
+                            {% endif %}
+                        </div>
+                        {% if session.rol == 'admin' %}
+                        <a href="{{ url_for('admin.admin') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
+                            <i class="fas fa-cog mr-2 text-green-700"></i>Panel Admin
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('login.logout') }}" class="block px-4 py-2 hover:bg-red-100 transition duration-150 text-red-600">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login.login') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
+                            <i class="fas fa-sign-in-alt mr-2 text-green-700"></i>Login
+                        </a>
+                        <a href="{{ url_for('registro.registro_usuario') }}" class="block px-4 py-2 hover:bg-green-100 transition duration-150">
+                            <i class="fas fa-user-plus mr-2 text-green-700"></i>Registro
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </nav>

@@ -72,9 +72,14 @@
                 </div>
                 <div>
                     <label for="password" class="sr-only">Contraseña</label>
-                    <input id="password" name="password" type="password" autocomplete="new-password" required 
-                        class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
-                        placeholder="Contraseña">
+                    <div class="relative">
+                        <input id="password" name="password" type="password" autocomplete="new-password" required 
+                            class="appearance-none relative block w-full px-3 py-3 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
+                            placeholder="Contraseña">
+                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                            <i id="passwordIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     <div class="mt-1 flex space-x-1">
                         <div id="strength-1" class="password-strength w-1/4 bg-gray-200 rounded"></div>
                         <div id="strength-2" class="password-strength w-1/4 bg-gray-200 rounded"></div>
@@ -88,9 +93,14 @@
                 </div>
                 <div>
                     <label for="confirm-password" class="sr-only">Confirmar contraseña</label>
-                    <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required 
-                        class="appearance-none rounded-b-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
-                        placeholder="Confirmar contraseña">
+                    <div class="relative">
+                        <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required 
+                            class="appearance-none rounded-b-lg relative block w-full px-3 py-3 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
+                            placeholder="Confirmar contraseña">
+                        <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                            <i id="confirmPasswordIcon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     <div id="confirm-validation" class="validation-message text-red-500 hidden">
                         <i class="fas fa-exclamation-circle mr-1"></i>
                         <span>Las contraseñas no coinciden</span>
@@ -125,5 +135,38 @@
         </form>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // Funcionalidad del ojito para mostrar/ocultar contraseña principal
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('passwordIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.classList.remove('fa-eye');
+                passwordIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.classList.remove('fa-eye-slash');
+                passwordIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Funcionalidad del ojito para mostrar/ocultar confirmar contraseña
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            const confirmPasswordInput = document.getElementById('confirm-password');
+            const confirmPasswordIcon = document.getElementById('confirmPasswordIcon');
+            
+            if (confirmPasswordInput.type === 'password') {
+                confirmPasswordInput.type = 'text';
+                confirmPasswordIcon.classList.remove('fa-eye');
+                confirmPasswordIcon.classList.add('fa-eye-slash');
+            } else {
+                confirmPasswordInput.type = 'password';
+                confirmPasswordIcon.classList.remove('fa-eye-slash');
+                confirmPasswordIcon.classList.add('fa-eye');
+            }
+        });
+    </script>
 </body>
 </html>

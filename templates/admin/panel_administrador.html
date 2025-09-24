@@ -19,13 +19,26 @@
                 <a href="{{ url_for('admin.agregar_implemento') }}" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold">
                     <i class="fas fa-plus mr-2"></i>Nuevo Implemento
                 </a>
+                <a href="{{ url_for('index') }}" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-semibold">
+                    <i class="fas fa-home mr-2"></i>Inicio
+                </a>
                 <div class="relative">
-                    <button class="flex items-center space-x-2">
+                    <button id="adminProfileBtn" class="flex items-center space-x-2 focus:outline-none">
                         <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
                             <i class="fas fa-user"></i>
                         </div>
                         <span>Administrador</span>
                     </button>
+                    <div id="adminProfileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 text-gray-800 z-50 hidden">
+                        <div class="px-4 py-2 border-b border-gray-200">
+                            <div class="text-sm font-medium text-gray-900">{{ session.user_nombre }}</div>
+                            <div class="text-xs text-gray-500">{{ session.user_email }}</div>
+                            <div class="text-xs text-green-600 font-medium">Administrador</div>
+                        </div>
+                        <a href="{{ url_for('login.logout') }}" class="block px-4 py-2 hover:bg-red-100 transition duration-150 text-red-600">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -161,5 +174,23 @@
             <p>© 2025 Libratech - Sistema de Gestión de Implementos</p>
         </div>
     </footer>
+
+    <script>
+        // JavaScript para el menú desplegable del perfil de administrador
+        document.getElementById('adminProfileBtn').addEventListener('click', function() {
+            const menu = document.getElementById('adminProfileMenu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Cerrar el menú al hacer clic fuera de él
+        document.addEventListener('click', function(event) {
+            const adminProfileBtn = document.getElementById('adminProfileBtn');
+            const adminProfileMenu = document.getElementById('adminProfileMenu');
+            
+            if (!adminProfileBtn.contains(event.target) && !adminProfileMenu.contains(event.target)) {
+                adminProfileMenu.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
