@@ -33,7 +33,7 @@ def init_db():
             )
         ''')
         
-       # Tabla prestamos
+        # Tabla prestamos
         conn.execute('''
             CREATE TABLE IF NOT EXISTS prestamos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
