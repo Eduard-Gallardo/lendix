@@ -122,3 +122,19 @@ button:focus, a:focus, input:focus, select:focus {
 [xcloak] {
     display: none !important;
 }
+
+.image-container {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .image-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .image-placeholder {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0ea5e9;
+            font-weight: 500;
+        }
