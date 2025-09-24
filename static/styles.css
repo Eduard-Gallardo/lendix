@@ -85,7 +85,7 @@ button:focus, a:focus, input:focus, select:focus {
 
 /*Registro*/
 
-body {
+.register {
     font-family: 'Open Sans', sans-serif;
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
     background-size: cover;
@@ -117,4 +117,8 @@ body {
 .validation-message {
     font-size: 0.75rem;
     margin-top: 0.25rem;
+}
+
+[xcloak] {
+    display: none !important;
 }

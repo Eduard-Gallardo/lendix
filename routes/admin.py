@@ -10,13 +10,12 @@ from datetime import datetime, timedelta
 # Configuración del Blueprint
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
 
-# Configuración
+# Configuración de subida de imagenes
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Crear directorio de uploads si no existe
 def ensure_upload_folder():
