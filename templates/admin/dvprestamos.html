@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devolución de Préstamos - Libratech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fas fa-seedling text-3xl mr-3"></i>
+                <h1 class="text-2xl font-bold">Libratech Admin</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="{{ url_for('admin.admin') }}" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Panel
+                </a>
+                <div class="relative">
+                    <button class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>Administrador</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-green-800">Devolución de Préstamos Activos</h2>
+            <div class="flex space-x-4">
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Buscar préstamo..." 
+                           class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded {% if category == 'error' %}bg-red-100 text-red-700 border border-red-300{% else %}bg-green-100 text-green-700 border border-green-300{% endif %}">
+                        <div class="flex items-center">
+                            <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Estadísticas rápidas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-hand-holding text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-800">{{ total_prestamos }}</p>
+                        <p class="text-gray-600">Préstamos Activos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-boxes text-green-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-800">{{ total_implementos }}</p>
+                        <p class="text-gray-600">Implementos Prestados</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500">
+                <div class="flex items-center">
+                    <div class="bg-orange-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-clock text-orange-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-800">{{ prestamos_hoy }}</p>
+                        <p class="text-gray-600">Prestados Hoy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de préstamos activos -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% if prestamos_activos %}
+            <div class="overflow-x-auto">
+                <table class="w-full" id="prestamosTable">
+                    <thead class="bg-green-50 text-green-800">
+                        <tr>
+                            <th class="px-6 py-4 text-left">Prestatario</th>
+                            <th class="px-6 py-4 text-left">Implemento</th>
+                            <th class="px-6 py-4 text-left">Instructor</th>
+                            <th class="px-6 py-4 text-left">Jornada</th>
+                            <th class="px-6 py-4 text-left">Ambiente</th>
+                            <th class="px-6 py-4 text-left">Fecha Préstamo</th>
+                            <th class="px-6 py-4 text-left">Días Transcurridos</th>
+                            <th class="px-6 py-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prestamo in prestamos_activos %}
+                        <tr class="border-b hover:bg-gray-50 prestamo-row">
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-gray-900">{{ prestamo.nombre }}</div>
+                                <div class="text-sm text-gray-500">Registrado por: {{ prestamo.usuario_nombre }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-medium">{{ prestamo.implemento }}</div>
+                                <div class="text-sm text-gray-500">ID: {{ prestamo.fk_modelo }}</div>
+                            </td>
+                            <td class="px-6 py-4">{{ prestamo.instructor }}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full capitalize">
+                                    {{ prestamo.jornada }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">{{ prestamo.ambiente }}</td>
+                            <td class="px-6 py-4">
+                                <div class="text-gray-900">{{ prestamo.fecha_prestamo[:10] }}</div>
+                                <div class="text-xs text-gray-500">{{ prestamo.fecha_prestamo[11:16] }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 {% if prestamo.dias_transcurridos > 7 %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %} text-xs font-medium rounded-full">
+                                    {{ prestamo.dias_transcurridos }} días
+                                </span>
+                            </td>
+                           <td class="px-6 py-4">
+                                <div class="flex justify-center">
+                                    <form action="{{ url_for('admin.devolver_prestamo_admin', id=prestamo.id) }}" method="POST" class="inline">
+                                        <button type="submit" 
+                                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center transition duration-200"
+                                                onclick="return confirm('¿Está seguro de registrar la devolución de &quot;{{ prestamo.implemento }}&quot; por {{ prestamo.nombre }}?')">
+                                            <i class="fas fa-check-circle mr-2"></i>Devolver
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                    </div>
+                        {% else %}
+                        <div class="text-center py-12">
+                            <i class="fas fa-check-circle text-4xl text-green-400 mb-4"></i>
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay préstamos activos</h3>
+                            <p class="text-gray-500">Todos los implementos han sido devueltos correctamente.</p>
+                        </div>
+                        {% endif %}
+                </div>
+
+                    <!-- Información adicional -->
+                    {% if prestamos_activos %}
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                            <p class="text-blue-700 text-sm">
+                                <strong>Nota:</strong> Los préstamos que superen los 7 días se marcarán en rojo para seguimiento.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+    <!-- Footer -->
+    <footer class="bg-green-900 text-white mt-12 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 Libratech - Sistema de Gestión de Implementos</p>
+        </div>
+    </footer>
+
+<!-- Script para búsqueda -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const prestamoRows = document.querySelectorAll('.prestamo-row');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            prestamoRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
