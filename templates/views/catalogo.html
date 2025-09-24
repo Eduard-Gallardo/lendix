@@ -166,9 +166,16 @@
                  @click="if(!loading) { open = true; action = '' }">
                 
                 <!-- Imagen -->
-                <div class="h-48 bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center overflow-hidden relative">
-                    <img src="{{ url_for('static', filename=(('uploads/' + item.imagen_url) if item.imagen_url else 'img/default.jpg')) }}"
-                        alt="{{ item.implemento }}"> 
+                <!-- Contenedor de imagen mejorado -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden image-container mb-8">
+            <div class="h-64 md:h-80 relative flex items-center justify-center overflow-hidden">
+                <!-- Imagen con mejor manejo de tamaño -->
+                <img 
+                    src="{{ url_for('static', filename=(('uploads/' + item.imagen_url) if item.imagen_url else 'img/default.jpg')) }}"
+                    alt="{{ item.implemento }}"
+                    class="w-full h-full object-cover object-center"
+                    onerror="this.src='https://via.placeholder.com/400x300/eff6ff/0ea5e9?text=Imagen+No+Disponible'"
+                >
                     
                     <!-- Badge de disponibilidad -->
                     <div class="absolute top-3 right-3">

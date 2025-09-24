@@ -22,15 +22,10 @@
       <a href="{{ url_for('admin.agregar_implemento') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <i class="fas fa-plus mr-3"></i> Nuevo Implemento
       </a>
-      <a href="#" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <i class="fas fa-users mr-3"></i> Usuarios
+      <a href="{{ url_for('admin.devolucion_prestamos') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        <i class="fas fa-undo mr-2"></i> Gestión Devoluciones
       </a>
-      <a href="#" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <i class="fas fa-file-alt mr-3"></i> Reportes
-      </a>
-      <a href="#" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <i class="fas fa-cogs mr-3"></i> Configuración
-      </a>
+      
     </nav>
     <div class="p-4 border-t border-green-700 flex items-center space-x-3">
       <div class="w-10 h-10 bg-green-700 flex items-center justify-center rounded-full">
@@ -58,41 +53,7 @@
     </div>
 
     <!-- Tarjetas resumen -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-sm text-gray-500">Implementos</h3>
-            <p class="text-2xl font-bold text-green-700">{{ implementos|length }}</p>
-          </div>
-          <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-            <i class="fas fa-box"></i>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-sm text-gray-500">Usuarios</h3>
-            <p class="text-2xl font-bold text-green-700">56</p>
-          </div>
-          <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-            <i class="fas fa-users"></i>
-          </div>
-        </div>
-      </div>
-      <div class="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-sm text-gray-500">Reservas</h3>
-            <p class="text-2xl font-bold text-green-700">14</p>
-          </div>
-          <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-            <i class="fas fa-calendar-check"></i>
-          </div>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Mensajes flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
