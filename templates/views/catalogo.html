@@ -167,26 +167,8 @@
                 
                 <!-- Imagen -->
                 <div class="h-48 bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center overflow-hidden relative">
-                    {% if item['imagen_url'] %}
-                        <img src="{{ item['imagen_url'] }}" alt="{{ item['implemento'] }}" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/otro.jpg') }}';">
-                    {% else %}
-                        {% if item['categoria'] == 'Libros' %}
-                            <img src="{{ url_for('static', filename='img/libro.jpg') }}" alt="Libro" 
-                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                        {% elif item['categoria'] == 'Computadores' %}
-                            <img src="{{ url_for('static', filename='img/computador.jpg') }}" alt="Computador" 
-                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                        {% elif item['categoria'] == 'Mouses' %}
-                            <img src="{{ url_for('static', filename='img/mouse.jpg') }}" alt="Mouse" 
-                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                        {% elif item['categoria'] == 'Teclados' %}
-                            <img src="{{ url_for('static', filename='img/teclado.jpg') }}" alt="Teclado" 
-                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                        {% else %}
-                            <img src="{{ url_for('static', filename='img/otro.jpg') }}" alt="Otro" 
-                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
-                        {% endif %}
-                    {% endif %}
+                    <img src="{{ url_for('static', filename=(('uploads/' + item.imagen_url) if item.imagen_url else 'img/default.jpg')) }}"
+                        alt="{{ item.implemento }}"> 
                     
                     <!-- Badge de disponibilidad -->
                     <div class="absolute top-3 right-3">
