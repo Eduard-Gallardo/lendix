@@ -49,7 +49,7 @@
                         <i class="fas fa-times"></i>
                     </button>
 
-                    {% if 'user' in session %}
+                    {% if 'user_id' in session %}
                         <div class="flex flex-col items-center text-center">
                             <div class="w-20 h-20 rounded-full bg-green-200 flex items-center justify-center mb-3">
                                 <i class="fas fa-user text-3xl text-green-700"></i>
@@ -57,7 +57,7 @@
                             <h2 class="text-xl font-semibold">{{ session['user_nombre'] }}</h2>
                             <p class="text-gray-600 mb-4">{{ session['user_email'] }}</p>
                             <p class="text-gray-600 mb-4">{{ session['user_telefono'] }}</p>
-                            <a href="{{ url_for('logout') }}" 
+                            <a href="{{ url_for('login.logout') }}" 
                             class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition duration-150">
                             <i class="fas fa-sign-out-alt mr-2"></i>Cerrar sesión
                             </a>
