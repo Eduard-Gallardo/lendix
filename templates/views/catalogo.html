@@ -172,19 +172,19 @@
                     {% else %}
                         {% if item['categoria'] == 'Libros' %}
                             <img src="{{ url_for('static', filename='img/libro.jpg') }}" alt="Libro" 
-                                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
                         {% elif item['categoria'] == 'Computadores' %}
                             <img src="{{ url_for('static', filename='img/computador.jpg') }}" alt="Computador" 
-                                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
                         {% elif item['categoria'] == 'Mouses' %}
                             <img src="{{ url_for('static', filename='img/mouse.jpg') }}" alt="Mouse" 
-                                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
                         {% elif item['categoria'] == 'Teclados' %}
                             <img src="{{ url_for('static', filename='img/teclado.jpg') }}" alt="Teclado" 
-                                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
                         {% else %}
                             <img src="{{ url_for('static', filename='img/otro.jpg') }}" alt="Otro" 
-                                 class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105">
                         {% endif %}
                     {% endif %}
                     
@@ -227,13 +227,13 @@
 
             <!-- Modal de gestión -->
             <div x-show="open" x-cloak 
-                 class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-                 x-transition:enter="ease-out duration-300" 
-                 x-transition:enter-start="opacity-0" 
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="ease-in duration-200" 
-                 x-transition:leave-start="opacity-100" 
-                 x-transition:leave-end="opacity-0">
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                x-transition:enter="ease-out duration-300" 
+                x-transition:enter-start="opacity-0" 
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200" 
+                x-transition:leave-start="opacity-100" 
+                x-transition:leave-end="opacity-0">
 
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto" @click.away="if(!loading) open = false">
                     <div class="p-6 space-y-6">
