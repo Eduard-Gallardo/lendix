@@ -23,7 +23,7 @@ def login():
         # Buscar usuario en la base de datos
         conn = get_db_connection()
         usuario = conn.execute(
-            'SELECT * FROM usuarios WHERE email = ?', (email,)
+            'SELECT * FROM usuarios WHERE email = ? AND activo = 1', (email,)
         ).fetchone()
         conn.close()
         
@@ -33,12 +33,7 @@ def login():
             session['user_nombre'] = usuario['nombre']
             session['user_email'] = usuario['email']
             session['user_telefono'] = usuario['telefono']
-            
-            # Configurar rol de administrador
-            if email == 'Eduard@gmail.com':
-                session['rol'] = 'admin'
-            else:
-                session['rol'] = 'user'
+            session['rol'] = usuario['rol']  # Usar el rol de la base de datos
             
             # Configurar sesión persistente si "Recordarme" está marcado
             if remember_me:
@@ -46,10 +41,13 @@ def login():
             
             flash(f'¡Bienvenido de nuevo, {usuario["nombre"]}!', 'success')
             
-            # REDIRECCIÓN ESPECÍFICA PARA Eduard@gmail.com
-            if email == 'Eduard@gmail.com':
+            # REDIRECCIÓN ESPECÍFICA SEGÚN EL ROL
+            if usuario['rol'] == 'admin':
                 return redirect(url_for('admin.admin'))
+            elif usuario['rol'] == 'instructor':
+                return redirect(url_for('instructor.panel_instructor'))
             else:
+                # Aprendices y externos van al índice
                 return redirect(url_for('index'))
         else:
             # Login fallido
@@ -76,6 +74,34 @@ def login_required(view):
         return view(*args, **kwargs)
     return wrapped_view
 
+# Middleware para verificar rol de administrador
+def admin_required(view):
+    from functools import wraps
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Por favor, inicie sesión para acceder a esta página', 'error')
+            return redirect(url_for('login.login'))
+        if session.get('rol') != 'admin':
+            flash('No tienes permisos para acceder a esta página', 'error')
+            return redirect(url_for('index'))
+        return view(*args, **kwargs)
+    return wrapped_view
+
+# Middleware para verificar rol de instructor o admin
+def instructor_required(view):
+    from functools import wraps
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Por favor, inicie sesión para acceder a esta página', 'error')
+            return redirect(url_for('login.login'))
+        if session.get('rol') not in ['instructor', 'admin']:
+            flash('No tienes permisos para acceder a esta página', 'error')
+            return redirect(url_for('index'))
+        return view(*args, **kwargs)
+    return wrapped_view
+
 # API endpoint para verificar credenciales
 @login_bp.route('/api/login', methods=['POST'])
 def api_login():
@@ -88,7 +114,7 @@ def api_login():
     
     conn = get_db_connection()
     usuario = conn.execute(
-        'SELECT * FROM usuarios WHERE email = ?', (email,)
+        'SELECT * FROM usuarios WHERE email = ? AND activo = 1', (email,)
     ).fetchone()
     conn.close()
     
@@ -99,7 +125,8 @@ def api_login():
             'user': {
                 'id': usuario['id'],
                 'nombre': usuario['nombre'],
-                'email': usuario['email']
+                'email': usuario['email'],
+                'rol': usuario['rol']
             }
         })
     else:

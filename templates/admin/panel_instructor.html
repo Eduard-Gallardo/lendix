@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-serif font-bold text-green-800 mb-3">Panel de Instructor</h1>
+        <p class="text-gray-600 text-lg mb-4">Gestiona las autorizaciones de préstamos y reservas</p>
+        
+        <!-- Estadísticas rápidas -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <div class="text-2xl font-bold text-yellow-700">{{ prestamos_pendientes }}</div>
+                <div class="text-sm text-gray-600">Préstamos Pendientes</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <div class="text-2xl font-bold text-purple-700">{{ reservas_pendientes }}</div>
+                <div class="text-sm text-gray-600">Reservas Pendientes</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <div class="text-2xl font-bold text-blue-700">{{ prestamos_activos }}</div>
+                <div class="text-sm text-gray-600">Préstamos Activos</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <div class="text-2xl font-bold text-red-700">{{ notificaciones_no_leidas }}</div>
+                <div class="text-sm text-gray-600">Notificaciones</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navegación rápida -->
+    <div class="flex flex-wrap gap-4 mb-8 justify-center">
+        <a href="{{ url_for('catalogo.catalogo') }}" 
+           class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition flex items-center shadow-md">
+            <i class="fas fa-book mr-2"></i> Ver Catálogo
+        </a>
+        <a href="{{ url_for('prestamos.prestamos') }}" 
+           class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition flex items-center shadow-md">
+            <i class="fas fa-history mr-2"></i> Ver Historial
+        </a>
+        <a href="{{ url_for('instructor.historial_autorizaciones') }}" 
+           class="bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition flex items-center shadow-md">
+            <i class="fas fa-check-circle mr-2"></i> Mis Autorizaciones
+        </a>
+        {% if notificaciones_no_leidas > 0 %}
+        <form action="{{ url_for('instructor.marcar_notificaciones_leidas') }}" method="POST" class="inline">
+            <button type="submit" 
+                    class="bg-gray-600 text-white px-6 py-3 rounded-xl hover:bg-gray-700 transition flex items-center shadow-md">
+                <i class="fas fa-envelope-open mr-2"></i> Marcar Leídas
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Notificaciones recientes -->
+    {% if notificaciones %}
+    <div class="bg-white p-6 rounded-2xl shadow-lg mb-8 border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-bell mr-2 text-yellow-600"></i>Notificaciones Recientes
+        </h2>
+        <div class="space-y-3">
+            {% for notif in notificaciones[:5] %}
+            <div class="p-3 rounded-lg border {% if not notif.leida %}bg-yellow-50 border-yellow-200{% else %}bg-gray-50 border-gray-200{% endif %}">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm {% if not notif.leida %}font-semibold text-gray-900{% else %}text-gray-700{% endif %}">
+                            {{ notif.mensaje }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ notif.created_at[:16] }}
+                        </p>
+                    </div>
+                    <span class="px-2 py-1 text-xs rounded-full 
+                        {% if notif.tipo == 'prestamo' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ notif.tipo|title }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Préstamos pendientes de autorización -->
+    {% if prestamos_pendientes_list %}
+    <div class="bg-white p-6 rounded-2xl shadow-lg mb-8 border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <i class="fas fa-clock mr-2 text-yellow-600"></i>Préstamos Pendientes de Autorización
+            <span class="ml-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                {{ prestamos_pendientes_list|length }}
+            </span>
+        </h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-yellow-50 text-gray-800">
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Solicitado por</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Prestatario</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Implemento</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Instructor</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Jornada</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Ambiente</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Fecha</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prestamo in prestamos_pendientes_list %}
+                    <tr class="border-b even:bg-gray-50 hover:bg-yellow-50 transition-colors duration-200">
+                        <td class="px-4 py-3 text-sm font-medium">{{ prestamo.usuario_nombre }}</td>
+                        <td class="px-4 py-3 text-sm">{{ prestamo.prestatario_nombre }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="font-medium">{{ prestamo.implemento }}</div>
+                            <div class="text-xs text-gray-500">{{ prestamo.categoria }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm">{{ prestamo.instructor }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                {{ prestamo.jornada }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm">{{ prestamo.ambiente }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="text-gray-900">{{ prestamo.fecha_prestamo[:10] }}</div>
+                            <div class="text-xs text-gray-500">{{ prestamo.fecha_prestamo[11:16] }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-2">
+                                <form action="{{ url_for('instructor.aprobar_prestamo', id=prestamo.id) }}" method="POST" class="inline">
+                                    <button type="submit" 
+                                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1 transition duration-200 shadow-sm"
+                                            onclick="return confirm('¿Aprobar préstamo de {{ prestamo.implemento }}?')">
+                                        <i class="fas fa-check"></i> Aprobar
+                                    </button>
+                                </form>
+                                
+                                <button onclick="rechazarPrestamo('{{ prestamo.id }}', '{{ prestamo.implemento }}')"
+                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1 transition duration-200 shadow-sm">
+                                    <i class="fas fa-times"></i> Rechazar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Reservas pendientes de autorización -->
+    {% if reservas_pendientes_list %}
+    <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <i class="fas fa-calendar-check mr-2 text-purple-600"></i>Reservas Pendientes de Autorización
+            <span class="ml-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                {{ reservas_pendientes_list|length }}
+            </span>
+        </h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-purple-50 text-gray-800">
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Solicitado por</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Solicitante</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Implemento</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Lugar</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Inicio</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Fin</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reserva in reservas_pendientes_list %}
+                    <tr class="border-b even:bg-gray-50 hover:bg-purple-50 transition-colors duration-200">
+                        <td class="px-4 py-3 text-sm font-medium">{{ reserva.usuario_nombre }}</td>
+                        <td class="px-4 py-3 text-sm">{{ reserva.solicitante_nombre }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="font-medium">{{ reserva.implemento }}</div>
+                            <div class="text-xs text-gray-500">{{ reserva.categoria }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm">{{ reserva.lugar }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="text-gray-900">{{ reserva.fecha_inicio[:10] }}</div>
+                            <div class="text-xs text-gray-500">{{ reserva.fecha_inicio[11:16] }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm">
+                            <div class="text-gray-900">{{ reserva.fecha_fin[:10] }}</div>
+                            <div class="text-xs text-gray-500">{{ reserva.fecha_fin[11:16] }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-2">
+                                <form action="{{ url_for('instructor.aprobar_reserva', id=reserva.id) }}" method="POST" class="inline">
+                                    <button type="submit" 
+                                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1 transition duration-200 shadow-sm"
+                                            onclick="return confirm('¿Aprobar reserva de {{ reserva.implemento }}?')">
+                                        <i class="fas fa-check"></i> Aprobar
+                                    </button>
+                                </form>
+                                
+                                <button onclick="rechazarReserva('{{ reserva.id }}', '{{ reserva.implemento }}')"
+                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1 transition duration-200 shadow-sm">
+                                    <i class="fas fa-times"></i> Rechazar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Mensaje cuando no hay pendientes -->
+    {% if not prestamos_pendientes_list and not reservas_pendientes_list %}
+    <div class="bg-white p-12 rounded-2xl shadow-lg text-center">
+        <i class="fas fa-check-circle text-5xl text-green-400 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">¡Todo al día!</h3>
+        <p class="text-gray-500">No hay préstamos ni reservas pendientes de autorización</p>
+    </div>
+    {% endif %}
+</main>
+
+<!-- Modal para rechazar préstamo -->
+<div id="modalRechazarPrestamo" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Rechazar Préstamo</h3>
+        <form id="formRechazarPrestamo" method="POST">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo</label>
+                <textarea name="motivo" rows="3" required 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                          placeholder="Explique el motivo del rechazo..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="cerrarModalRechazo()"
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800 transition">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                    Rechazar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para rechazar reserva -->
+<div id="modalRechazarReserva" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Rechazar Reserva</h3>
+        <form id="formRechazarReserva" method="POST">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo</label>
+                <textarea name="motivo" rows="3" required 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                          placeholder="Explique el motivo del rechazo..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="cerrarModalRechazo()"
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800 transition">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                    Rechazar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function rechazarPrestamo(id, implemento) {
+    const modal = document.getElementById('modalRechazarPrestamo');
+    const form = document.getElementById('formRechazarPrestamo');
+    form.action = `{{ url_for('instructor.rechazar_prestamo', id=0) }}`.replace('0', id);
+    modal.classList.remove('hidden');
+}
+
+function rechazarReserva(id, implemento) {
+    const modal = document.getElementById('modalRechazarReserva');
+    const form = document.getElementById('formRechazarReserva');
+    form.action = `{{ url_for('instructor.rechazar_reserva', id=0) }}`.replace('0', id);
+    modal.classList.remove('hidden');
+}
+
+function cerrarModalRechazo() {
+    document.getElementById('modalRechazarPrestamo').classList.add('hidden');
+    document.getElementById('modalRechazarReserva').classList.add('hidden');
+}
+
+// Cerrar modales al hacer clic fuera
+document.getElementById('modalRechazarPrestamo').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalRechazo();
+});
+
+document.getElementById('modalRechazarReserva').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalRechazo();
+});
+</script>
+
+{% endblock %}
