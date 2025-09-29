@@ -6,6 +6,12 @@ from utils.db import get_db_connection
 from werkzeug.utils import secure_filename
 from routes.login import login_required  # Agregar este import
 from datetime import datetime, timedelta
+from utils.permisos import (
+    es_instructor, es_aprendiz, verificar_permiso_prestamo, 
+    crear_permiso_ambiente, asignar_aprendiz_a_instructor,
+    obtener_aprendices_del_instructor, obtener_permisos_instructor,
+    obtener_ambientes_disponibles
+)
 
 # Configuración del Blueprint
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
@@ -53,14 +59,24 @@ def admin():
                     implementos=implementos)
 
 @admin_bp.route('/admin/catalogo')
+@login_required
 def ver_catalogo():
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
     conn = get_db_connection()
     implementos = conn.execute('SELECT * FROM catalogo ORDER BY id DESC').fetchall()
     conn.close()
     return render_template('admin/panel_administrador.html', implementos=implementos)
 
 @admin_bp.route('/admin/catalogo/agregar', methods=['GET', 'POST'])
+@login_required
 def agregar_implemento():
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
     if request.method == 'POST':
         # Obtener datos del formulario
         implemento = request.form.get('implemento')
@@ -104,7 +120,12 @@ def agregar_implemento():
     return render_template('admin/agregar_implemento.html')
 
 @admin_bp.route('/admin/catalogo/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
 def editar_implemento(id):
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
     conn = get_db_connection()
     
     if request.method == 'POST':
@@ -160,7 +181,12 @@ def editar_implemento(id):
     return render_template('admin/editar_implemento.html', implemento=implemento)
 
 @admin_bp.route('/admin/catalogo/eliminar/<int:id>', methods=['POST'])
+@login_required
 def eliminar_implemento(id):
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
     conn = get_db_connection()
     
     try:
@@ -185,7 +211,12 @@ def eliminar_implemento(id):
 
 # Gestión de usuarios
 @admin_bp.route('/admin/usuarios')
+@login_required
 def gestion_usuarios():
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
     conn = get_db_connection()
     usuarios = conn.execute('SELECT * FROM usuarios ORDER BY id DESC').fetchall()
     conn.close()
@@ -193,7 +224,12 @@ def gestion_usuarios():
 
 # Gestión de reservas
 @admin_bp.route('/admin/reservas')
+@login_required
 def gestion_reservas():
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
     conn = get_db_connection()
     reservas = conn.execute('''
         SELECT r.*, u.nombre as usuario_nombre, c.implemento 
@@ -254,7 +290,10 @@ def api_estadisticas():
 @admin_bp.route('/devolucion_prestamos')
 @login_required
 def devolucion_prestamos():
-    #control de acceso
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
 
 
     conn = get_db_connection()
@@ -310,8 +349,10 @@ def devolucion_prestamos():
 @admin_bp.route('/devolver_prestamo_admin/<int:id>', methods=['POST'])
 @login_required
 def devolver_prestamo_admin(id):
-
-    #control de acceso
+    # VERIFICAR SI ES ADMIN
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
     
     conn = get_db_connection()
     try:
@@ -356,3 +397,117 @@ def devolver_prestamo_admin(id):
         conn.close()
     
     return redirect(url_for('admin.devolucion_prestamos'))
+
+# ===== GESTIÓN DE PERMISOS DE AMBIENTES =====
+
+@admin_bp.route('/gestion_permisos')
+@login_required
+def gestion_permisos():
+    """Vista principal para gestionar permisos de ambientes"""
+    # VERIFICAR SI ES ADMIN O INSTRUCTOR
+    if not is_admin() and not es_instructor(session.get('user_id')):
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect(url_for('index'))
+    
+    user_id = session.get('user_id')
+    
+    # Obtener permisos del instructor
+    permisos = obtener_permisos_instructor(user_id)
+    
+    # Obtener aprendices asignados
+    aprendices = obtener_aprendices_del_instructor(user_id)
+    
+    # Obtener ambientes disponibles
+    ambientes_disponibles = obtener_ambientes_disponibles()
+    
+    return render_template('admin/gestion_permisos.html',
+                         permisos=permisos,
+                         aprendices=aprendices,
+                         ambientes_disponibles=ambientes_disponibles)
+
+@admin_bp.route('/configurar_permiso_ambiente', methods=['POST'])
+@login_required
+def configurar_permiso_ambiente():
+    """Configura el permiso de un ambiente para un instructor"""
+    if not is_admin() and not es_instructor(session.get('user_id')):
+        flash('No tienes permisos para realizar esta acción', 'error')
+        return redirect(url_for('admin.gestion_permisos'))
+    
+    instructor_id = session.get('user_id')
+    ambiente = request.form.get('ambiente')
+    habilitado = request.form.get('habilitado') == 'on'
+    
+    if not ambiente:
+        flash('Debe seleccionar un ambiente', 'error')
+        return redirect(url_for('admin.gestion_permisos'))
+    
+    if crear_permiso_ambiente(instructor_id, ambiente, habilitado):
+        estado = "habilitado" if habilitado else "deshabilitado"
+        flash(f'Permiso para el ambiente "{ambiente}" {estado} correctamente', 'success')
+    else:
+        flash('Error al configurar el permiso', 'error')
+    
+    return redirect(url_for('admin.gestion_permisos'))
+
+@admin_bp.route('/asignar_aprendiz', methods=['POST'])
+@login_required
+def asignar_aprendiz():
+    """Asigna un aprendiz a un instructor en un ambiente específico"""
+    if not is_admin() and not es_instructor(session.get('user_id')):
+        flash('No tienes permisos para realizar esta acción', 'error')
+        return redirect(url_for('admin.gestion_permisos'))
+    
+    instructor_id = session.get('user_id')
+    aprendiz_id = request.form.get('aprendiz_id')
+    ambiente = request.form.get('ambiente')
+    
+    if not all([aprendiz_id, ambiente]):
+        flash('Debe seleccionar un aprendiz y un ambiente', 'error')
+        return redirect(url_for('admin.gestion_permisos'))
+    
+    # Verificar que el usuario seleccionado es realmente un aprendiz
+    if not es_aprendiz(aprendiz_id):
+        flash('El usuario seleccionado no es un aprendiz', 'error')
+        return redirect(url_for('admin.gestion_permisos'))
+    
+    if asignar_aprendiz_a_instructor(instructor_id, aprendiz_id, ambiente):
+        # Obtener nombre del aprendiz
+        conn = get_db_connection()
+        aprendiz = conn.execute('SELECT nombre FROM usuarios WHERE id = ?', (aprendiz_id,)).fetchone()
+        conn.close()
+        
+        flash(f'Aprendiz "{aprendiz["nombre"]}" asignado al ambiente "{ambiente}" correctamente', 'success')
+    else:
+        flash('Error al asignar el aprendiz', 'error')
+    
+    return redirect(url_for('admin.gestion_permisos'))
+
+@admin_bp.route('/obtener_aprendices_disponibles')
+@login_required
+def obtener_aprendices_disponibles():
+    """API endpoint para obtener aprendices disponibles para asignar"""
+    if not is_admin() and not es_instructor(session.get('user_id')):
+        return jsonify({'error': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    aprendices = conn.execute('''
+        SELECT id, nombre, email 
+        FROM usuarios 
+        WHERE tipo_usuario = 'aprendiz' AND activo = 1
+        ORDER BY nombre
+    ''').fetchall()
+    conn.close()
+    
+    return jsonify([dict(aprendiz) for aprendiz in aprendices])
+
+@admin_bp.route('/verificar_permiso_prestamo/<ambiente>')
+@login_required
+def verificar_permiso_prestamo_api(ambiente):
+    """API endpoint para verificar si un usuario puede solicitar préstamos en un ambiente"""
+    user_id = session.get('user_id')
+    tiene_permiso, mensaje = verificar_permiso_prestamo(user_id, ambiente)
+    
+    return jsonify({
+        'tiene_permiso': tiene_permiso,
+        'mensaje': mensaje
+    })

@@ -1,231 +1,133 @@
-{% extends "base.html" %}
-{% block content %}
-
-<main class="container mx-auto px-4 py-8 max-w-4xl">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Implemento - Libratech</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
     <!-- Header -->
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-serif font-bold text-green-800 mb-3">
-            <i class="fas fa-plus-circle mr-2 text-green-600"></i>Agregar Nuevo Implemento
-        </h1>
-        <p class="text-gray-600 text-lg">Complete el formulario para agregar un nuevo elemento al catálogo</p>
-        
-        <!-- Breadcrumb -->
-        <nav class="flex justify-center mt-4" aria-label="Breadcrumb">
-            <ol class="flex items-center space-x-2 text-sm text-gray-500">
-                <li><a href="{{ url_for('admin.admin') }}" class="hover:text-green-600">Panel Admin</a></li>
-                <li><i class="fas fa-chevron-right"></i></li>
-                <li><a href="{{ url_for('catalogo.catalogo') }}" class="hover:text-green-600">Catálogo</a></li>
-                <li><i class="fas fa-chevron-right"></i></li>
-                <li class="text-green-600 font-medium">Agregar Implemento</li>
-            </ol>
-        </nav>
-    </div>
-
-    <!-- Mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="mb-6 p-4 rounded-xl border 
-                    {% if category == 'error' %}bg-red-50 text-red-700 border-red-200
-                    {% elif category == 'warning' %}bg-yellow-50 text-yellow-700 border-yellow-200
-                    {% else %}bg-green-50 text-green-700 border-green-200{% endif %}">
-                    <div class="flex items-center">
-                        <i class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-check-circle{% endif %} mr-2"></i>
-                        {{ message }}
-                    </div>
+    <header class="bg-green-800 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fas fa-seedling text-3xl mr-3"></i>
+                <h1 class="text-2xl font-bold">Libratech Admin</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="{{ url_for('admin.ver_catalogo') }}" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Catálogo
+                </a>
+                <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
+                    <i class="fas fa-user"></i>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+            </div>
+        </div>
+    </header>
 
-    <!-- Formulario -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-        <form action="{{ url_for('admin.agregar_implemento') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-            
-            <!-- Información básica -->
-            <div class="border-b border-gray-200 pb-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>Información Básica
-                </h2>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-green-700">
+                    <i class="fas fa-plus-circle mr-2"></i>Agregar Nuevo Implemento
+                </h1>
+                <p class="text-gray-600">Complete el formulario para agregar un nuevo elemento al catálogo</p>
+            </div>
+
+            <!-- Mostrar mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-6 p-4 rounded {% if category == 'error' %}bg-red-100 text-red-700 border border-red-300{% else %}bg-green-100 text-green-700 border border-green-300{% endif %}">
+                            <div class="flex items-center">
+                                <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+                                {{ message }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 mb-2 font-medium" for="implemento">Nombre del Implemento *</label>
+                    <input type="text" id="implemento" name="implemento" required 
+                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-2 font-medium" for="descripcion">Descripción *</label>
+                    <textarea id="descripcion" name="descripcion" rows="3" required 
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" for="implemento">
-                            Nombre del Implemento *
-                        </label>
-                        <input type="text" id="implemento" name="implemento" required 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent transition"
-                               placeholder="Ej: Laptop Dell Inspiron 15">
+                        <label class="block text-gray-700 mb-2 font-medium" for="disponibilidad">Disponibilidad *</label>
+                        <input type="number" id="disponibilidad" name="disponibilidad" min="1" required 
+                            class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2" for="categoria">
-                            Categoría *
-                        </label>
+                        <label class="block text-gray-700 mb-2 font-medium" for="categoria">Categoría *</label>
                         <select id="categoria" name="categoria" required 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             <option value="">Seleccionar categoría</option>
-                            <option value="Libros">Libros</option>
-                            <option value="Computadores">Computadores</option>
-                            <option value="Mouses">Mouses</option>
-                            <option value="Teclados">Teclados</option>
-                            <option value="Otros">Otros</option>
+                            <option value="libros">Libros</option>
+                            <option value="computadores">Computadores</option>
+                            <option value="mouses">Mouses</option>
+                            <option value="teclados">Teclados</option>
+                            <option value="otros">Otros</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2" for="descripcion">
-                        Descripción *
-                    </label>
-                    <textarea id="descripcion" name="descripcion" rows="3" required 
-                              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent transition"
-                              placeholder="Describe las características principales del implemento..."></textarea>
-                </div>
-
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2" for="disponibilidad">
-                        Cantidad Disponible *
-                    </label>
-                    <input type="number" id="disponibilidad" name="disponibilidad" min="0" value="1" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
-                </div>
-            </div>
-
-            <!-- Configuración de permisos -->
-            <div class="border-b border-gray-200 pb-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-shield-alt mr-2 text-yellow-600"></i>Configuración de Permisos
-                </h2>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center space-x-3 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                        <input type="checkbox" id="requiere_autorizacion" name="requiere_autorizacion" 
-                               class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded" checked>
-                        <label for="requiere_autorizacion" class="text-sm text-gray-700">
-                            <i class="fas fa-shield-alt text-yellow-500 mr-2"></i>
-                            <strong>Requiere autorización de instructor</strong>
-                            <p class="text-xs text-gray-600 mt-1">Los aprendices necesitarán aprobación del instructor para solicitar este implemento</p>
-                        </label>
-                    </div>
-                    
-                    <div class="flex items-center space-x-3 p-4 bg-red-50 rounded-xl border border-red-200">
-                        <input type="checkbox" id="solo_instructores" name="solo_instructores" 
-                               class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
-                        <label for="solo_instructores" class="text-sm text-gray-700">
-                            <i class="fas fa-lock text-red-500 mr-2"></i>
-                            <strong>Exclusivo para instructores y administradores</strong>
-                            <p class="text-xs text-gray-600 mt-1">Solo los instructores y administradores podrán ver y solicitar este implemento</p>
+                <div>
+                    <label class="block text-gray-700 mb-2 font-medium">Imagen del Implemento</label>
+                    <div class="flex items-center justify-center w-full">
+                        <label for="imagen" class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer border-gray-300 hover:border-green-400">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6" id="uploadText">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <p class="mb-2 text-sm text-gray-500">Haga clic para subir una imagen</p>
+                                <p class="text-xs text-gray-500">PNG, JPG, JPEG (Max. 5MB)</p>
+                            </div>
+                            <img id="previewImage" class="hidden w-full h-full object-contain p-2">
+                            <input id="imagen" name="imagen" type="file" class="hidden" accept="image/*" />
                         </label>
                     </div>
                 </div>
-                
-                <div class="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                    <div class="text-xs text-blue-700">
-                        <h4 class="font-semibold mb-2"><i class="fas fa-info-circle mr-1"></i>Guía de Permisos:</h4>
-                        <ul class="space-y-1">
-                            <li><strong>Sin restricciones:</strong> Todos los roles pueden solicitar sin autorización</li>
-                            <li><strong>Solo autorización:</strong> Aprendices requieren aprobación, otros roles acceso directo</li>
-                            <li><strong>Solo exclusivo:</strong> Visible solo para instructores/admins, préstamo directo</li>
-                            <li><strong>Ambas opciones:</strong> Exclusivo para instructores con autorización</li>
-                        </ul>
-                    </div>
+
+                <div class="flex justify-end space-x-4 pt-4">
+                    <a href="{{ url_for('admin.ver_catalogo') }}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        <i class="fas fa-save mr-2"></i>Guardar Implemento
+                    </button>
                 </div>
-            </div>
-
-            <!-- Imagen del implemento -->
-            <div class="border-b border-gray-200 pb-6">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-image mr-2 text-purple-600"></i>Imagen del Implemento
-                </h2>
-                
-                <div class="flex items-center justify-center w-full">
-                    <label for="imagen" class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-green-400 transition bg-gray-50 hover:bg-green-50">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6" id="uploadText">
-                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
-                            <p class="mb-2 text-sm font-medium text-gray-600">Haga clic para subir una imagen</p>
-                            <p class="text-xs text-gray-500">PNG, JPG, JPEG (Max. 5MB)</p>
-                        </div>
-                        <img id="previewImage" class="hidden w-full h-full object-contain p-4 rounded-xl">
-                        <input id="imagen" name="imagen" type="file" class="hidden" accept="image/*" />
-                    </label>
-                </div>
-            </div>
-
-            <!-- Botones de acción -->
-            <div class="flex justify-between items-center pt-4">
-                <a href="{{ url_for('catalogo.catalogo') }}" 
-                   class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition flex items-center">
-                    <i class="fas fa-times mr-2"></i>Cancelar
-                </a>
-                
-                <button type="submit" 
-                        class="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition flex items-center shadow-md hover:shadow-lg">
-                    <i class="fas fa-save mr-2"></i>Guardar Implemento
-                </button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Información adicional -->
-    <div class="mt-8 bg-gray-50 border border-gray-200 rounded-xl p-6">
-        <h3 class="text-sm font-semibold text-gray-800 mb-3 flex items-center">
-            <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>Consejos para agregar implementos
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600">
-            <div>
-                <h4 class="font-semibold text-gray-700 mb-1">Nombres descriptivos:</h4>
-                <p>Use nombres específicos como "Laptop Dell Inspiron 15" en lugar de solo "Laptop"</p>
-            </div>
-            <div>
-                <h4 class="font-semibold text-gray-700 mb-1">Descripciones claras:</h4>
-                <p>Incluya características técnicas y estado del implemento</p>
-            </div>
-            <div>
-                <h4 class="font-semibold text-gray-700 mb-1">Categorización:</h4>
-                <p>Seleccione la categoría más específica para facilitar búsquedas</p>
-            </div>
-            <div>
-                <h4 class="font-semibold text-gray-700 mb-1">Imágenes de calidad:</h4>
-                <p>Use fotos claras y bien iluminadas del implemento real</p>
-            </div>
+            </form>
         </div>
     </div>
-</main>
 
-<script>
-// Preview de la imagen seleccionada
-document.getElementById('imagen').addEventListener('change', function(e) {
-    const file = this.files[0];
-    if (file) {
-        // Validar tamaño
-        if (file.size > 5 * 1024 * 1024) {
-            alert('El archivo es demasiado grande. El tamaño máximo es 5MB.');
-            this.value = '';
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById('previewImage');
-            const uploadText = document.getElementById('uploadText');
-            
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-            uploadText.classList.add('hidden');
-        }
-        reader.readAsDataURL(file);
-    }
-});
-
-// Validación de permisos
-document.getElementById('solo_instructores').addEventListener('change', function() {
-    const requiereAuth = document.getElementById('requiere_autorizacion');
-    if (this.checked) {
-        // Si es exclusivo para instructores, la autorización es menos relevante
-        // pero puede mantenerse para casos especiales
-    }
-});
-</script>
-
-{% endblock %}
+    <script>
+        // Preview de la imagen seleccionada
+        document.getElementById('imagen').addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('previewImage');
+                    const uploadText = document.getElementById('uploadText');
+                    
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    uploadText.classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

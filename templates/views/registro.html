@@ -71,19 +71,13 @@
                     </div>
                 </div>
                 <div>
-                    <label for="rol" class="sr-only">Rol</label>
-                    <select id="rol" name="rol" required 
+                    <label for="tipo_usuario" class="sr-only">Tipo de Usuario</label>
+                    <select id="tipo_usuario" name="tipo_usuario" required 
                         class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm">
-                        <option value="" disabled selected>Selecciona tu rol</option>
-                        <option value="aprendiz" {% if request.form.rol == 'aprendiz' %}selected{% endif %}>Aprendiz</option>
-                        <option value="instructor" {% if request.form.rol == 'instructor' %}selected{% endif %}>Instructor</option>
-                        <option value="externo" {% if request.form.rol == 'externo' %}selected{% endif %}>Externo</option>
+                        <option value="aprendiz" {% if request.form and request.form.tipo_usuario == 'aprendiz' %}selected{% endif %}>Aprendiz</option>
+                        <option value="instructor" {% if request.form and request.form.tipo_usuario == 'instructor' %}selected{% endif %}>Instructor</option>
                     </select>
-                    <div id="rol-validation" class="validation-message text-red-500 hidden">
-                        <i class="fas fa-exclamation-circle mr-1"></i>
-                        <span>Por favor selecciona un rol</span>
-                    </div>
-
+                </div>
                 <div>
                     <label for="password" class="sr-only">Contraseña</label>
                     <div class="relative">

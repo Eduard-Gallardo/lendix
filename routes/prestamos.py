@@ -212,7 +212,7 @@ def cancelar_reserva(id):
 def aprobar_reserva(id):
     if session.get('rol') != 'admin':
         flash('No tienes permiso para aprobar reservas.', 'error')
-        return redirect(url_for('prestamos.prestamos'))
+        return redirect(url_for('reservas.reservas'))
 
     conn = get_db_connection()
     try:
@@ -283,7 +283,7 @@ def aprobar_reserva(id):
 def rechazar_reserva(id):
     if session.get('rol') != 'admin':
         flash('No tienes permiso para rechazar reservas.', 'error')
-        return redirect(url_for('prestamos.prestamos'))
+        return redirect(url_for('reservas.reservas'))
 
     conn = get_db_connection()
     try:
