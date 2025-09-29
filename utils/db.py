@@ -16,7 +16,10 @@ def init_db():
                 nombre TEXT NOT NULL UNIQUE,
                 email TEXT NOT NULL UNIQUE,
                 telefono TEXT NOT NULL UNIQUE,
-                password TEXT NOT NULL
+                password TEXT NOT NULL,
+                tipo_usuario TEXT DEFAULT 'aprendiz',
+                activo BOOLEAN DEFAULT 1,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         
@@ -65,6 +68,33 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (fk_usuario) REFERENCES usuarios(id),
                 FOREIGN KEY (fk_implemento) REFERENCES catalogo(id)
+            )
+        ''')
+        
+        # Tabla permisos de ambientes (nueva funcionalidad)
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS permisos_ambientes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fk_instructor INTEGER NOT NULL,
+                ambiente TEXT NOT NULL,
+                habilitado BOOLEAN DEFAULT 1,
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (fk_instructor) REFERENCES usuarios(id)
+            )
+        ''')
+        
+        # Tabla asignaciones de aprendices a instructores
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS asignaciones_aprendices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fk_instructor INTEGER NOT NULL,
+                fk_aprendiz INTEGER NOT NULL,
+                ambiente TEXT NOT NULL,
+                fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                activo BOOLEAN DEFAULT 1,
+                FOREIGN KEY (fk_instructor) REFERENCES usuarios(id),
+                FOREIGN KEY (fk_aprendiz) REFERENCES usuarios(id)
             )
         ''')
     conn.close()

@@ -60,6 +60,10 @@
                                 <a href="{{ url_for('admin.admin') }}" class="mb-3 inline-flex items-center text-green-700 hover:text-green-800">
                                     <i class="fas fa-cog mr-2"></i> Panel Admin
                                 </a>
+                                {% elif session.get('rol') == 'instructor' %}
+                                <a href="{{ url_for('admin.gestion_permisos') }}" class="mb-3 inline-flex items-center text-green-700 hover:text-green-800">
+                                    <i class="fas fa-shield-alt mr-2"></i> Gestionar Permisos
+                                </a>
                                 {% endif %}
                                 <a href="{{ url_for('login.logout') }}" 
                                    class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition duration-150">

@@ -17,6 +17,7 @@ def registro_usuario():
         telefono = request.form.get('telefono')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm-password')
+        tipo_usuario = request.form.get('tipo_usuario', 'aprendiz')  # Por defecto es aprendiz
         
         # Validar campos obligatorios
         if not all([nombre, email, telefono, password, confirm_password]):
@@ -50,8 +51,8 @@ def registro_usuario():
         conn = get_db_connection()
         try:
             conn.execute(
-                'INSERT INTO usuarios (nombre, email, telefono, password) VALUES (?, ?, ?, ?)',
-                (nombre, email, telefono, hashed_password)
+                'INSERT INTO usuarios (nombre, email, telefono, password, tipo_usuario) VALUES (?, ?, ?, ?, ?)',
+                (nombre, email, telefono, hashed_password, tipo_usuario)
             )
             conn.commit()
             flash('¡Cuenta creada exitosamente! Ya puede iniciar sesión.', 'success')

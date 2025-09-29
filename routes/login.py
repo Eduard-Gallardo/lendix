@@ -34,11 +34,13 @@ def login():
             session['user_email'] = usuario['email']
             session['user_telefono'] = usuario['telefono']
             
-            # Configurar rol de administrador
+            # Configurar rol de usuario
             if email == 'Eduard@gmail.com':
                 session['rol'] = 'admin'
+            elif usuario['tipo_usuario'] == 'instructor':
+                session['rol'] = 'instructor'
             else:
-                session['rol'] = 'user'
+                session['rol'] = 'aprendiz'
             
             # Configurar sesión persistente si "Recordarme" está marcado
             if remember_me:

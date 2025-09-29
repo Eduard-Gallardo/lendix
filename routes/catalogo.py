@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from routes.login import login_required
 from utils.db import get_db_connection
+from utils.permisos import verificar_permiso_prestamo, es_instructor, es_aprendiz
 from datetime import datetime
 
 catalogo_bp = Blueprint('catalogo', __name__, template_folder='templates')
@@ -124,6 +125,14 @@ def prestar(id):
             flash('Todos los campos del préstamo son obligatorios.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
+        # VERIFICAR PERMISOS DE PRÉSTAMO
+        user_id = session.get('user_id')
+        tiene_permiso, mensaje_permiso = verificar_permiso_prestamo(user_id, ambiente)
+        
+        if not tiene_permiso:
+            flash(f'No puedes solicitar préstamos en este ambiente: {mensaje_permiso}', 'error')
+            return redirect(url_for('catalogo.catalogo'))
+
         # Registrar el préstamo en la base de datos - CORREGIDO: campo 'nombre'
         conn.execute('''
             INSERT INTO prestamos (fk_usuario, fk_modelo, fecha_prestamo, fecha_devolucion, 
@@ -177,6 +186,14 @@ def reservar(id):
         # Validar campos obligatorios
         if not all([nombre, lugar, fecha_inicio, fecha_fin]):
             flash('Todos los campos de la reserva son obligatorios.', 'error')
+            return redirect(url_for('catalogo.catalogo'))
+
+        # VERIFICAR PERMISOS DE RESERVA (usar el lugar como ambiente)
+        user_id = session.get('user_id')
+        tiene_permiso, mensaje_permiso = verificar_permiso_prestamo(user_id, lugar)
+        
+        if not tiene_permiso:
+            flash(f'No puedes solicitar reservas en este ambiente: {mensaje_permiso}', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
         # Validar que la fecha de inicio sea anterior a la fecha de fin

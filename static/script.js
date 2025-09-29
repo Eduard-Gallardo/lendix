@@ -48,7 +48,7 @@ document.getElementById('email').addEventListener('blur', function() {
         this.classList.add('border-red-500');
     } else {
     // Verificar disponibilidad del email
-    fetch('{{ url_for("registro.verificar_email") }}', {
+    fetch('/registro/api/verificar-email', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ document.getElementById('telefono').addEventListener('blur', function() {
         this.classList.add('border-red-500');
     } else {
     // Verificar disponibilidad del teléfono
-    fetch('{{ url_for("registro.verificar_telefono") }}', {
+    fetch('/registro/api/verificar-telefono', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
