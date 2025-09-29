@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
+from flask import Blueprint, get_flashed_messages, request, jsonify, render_template, flash, redirect, url_for
 import sqlite3
 import re
 from utils.db import get_db_connection
@@ -70,7 +70,7 @@ def registro_usuario():
         finally:
             conn.close()
         
-        return redirect(url_for('registro.registro_usuario'))
+        return redirect(url_for('login.login'))
     
     return render_template('views/registro.html')
 
