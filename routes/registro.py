@@ -17,7 +17,8 @@ def registro_usuario():
         telefono = request.form.get('telefono')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm-password')
-        tipo_usuario = request.form.get('tipo_usuario', 'aprendiz')  # Por defecto es aprendiz
+        # Por defecto todos los nuevos registros son funcionarios
+        tipo_usuario = 'funcionario'
         
         # Validar campos obligatorios
         if not all([nombre, email, telefono, password, confirm_password]):
@@ -51,11 +52,11 @@ def registro_usuario():
         conn = get_db_connection()
         try:
             conn.execute(
-                'INSERT INTO usuarios (nombre, email, telefono, password, tipo_usuario) VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO usuarios (nombre, email, telefono, password, rol) VALUES (?, ?, ?, ?, ?)',
                 (nombre, email, telefono, hashed_password, tipo_usuario)
             )
             conn.commit()
-            flash('¡Cuenta creada exitosamente! Ya puede iniciar sesión.', 'success')
+            flash('¡Cuenta creada exitosamente! Un administrador debe aprobar tu acceso antes de poder iniciar sesión.', 'success')
         except sqlite3.IntegrityError as e:
             if 'UNIQUE constraint failed: usuarios.email' in str(e):
                 flash('Este correo electrónico ya está registrado', 'error')
