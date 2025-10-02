@@ -17,7 +17,7 @@ def init_db():
                 email TEXT NOT NULL UNIQUE,
                 telefono TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
-                tipo_usuario TEXT DEFAULT 'aprendiz',
+                tipo_usuario TEXT DEFAULT 'instructor',
                 activo BOOLEAN DEFAULT 1,
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -48,53 +48,9 @@ def init_db():
                 instructor TEXT,
                 jornada TEXT,
                 ambiente TEXT,
+                n_ficha TEXT,
                 FOREIGN KEY (fk_usuario) REFERENCES usuarios(id),
                 FOREIGN KEY (fk_modelo) REFERENCES catalogo(id)                
-            )
-        ''')
-
-        # Tabla reservas
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS reservas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fk_usuario INTEGER NOT NULL,
-                fk_implemento INTEGER NOT NULL,
-                fecha_reserva TIMESTAMP NOT NULL,
-                fecha_inicio TIMESTAMP NOT NULL,
-                fecha_fin TIMESTAMP NOT NULL,
-                nombre TEXT NOT NULL,
-                lugar TEXT,
-                estado TEXT DEFAULT 'pendiente',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (fk_usuario) REFERENCES usuarios(id),
-                FOREIGN KEY (fk_implemento) REFERENCES catalogo(id)
-            )
-        ''')
-        
-        # Tabla permisos de ambientes (nueva funcionalidad)
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS permisos_ambientes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fk_instructor INTEGER NOT NULL,
-                ambiente TEXT NOT NULL,
-                habilitado BOOLEAN DEFAULT 1,
-                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                fecha_modificacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (fk_instructor) REFERENCES usuarios(id)
-            )
-        ''')
-        
-        # Tabla asignaciones de aprendices a instructores
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS asignaciones_aprendices (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fk_instructor INTEGER NOT NULL,
-                fk_aprendiz INTEGER NOT NULL,
-                ambiente TEXT NOT NULL,
-                fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                activo BOOLEAN DEFAULT 1,
-                FOREIGN KEY (fk_instructor) REFERENCES usuarios(id),
-                FOREIGN KEY (fk_aprendiz) REFERENCES usuarios(id)
             )
         ''')
     conn.close()
