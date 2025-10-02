@@ -1,6 +1,13 @@
 /* Estilos personalizados para LibraTech */
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap');
 
+:root {
+    --zay-green: #7AB88E;
+    --zay-green-light: #9ECFAA;
+    --zay-green-dark: #5A9670;
+    --zay-green-pale: #E8F5EC;
+}
+
 body {
     font-family: 'Open Sans', sans-serif;
 }
@@ -16,34 +23,34 @@ a, button {
 
 /* Efecto de elevación para las tarjetas de libro */
 .shadow-md {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(122, 184, 142, 0.08), 0 1px 3px rgba(122, 184, 142, 0.12);
 }
 
 .shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px -3px rgba(122, 184, 142, 0.15), 0 4px 8px -2px rgba(122, 184, 142, 0.1);
 }
 
 /* Personalización de la barra de desplazamiento */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: #f8f9fa;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #2d5c3b;
-    border-radius: 4px;
+    background: #7AB88E;
+    border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #1e3e29;
+    background: #5A9670;
 }
 
 /* Mejoras de accesibilidad para enfoque */
 button:focus, a:focus, input:focus, select:focus {
-    outline: 2px solid #2d5c3b;
+    outline: 2px solid #7AB88E;
     outline-offset: 2px;
 }
 
@@ -61,7 +68,7 @@ button:focus, a:focus, input:focus, select:focus {
 
 .login {
     font-family: 'Open Sans', sans-serif;
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+    background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(19, 20, 19, 0.75)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
     background-size: cover;
 }
         
@@ -70,24 +77,27 @@ button:focus, a:focus, input:focus, select:focus {
 }
         
 .login-container {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(122, 184, 142, 0.1);
 }
         
 .btn-primary {
     transition: all 0.3s ease;
+    background-color: #7AB88E;
 }
-        
+
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 12px rgba(122, 184, 142, 0.3);
+    background-color: #5A9670;
 }
 
 /*Registro*/
 
 .register {
     font-family: 'Open Sans', sans-serif;
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+    background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(19, 20, 19, 0.75)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
     background-size: cover;
 }
         
@@ -96,8 +106,9 @@ button:focus, a:focus, input:focus, select:focus {
 }
         
 .register-container {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(122, 184, 142, 0.1);
 }
         
 .btn-primary {
@@ -106,12 +117,24 @@ button:focus, a:focus, input:focus, select:focus {
         
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 12px rgba(122, 184, 142, 0.3);
 }
         
 .password-strength {
     height: 5px;
     transition: all 0.3s ease;
+}
+
+.password-strength.weak {
+    background-color: #ef4444;
+}
+
+.password-strength.medium {
+    background-color: #f59e0b;
+}
+
+.password-strength.strong {
+    background-color: #7AB88E;
 }
         
 .validation-message {
@@ -124,17 +147,98 @@ button:focus, a:focus, input:focus, select:focus {
 }
 
 .image-container {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .image-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .image-placeholder {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #0ea5e9;
-            font-weight: 500;
-        }
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.image-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(122, 184, 142, 0.2);
+}
+
+.image-placeholder {
+    background: linear-gradient(135deg, #E8F5EC 0%, #D4EFE0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7AB88E;
+    font-weight: 500;
+}
+
+/* Estilos adicionales para botones verdes */
+.bg-green-600, .bg-green-700, .bg-green-800 {
+    background-color: #7AB88E !important;
+}
+
+.bg-green-600:hover, .bg-green-700:hover {
+    background-color: #5A9670 !important;
+}
+
+.text-green-600, .text-green-700, .text-green-800 {
+    color: #7AB88E !important;
+}
+
+.border-green-600, .border-green-700 {
+    border-color: #7AB88E !important;
+}
+
+/* Efectos hover para enlaces */
+a:hover {
+    color: #5A9670;
+}
+
+/* Inputs y formularios */
+input:focus, select:focus, textarea:focus {
+    border-color: #7AB88E !important;
+    box-shadow: 0 0 0 2px #7AB88E !important;
+}
+
+/* Badges y etiquetas */
+.badge-primary {
+    background-color: #E8F5EC;
+    color: #5A9670;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Cards mejoradas */
+.card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 12px 24px rgba(122, 184, 142, 0.15);
+    transform: translateY(-3px);
+}
+
+/* Botones secundarios */
+.btn-secondary {
+    background-color: #E8F5EC;
+    color: #5A9670;
+    border: 1px solid #9ECFAA;
+}
+
+.btn-secondary:hover {
+    background-color: #D4EFE0;
+    border-color: #7AB88E;
+}
+
+/* Footer con gradiente sutil verde-azul */
+.footer-gradient {
+    background: linear-gradient(135deg, #E8F5EC 0%, #E3F2F7 50%, #DFF0F5 100%);
+    border-top: 1px solid rgba(122, 184, 142, 0.15);
+}
+
+/* Logo hover effect */
+header img, footer img {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+header img:hover, footer img:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
