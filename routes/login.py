@@ -75,8 +75,8 @@ def login():
         
         # Verificar si el usuario existe y la contraseña es correcta
         if usuario and check_password_hash(usuario['password'], password):
-            # Verificar si el usuario está activo
-            if not usuario['activo']:
+            # Verificar si el usuario está activo (1 = activo, 0 = inactivo)
+            if usuario['activo'] != 1:
                 flash('Tu cuenta está pendiente de aprobación por un administrador. Por favor, espera a ser activado.', 'warning')
                 return render_template('views/login.html')
             
@@ -202,7 +202,7 @@ def api_login():
     conn.close()
     
     if usuario and check_password_hash(usuario['password'], password):
-        if not usuario['activo']:
+        if usuario['activo'] != 1:
             return jsonify({'success': False, 'message': 'Cuenta pendiente de aprobación'}), 403
             
         return jsonify({

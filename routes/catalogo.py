@@ -1,14 +1,26 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from routes.login import login_required
 from utils.db import get_db_connection
-from utils.permisos import verificar_permiso_prestamo, es_instructor, es_aprendiz
 from datetime import datetime
 
 catalogo_bp = Blueprint('catalogo', __name__, template_folder='templates')
 
+def crear_notificacion(tipo, titulo, mensaje, fk_usuario=None, fk_prestamo=None):
+    """Crea una notificación en el sistema"""
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT INTO notificaciones (tipo, titulo, mensaje, fk_usuario, fk_prestamo)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (tipo, titulo, mensaje, fk_usuario, fk_prestamo))
+        conn.commit()
+    except Exception as e:
+        print(f"Error al crear notificación: {e}")
+    finally:
+        conn.close()
+
 # Vista principal del catálogo
 @catalogo_bp.route('/catalogo', methods=['GET', 'POST'])
-@login_required
 def catalogo():
     if request.method == 'POST':
         # Solo admin puede agregar implementos
@@ -39,11 +51,20 @@ def catalogo():
         conn = get_db_connection()
         try:
             conn.execute(
-                '''INSERT INTO catalogo (implemento, descripcion, disponibilidad, categoria, imagen_url)
+                '''INSERT INTO implementos (implemento, descripcion, disponibilidad, categoria, imagen_url)
                    VALUES (?, ?, ?, ?, ?)''',
                 (implemento, descripcion, disponibilidad, categoria, imagen_url)
             )
             conn.commit()
+            
+            # Crear notificación para admin
+            crear_notificacion(
+                'implemento_nuevo',
+                'Nuevo implemento agregado',
+                f'{implemento} ha sido agregado al catálogo por {session.get("user_nombre")}',
+                session.get('user_id')
+            )
+            
             flash('Implemento agregado al catálogo exitosamente.', 'success')
         except Exception as e:
             flash(f'Error al agregar implemento: {str(e)}', 'error')
@@ -53,7 +74,7 @@ def catalogo():
         return redirect(url_for('catalogo.catalogo'))
 
     conn = get_db_connection()
-    catalogo_items = conn.execute('SELECT * FROM catalogo ORDER BY implemento').fetchall()
+    catalogo_items = conn.execute('SELECT * FROM implementos ORDER BY implemento').fetchall()
     conn.close()
     return render_template('views/catalogo.html', catalogo=catalogo_items)
 
@@ -66,7 +87,7 @@ def filtrar_catalogo():
     disponibilidad = request.args.get('disponibilidad', '')
 
     conn = get_db_connection()
-    query = "SELECT * FROM catalogo WHERE 1=1"
+    query = "SELECT * FROM implementos WHERE 1=1"
     params = []
 
     if categoria:
@@ -92,15 +113,20 @@ def filtrar_catalogo():
                            categoria=categoria,
                            disponibilidad=disponibilidad)
 
-# Registrar préstamo - CORREGIDO Y FUNCIONAL
+# Registrar préstamo individual
 @catalogo_bp.route('/prestar/<int:id>', methods=['POST'])
 @login_required
 def prestar(id):
+    # Solo instructores y funcionarios pueden hacer préstamos
+    if session.get('rol') not in ['instructor', 'funcionario']:
+        flash('No tienes permiso para realizar préstamos.', 'error')
+        return redirect(url_for('catalogo.catalogo'))
+    
     conn = get_db_connection()
     try:
-        # Verificar que el implemento existe y tiene disponibilidad
+        # Verificar disponibilidad del implemento
         implemento = conn.execute(
-            'SELECT id, implemento, disponibilidad FROM catalogo WHERE id = ?', (id,)
+            'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (id,)
         ).fetchone()
 
         if not implemento:
@@ -113,39 +139,35 @@ def prestar(id):
 
         fk_usuario = session.get('user_id')
         fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Obtener datos del formulario - CORREGIDO: usar 'nombre' directamente
-        nombre_prestatario = request.form.get("nombre")
-        instructor = request.form.get("instructor")
-        jornada = request.form.get("jornada")
-        ambiente = request.form.get("ambiente")
-
-        # Validar campos obligatorios
-        if not all([nombre_prestatario, instructor, jornada, ambiente]):
-            flash('Todos los campos del préstamo son obligatorios.', 'error')
-            return redirect(url_for('catalogo.catalogo'))
-
-        # VERIFICAR PERMISOS DE PRÉSTAMO
-        user_id = session.get('user_id')
-        tiene_permiso, mensaje_permiso = verificar_permiso_prestamo(user_id, ambiente)
         
-        if not tiene_permiso:
-            flash(f'No puedes solicitar préstamos en este ambiente: {mensaje_permiso}', 'error')
-            return redirect(url_for('catalogo.catalogo'))
+        # El nombre del prestatario es el usuario que hace el préstamo
+        nombre_prestatario = session.get('user_nombre')
 
-        # Registrar el préstamo en la base de datos - CORREGIDO: campo 'nombre'
-        conn.execute('''
-            INSERT INTO prestamos (fk_usuario, fk_modelo, fecha_prestamo, fecha_devolucion, 
-                                nombre, instructor, jornada, ambiente)
-            VALUES (?, ?, ?, NULL, ?, ?, ?, ?)
-        ''', (fk_usuario, id, fecha_prestamo, nombre_prestatario, instructor, jornada, ambiente))
+        # Registrar el préstamo individual
+        cursor = conn.execute('''
+            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                fecha_prestamo)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (fk_usuario, id, 'individual', nombre_prestatario, fecha_prestamo))
+        
+        prestamo_id = cursor.lastrowid
 
         # Actualizar la disponibilidad del implemento
         nueva_disponibilidad = implemento['disponibilidad'] - 1
-        conn.execute('UPDATE catalogo SET disponibilidad = ? WHERE id = ?', 
+        conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
                     (nueva_disponibilidad, id))
 
         conn.commit()
+        
+        # Crear notificación para admin
+        crear_notificacion(
+            'prestamo_individual',
+            'Nuevo préstamo individual',
+            f'{nombre_prestatario} ha solicitado un préstamo de {implemento["implemento"]}',
+            fk_usuario,
+            prestamo_id
+        )
+        
         flash(f"Préstamo de '{implemento['implemento']}' registrado con éxito", "success")
         
     except Exception as e:
@@ -155,15 +177,20 @@ def prestar(id):
 
     return redirect(url_for('catalogo.catalogo'))
 
-#  Registrar reserva - FUNCIONAL
-@catalogo_bp.route('/reservar/<int:id>', methods=['POST'])
+# Registrar préstamo múltiple
+@catalogo_bp.route('/prestar_multiple/<int:id>', methods=['POST'])
 @login_required
-def reservar(id):
+def prestar_multiple(id):
+    # Solo instructores y funcionarios pueden hacer préstamos
+    if session.get('rol') not in ['instructor', 'funcionario']:
+        flash('No tienes permiso para realizar préstamos.', 'error')
+        return redirect(url_for('catalogo.catalogo'))
+    
     conn = get_db_connection()
     try:
-        # Verificar que el implemento existe y tiene disponibilidad
+        # Verificar disponibilidad del implemento
         implemento = conn.execute(
-            'SELECT id, implemento, disponibilidad FROM catalogo WHERE id = ?', (id,)
+            'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (id,)
         ).fetchone()
 
         if not implemento:
@@ -171,165 +198,60 @@ def reservar(id):
             return redirect(url_for('catalogo.catalogo'))
 
         if implemento['disponibilidad'] <= 0:
-            flash('Este implemento no está disponible para reserva.', 'error')
+            flash('Este implemento no está disponible para préstamo.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
         fk_usuario = session.get('user_id')
-        fecha_reserva = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Obtener datos del formulario
-        nombre = request.form.get("nombre")
-        lugar = request.form.get("lugar")
-        fecha_inicio = request.form.get("hora_inicio")
-        fecha_fin = request.form.get("hora_fin")
-
-        # Validar campos obligatorios
-        if not all([nombre, lugar, fecha_inicio, fecha_fin]):
-            flash('Todos los campos de la reserva son obligatorios.', 'error')
-            return redirect(url_for('catalogo.catalogo'))
-
-        # VERIFICAR PERMISOS DE RESERVA (usar el lugar como ambiente)
-        user_id = session.get('user_id')
-        tiene_permiso, mensaje_permiso = verificar_permiso_prestamo(user_id, lugar)
+        fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        if not tiene_permiso:
-            flash(f'No puedes solicitar reservas en este ambiente: {mensaje_permiso}', 'error')
+        # El nombre del prestatario es el usuario que hace el préstamo
+        nombre_prestatario = session.get('user_nombre')
+        
+        # Obtener datos adicionales del formulario
+        ficha = request.form.get("ficha")
+        ambiente = request.form.get("ambiente")
+        horario = request.form.get("horario")
+
+        # Validar campos obligatorios para préstamo múltiple
+        if not all([ficha, ambiente, horario]):
+            flash('Para préstamo múltiple, ficha, ambiente y horario son obligatorios.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
-        # Validar que la fecha de inicio sea anterior a la fecha de fin
-        if fecha_inicio >= fecha_fin:
-            flash('La fecha de inicio debe ser anterior a la fecha de fin.', 'error')
-            return redirect(url_for('catalogo.catalogo'))
-
-        # Registrar la reserva en la base de datos
-        conn.execute('''
-            INSERT INTO reservas (fk_usuario, fk_implemento, fecha_reserva, fecha_inicio, 
-                                fecha_fin, nombre, lugar, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente')
-        ''', (fk_usuario, id, fecha_reserva, fecha_inicio, fecha_fin, nombre, lugar))
+        # Registrar el préstamo múltiple
+        cursor = conn.execute('''
+            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                ficha, ambiente, horario, fecha_prestamo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (fk_usuario, id, 'multiple', nombre_prestatario, ficha, ambiente, horario, fecha_prestamo))
+        
+        prestamo_id = cursor.lastrowid
 
         # Actualizar la disponibilidad del implemento
         nueva_disponibilidad = implemento['disponibilidad'] - 1
-        conn.execute('UPDATE catalogo SET disponibilidad = ? WHERE id = ?', 
+        conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
                     (nueva_disponibilidad, id))
 
         conn.commit()
-        flash(f"Reserva de '{implemento['implemento']}' registrada con éxito", "success")
         
-    except Exception as e:
-        flash(f"Error en la reserva: {str(e)}", "error")
-    finally:
-        conn.close()
-
-    return redirect(url_for('catalogo.catalogo'))
-
-# Devolver implemento (solo admin) - FUNCIONAL
-@catalogo_bp.route('/devolver/<int:id>', methods=['POST'])
-@login_required
-def devolver(id):
-    if session.get('rol') != 'admin':
-        flash('No tienes permiso para procesar devoluciones.', 'error')
-        return redirect(url_for('catalogo.catalogo'))
-
-    conn = get_db_connection()
-    try:
-        # Buscar el préstamo activo más reciente para este implemento
-        prestamo = conn.execute(
-            '''SELECT * FROM prestamos 
-               WHERE fk_modelo = ? AND fecha_devolucion IS NULL 
-               ORDER BY fecha_prestamo DESC LIMIT 1''',
-            (id,)
-        ).fetchone()
-
-        if not prestamo:
-            flash('No se encontró un préstamo activo para este implemento.', 'error')
-            return redirect(url_for('catalogo.catalogo'))
-
-        # Registrar la devolución
-        fecha_devolucion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        conn.execute(
-            'UPDATE prestamos SET fecha_devolucion = ? WHERE id = ?',
-            (fecha_devolucion, prestamo['id'])
+        # Crear notificación para admin
+        crear_notificacion(
+            'prestamo_multiple',
+            'Nuevo préstamo múltiple',
+            f'{nombre_prestatario} ha solicitado un préstamo múltiple de {implemento["implemento"]} - Ficha: {ficha}, Ambiente: {ambiente}',
+            fk_usuario,
+            prestamo_id
         )
-
-        # Actualizar la disponibilidad del implemento
-        implemento = conn.execute(
-            'SELECT disponibilidad FROM catalogo WHERE id = ?', (id,)
-        ).fetchone()
         
-        if implemento:
-            nueva_disponibilidad = implemento['disponibilidad'] + 1
-            conn.execute(
-                'UPDATE catalogo SET disponibilidad = ? WHERE id = ?',
-                (nueva_disponibilidad, id)
-            )
-
-        conn.commit()
-        flash('Devolución registrada exitosamente.', 'success')
-
+        flash(f"Préstamo múltiple de '{implemento['implemento']}' registrado con éxito", "success")
+        
     except Exception as e:
-        flash(f'Error al procesar la devolución: {str(e)}', 'error')
+        flash(f"Error en el préstamo: {str(e)}", "error")
     finally:
         conn.close()
 
     return redirect(url_for('catalogo.catalogo'))
 
-# Cancelar reserva desde el catálogo - FUNCIONAL
-@catalogo_bp.route('/cancelar_reserva_catalogo/<int:id>', methods=['POST'])
-@login_required
-def cancelar_reserva_catalogo(id):
-    conn = get_db_connection()
-    try:
-        # Obtener información de la reserva
-        reserva = conn.execute(
-            'SELECT * FROM reservas WHERE id = ?', (id,)
-        ).fetchone()
-        
-        if not reserva:
-            flash('No se encontró la reserva.', 'error')
-            return redirect(url_for('catalogo.catalogo'))
-
-        # Verificar permisos (usuario dueño o admin)
-        if session.get('user_id') != reserva['fk_usuario'] and session.get('rol') != 'admin':
-            flash('No tienes permiso para cancelar esta reserva.', 'error')
-            return redirect(url_for('catalogo.catalogo'))
-
-        # Verificar que la reserva no esté ya cancelada
-        if reserva['estado'] == 'cancelada':
-            flash('Esta reserva ya fue cancelada.', 'warning')
-            return redirect(url_for('catalogo.catalogo'))
-
-        # Marcar la reserva como cancelada
-        conn.execute(
-            'UPDATE reservas SET estado = "cancelada" WHERE id = ?', 
-            (id,)
-        )
-
-        # Restaurar la disponibilidad del implemento (solo si estaba aprobada)
-        if reserva['estado'] == 'aprobada':
-            implemento = conn.execute(
-                'SELECT disponibilidad FROM catalogo WHERE id = ?', 
-                (reserva['fk_implemento'],)
-            ).fetchone()
-            
-            if implemento:
-                nueva_disponibilidad = implemento['disponibilidad'] + 1
-                conn.execute(
-                    'UPDATE catalogo SET disponibilidad = ? WHERE id = ?', 
-                    (nueva_disponibilidad, reserva['fk_implemento'])
-                )
-
-        conn.commit()
-        flash('Reserva cancelada exitosamente.', 'success')
-            
-    except Exception as e:
-        flash(f'Error al cancelar la reserva: {str(e)}', 'error')
-    finally:
-        conn.close()
-    
-    return redirect(url_for('catalogo.catalogo'))
-
-# 📌 Editar implemento (solo admin) - NUEVA FUNCIÓN
+# Editar implemento (solo admin)
 @catalogo_bp.route('/editar_implemento/<int:id>', methods=['POST'])
 @login_required
 def editar_implemento(id):
@@ -343,7 +265,6 @@ def editar_implemento(id):
     categoria = request.form.get('categoria')
     imagen_url = request.form.get('imagen_url')
 
-    # Validar campos obligatorios
     if not all([implemento, descripcion, disponibilidad, categoria]):
         flash('Todos los campos obligatorios deben ser completados.', 'error')
         return redirect(url_for('catalogo.catalogo'))
@@ -360,9 +281,9 @@ def editar_implemento(id):
     conn = get_db_connection()
     try:
         conn.execute(
-            '''UPDATE catalogo 
+            '''UPDATE implementos 
                SET implemento = ?, descripcion = ?, disponibilidad = ?, 
-                   categoria = ?, imagen_url = ?
+                   categoria = ?, imagen_url = ?, fecha_actualizacion = CURRENT_TIMESTAMP
                WHERE id = ?''',
             (implemento, descripcion, disponibilidad, categoria, imagen_url, id)
         )
@@ -375,7 +296,7 @@ def editar_implemento(id):
 
     return redirect(url_for('catalogo.catalogo'))
 
-# 📌 Eliminar implemento (solo admin) - NUEVA FUNCIÓN
+# Eliminar implemento (solo admin)
 @catalogo_bp.route('/eliminar_implemento/<int:id>', methods=['POST'])
 @login_required
 def eliminar_implemento(id):
@@ -387,21 +308,15 @@ def eliminar_implemento(id):
     try:
         # Verificar si hay préstamos activos
         prestamos_activos = conn.execute(
-            'SELECT COUNT(*) as count FROM prestamos WHERE fk_modelo = ? AND fecha_devolucion IS NULL',
+            'SELECT COUNT(*) as count FROM prestamos WHERE fk_implemento = ? AND fecha_devolucion IS NULL',
             (id,)
         ).fetchone()
 
-        # Verificar si hay reservas activas
-        reservas_activas = conn.execute(
-            "SELECT COUNT(*) as count FROM reservas WHERE fk_implemento = ? AND estado = 'aprobada'",
-            (id,)
-        ).fetchone()
-
-        if prestamos_activos['count'] > 0 or reservas_activas['count'] > 0:
-            flash('No se puede eliminar el implemento porque tiene préstamos o reservas activas.', 'error')
+        if prestamos_activos['count'] > 0:
+            flash('No se puede eliminar el implemento porque tiene préstamos activos.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
-        conn.execute('DELETE FROM catalogo WHERE id = ?', (id,))
+        conn.execute('DELETE FROM implementos WHERE id = ?', (id,))
         conn.commit()
         flash('Implemento eliminado exitosamente.', 'success')
         

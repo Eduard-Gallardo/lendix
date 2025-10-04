@@ -23,38 +23,39 @@ def init_db():
             )
         ''')
         
-        # Tabla catalogo
+        # Tabla implementos (antes catálogo)
         conn.execute('''
-            CREATE TABLE IF NOT EXISTS catalogo (
+            CREATE TABLE IF NOT EXISTS implementos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nombre TEXT NOT NULL,
+                implemento TEXT NOT NULL,
                 descripcion TEXT NOT NULL,
-                cantidad_disponible INTEGER NOT NULL DEFAULT 0,
-                cantidad_total INTEGER NOT NULL DEFAULT 0,
-                imagen_url TEXT,
+                disponibilidad INTEGER NOT NULL DEFAULT 0,
                 categoria TEXT,
-                estado TEXT DEFAULT 'disponible' CHECK(estado IN ('disponible', 'no_disponible', 'mantenimiento')),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                imagen_url TEXT,
+                estado TEXT DEFAULT 'Bueno' CHECK(estado IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')),
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         
-        # Tabla prestamos (simplificada para instructor)
+        # Tabla prestamos mejorada
         conn.execute('''
             CREATE TABLE IF NOT EXISTS prestamos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fk_usuario INTEGER NOT NULL,
-                fk_item INTEGER NOT NULL,
-                cantidad INTEGER DEFAULT 1,
+                fk_implemento INTEGER NOT NULL,
+                tipo_prestamo TEXT NOT NULL CHECK(tipo_prestamo IN ('individual', 'multiple')),
+                nombre_prestatario TEXT NOT NULL,
+                ficha TEXT,
+                ambiente TEXT,
+                horario TEXT,
                 fecha_prestamo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                fecha_devolucion_estimada TEXT NOT NULL,
-                fecha_devolucion_real TIMESTAMP,
-                estado TEXT DEFAULT 'activo' CHECK(estado IN ('activo', 'devuelto', 'vencido', 'renovado')),
+                fecha_devolucion TIMESTAMP,
+                novedad TEXT DEFAULT 'Ninguna',
+                estado_implemento_devolucion TEXT DEFAULT 'Bueno' CHECK(estado_implemento_devolucion IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')),
                 observaciones TEXT,
-                aprobado_por INTEGER,
                 FOREIGN KEY (fk_usuario) REFERENCES usuarios(id),
-                FOREIGN KEY (fk_item) REFERENCES catalogo(id),
-                FOREIGN KEY (aprobado_por) REFERENCES usuarios(id)
+                FOREIGN KEY (fk_implemento) REFERENCES implementos(id)
             )
         ''')
         
@@ -62,7 +63,7 @@ def init_db():
         conn.execute('''
             CREATE TABLE IF NOT EXISTS notificaciones (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tipo TEXT NOT NULL CHECK(tipo IN ('prestamo_nuevo', 'devolucion', 'vencimiento', 'registro_usuario')),
+                tipo TEXT NOT NULL CHECK(tipo IN ('prestamo_individual', 'prestamo_multiple', 'devolucion', 'implemento_nuevo')),
                 titulo TEXT NOT NULL,
                 mensaje TEXT NOT NULL,
                 fk_usuario INTEGER,
@@ -89,66 +90,83 @@ def init_db():
         
     conn.close()
 
-def migrate_db():
-    """
-    Función para migrar datos existentes al nuevo esquema
-    Elimina referencias a 'aprendiz' y actualiza la estructura
-    """
+def crear_admin_inicial():
+    """Crea un usuario admin inicial si no existe"""
+    from werkzeug.security import generate_password_hash
+    
     conn = get_db_connection()
     try:
-        with conn:
-            # Verificar si existe la columna tipo_usuario y migrar a rol
-            cursor = conn.execute("PRAGMA table_info(usuarios)")
-            columns = [column[1] for column in cursor.fetchall()]
+        # Verificar si ya existe un admin
+        admin = conn.execute(
+            "SELECT * FROM usuarios WHERE rol = 'admin'"
+        ).fetchone()
+        
+        if not admin:
+            # Crear admin por defecto
+            conn.execute('''
+                INSERT INTO usuarios (nombre, email, telefono, password, rol, activo)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                'Administrador',
+                'Eduard@gmail.com',
+                '3000000000',
+                generate_password_hash('admin123'),
+                'admin',
+                1
+            ))
+            conn.commit()
+            print("Usuario admin creado exitosamente")
+    except Exception as e:
+        print(f"Error al crear admin: {e}")
+    finally:
+        conn.close()
+
+def migrar_base_datos():
+    """Migra la base de datos existente para corregir inconsistencias"""
+    conn = get_db_connection()
+    try:
+        # Verificar si la tabla prestamos existe y tiene las columnas correctas
+        cursor = conn.execute("PRAGMA table_info(prestamos)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        # Agregar columnas faltantes si no existen
+        if 'estado_implemento_devolucion' not in columns:
+            conn.execute('''
+                ALTER TABLE prestamos ADD COLUMN estado_implemento_devolucion TEXT DEFAULT 'Bueno'
+            ''')
+            print("Columna estado_implemento_devolucion agregada a prestamos")
+        
+        if 'observaciones' not in columns:
+            conn.execute('''
+                ALTER TABLE prestamos ADD COLUMN observaciones TEXT
+            ''')
+            print("Columna observaciones agregada a prestamos")
+        
+        # Verificar tabla implementos
+        cursor = conn.execute("PRAGMA table_info(implementos)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        # Actualizar constraint de estado si es necesario
+        try:
+            # Intentar actualizar registros existentes con valores inválidos
+            conn.execute('''
+                UPDATE implementos SET estado = 'Bueno' 
+                WHERE estado NOT IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')
+            ''')
             
-            if 'tipo_usuario' in columns and 'rol' not in columns:
-                # Crear tabla temporal con nueva estructura
-                conn.execute('''
-                    CREATE TABLE usuarios_new (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        nombre TEXT NOT NULL UNIQUE,
-                        email TEXT NOT NULL UNIQUE,
-                        telefono TEXT NOT NULL UNIQUE,
-                        password TEXT NOT NULL,
-                        rol TEXT DEFAULT 'funcionario' CHECK(rol IN ('admin', 'instructor', 'funcionario')),
-                        activo BOOLEAN DEFAULT 1,
-                        fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                ''')
-                
-                # Migrar datos (convertir aprendices a funcionarios)
-                conn.execute('''
-                    INSERT INTO usuarios_new (id, nombre, email, telefono, password, rol, activo, fecha_registro)
-                    SELECT id, nombre, email, telefono, password, 
-                           CASE 
-                               WHEN tipo_usuario = 'admin' THEN 'admin'
-                               WHEN tipo_usuario = 'instructor' THEN 'instructor'
-                               WHEN tipo_usuario = 'funcionario' THEN 'funcionario'
-                               ELSE 'funcionario'
-                           END as rol,
-                           activo, fecha_registro
-                    FROM usuarios
-                ''')
-                
-                # Reemplazar tabla
-                conn.execute('DROP TABLE usuarios')
-                conn.execute('ALTER TABLE usuarios_new RENAME TO usuarios')
+            conn.execute('''
+                UPDATE prestamos SET estado_implemento_devolucion = 'Bueno' 
+                WHERE estado_implemento_devolucion NOT IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')
+                OR estado_implemento_devolucion IS NULL
+            ''')
             
-            # Actualizar tabla catalogo si es necesario
-            cursor = conn.execute("PRAGMA table_info(catalogo)")
-            columns = [column[1] for column in cursor.fetchall()]
+            conn.commit()
+            print("Migración de base de datos completada exitosamente")
             
-            if 'implemento' in columns and 'nombre' not in columns:
-                conn.execute('ALTER TABLE catalogo RENAME COLUMN implemento TO nombre')
-            
-            if 'disponibilidad' in columns and 'cantidad_disponible' not in columns:
-                conn.execute('ALTER TABLE catalogo ADD COLUMN cantidad_disponible INTEGER DEFAULT 0')
-                conn.execute('ALTER TABLE catalogo ADD COLUMN cantidad_total INTEGER DEFAULT 0')
-                conn.execute('UPDATE catalogo SET cantidad_disponible = disponibilidad, cantidad_total = disponibilidad')
-            
-            print("Migración completada exitosamente")
+        except Exception as e:
+            print(f"Error durante la migración: {e}")
             
     except Exception as e:
-        print(f"Error durante la migración: {e}")
+        print(f"Error al migrar base de datos: {e}")
     finally:
         conn.close()

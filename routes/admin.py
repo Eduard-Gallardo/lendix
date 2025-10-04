@@ -1,17 +1,10 @@
-
-from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session  # Agregar session
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session
 import sqlite3
 import os
 from utils.db import get_db_connection
 from werkzeug.utils import secure_filename
-from routes.login import login_required  # Agregar este import
+from routes.login import login_required
 from datetime import datetime, timedelta
-from utils.permisos import (
-    es_instructor, es_aprendiz, verificar_permiso_prestamo, 
-    crear_permiso_ambiente, asignar_aprendiz_a_instructor,
-    obtener_aprendices_del_instructor, obtener_permisos_instructor,
-    obtener_ambientes_disponibles
-)
 
 # Configuración del Blueprint
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
@@ -23,21 +16,32 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Crear directorio de uploads si no existe
 def ensure_upload_folder():
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
 
-# AGREGAR ESTA FUNCIÓN DE VERIFICACIÓN DE ADMIN
 def is_admin():
-    return session.get('user_email') == 'Eduard@gmail.com'
+    return session.get('user_email') == 'Eduard@gmail.com' or session.get('rol') == 'admin'
+
+def crear_notificacion(tipo, titulo, mensaje, fk_usuario=None, fk_prestamo=None):
+    """Crea una notificación en el sistema"""
+    conn = get_db_connection()
+    try:
+        conn.execute('''
+            INSERT INTO notificaciones (tipo, titulo, mensaje, fk_usuario, fk_prestamo)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (tipo, titulo, mensaje, fk_usuario, fk_prestamo))
+        conn.commit()
+    except Exception as e:
+        print(f"Error al crear notificación: {e}")
+    finally:
+        conn.close()
 
 # Rutas del Blueprint
-@admin_bp.route('/admin') 
+@admin_bp.route('/admin')
 @admin_bp.route('/admin/')
-@login_required  # AGREGAR DECORADOR DE LOGIN
+@login_required
 def admin():
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
@@ -45,70 +49,88 @@ def admin():
     conn = get_db_connection()
     
     # Obtener estadísticas
-    total_implementos = conn.execute('SELECT COUNT(*) as count FROM catalogo').fetchone()['count']
+    total_implementos = conn.execute('SELECT COUNT(*) as count FROM implementos').fetchone()['count']
     total_usuarios = conn.execute('SELECT COUNT(*) as count FROM usuarios').fetchone()['count']
-    total_reservas = conn.execute('SELECT COUNT(*) as count FROM reservas').fetchone()['count']
-    implementos = conn.execute('SELECT * FROM catalogo ORDER BY id DESC LIMIT 5').fetchall()
+    total_prestamos = conn.execute('SELECT COUNT(*) as count FROM prestamos').fetchone()['count']
+    prestamos_activos = conn.execute('SELECT COUNT(*) as count FROM prestamos WHERE fecha_devolucion IS NULL').fetchone()['count']
+    
+    # Obtener implementos recientes
+    implementos = conn.execute('SELECT * FROM implementos ORDER BY fecha_creacion DESC LIMIT 5').fetchall()
+    
+    # Obtener notificaciones no leídas
+    notificaciones = conn.execute('''
+        SELECT n.*, u.nombre as usuario_nombre
+        FROM notificaciones n
+        LEFT JOIN usuarios u ON n.fk_usuario = u.id
+        WHERE n.leida = 0
+        ORDER BY n.fecha_creacion DESC
+        LIMIT 10
+    ''').fetchall()
     
     conn.close()
     
-    return render_template('admin/panel_administrador.html', 
+    return render_template('admin/panel_administrador.html',
                     total_implementos=total_implementos,
                     total_usuarios=total_usuarios,
-                    total_reservas=total_reservas,
-                    implementos=implementos)
+                    total_prestamos=total_prestamos,
+                    prestamos_activos=prestamos_activos,
+                    implementos=implementos,
+                    notificaciones=notificaciones)
 
 @admin_bp.route('/admin/catalogo')
 @login_required
 def ver_catalogo():
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
     conn = get_db_connection()
-    implementos = conn.execute('SELECT * FROM catalogo ORDER BY id DESC').fetchall()
+    implementos = conn.execute('SELECT * FROM implementos ORDER BY id DESC').fetchall()
     conn.close()
     return render_template('admin/panel_administrador.html', implementos=implementos)
 
 @admin_bp.route('/admin/catalogo/agregar', methods=['GET', 'POST'])
 @login_required
 def agregar_implemento():
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
+    
     if request.method == 'POST':
-        # Obtener datos del formulario
         implemento = request.form.get('implemento')
         descripcion = request.form.get('descripcion')
         disponibilidad = request.form.get('disponibilidad')
         categoria = request.form.get('categoria')
         
-        # Validar campos obligatorios
         if not all([implemento, descripcion, disponibilidad, categoria]):
             flash('Todos los campos son obligatorios', 'error')
             return render_template('admin/agregar_implemento.html')
         
-        # Manejar la carga de la imagen
         imagen_url = None
         if 'imagen' in request.files:
             file = request.files['imagen']
             if file and file.filename != '' and allowed_file(file.filename):
                 ensure_upload_folder()
                 filename = secure_filename(file.filename)
-                # Crear nombre único para evitar colisiones
                 unique_filename = f"{os.urandom(8).hex()}_{filename}"
                 file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
                 imagen_url = unique_filename
         
-        # Guardar en la base de datos
         conn = get_db_connection()
         try:
             conn.execute(
-                'INSERT INTO catalogo (implemento, descripcion, disponibilidad, categoria, imagen_url) VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO implementos (implemento, descripcion, disponibilidad, categoria, imagen_url) VALUES (?, ?, ?, ?, ?)',
                 (implemento, descripcion, disponibilidad, categoria, imagen_url)
             )
             conn.commit()
+            
+            # Crear notificación
+            crear_notificacion(
+                'implemento_nuevo',
+                'Nuevo implemento agregado',
+                f'{implemento} ha sido agregado al sistema por {session.get("user_nombre")}',
+                session.get('user_id')
+            )
+            
             flash('Implemento agregado correctamente', 'success')
         except sqlite3.Error as e:
             flash(f'Error al guardar en la base de datos: {str(e)}', 'error')
@@ -122,10 +144,10 @@ def agregar_implemento():
 @admin_bp.route('/admin/catalogo/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_implemento(id):
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
+    
     conn = get_db_connection()
     
     if request.method == 'POST':
@@ -133,13 +155,12 @@ def editar_implemento(id):
         descripcion = request.form.get('descripcion')
         disponibilidad = request.form.get('disponibilidad')
         categoria = request.form.get('categoria')
+        estado = request.form.get('estado', 'Bueno')
         
-        # Validar campos obligatorios
         if not all([implemento, descripcion, disponibilidad, categoria]):
             flash('Todos los campos son obligatorios', 'error')
             return redirect(url_for('admin.editar_implemento', id=id))
         
-        # Si se sube una nueva imagen
         imagen_url = None
         if 'imagen' in request.files:
             file = request.files['imagen']
@@ -150,17 +171,16 @@ def editar_implemento(id):
                 file.save(os.path.join(UPLOAD_FOLDER, unique_filename))
                 imagen_url = unique_filename
         
-        # Actualizar en la base de datos
         try:
             if imagen_url:
                 conn.execute(
-                    'UPDATE catalogo SET implemento = ?, descripcion = ?, disponibilidad = ?, categoria = ?, imagen_url = ? WHERE id = ?',
-                    (implemento, descripcion, disponibilidad, categoria, imagen_url, id)
+                    'UPDATE implementos SET implemento = ?, descripcion = ?, disponibilidad = ?, categoria = ?, imagen_url = ?, estado = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?',
+                    (implemento, descripcion, disponibilidad, categoria, imagen_url, estado, id)
                 )
             else:
                 conn.execute(
-                    'UPDATE catalogo SET implemento = ?, descripcion = ?, disponibilidad = ?, categoria = ? WHERE id = ?',
-                    (implemento, descripcion, disponibilidad, categoria, id)
+                    'UPDATE implementos SET implemento = ?, descripcion = ?, disponibilidad = ?, categoria = ?, estado = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?',
+                    (implemento, descripcion, disponibilidad, categoria, estado, id)
                 )
             conn.commit()
             flash('Implemento actualizado correctamente', 'success')
@@ -170,8 +190,7 @@ def editar_implemento(id):
         conn.close()
         return redirect(url_for('admin.ver_catalogo'))
     
-    # GET request - mostrar formulario con datos actuales
-    implemento = conn.execute('SELECT * FROM catalogo WHERE id = ?', (id,)).fetchone()
+    implemento = conn.execute('SELECT * FROM implementos WHERE id = ?', (id,)).fetchone()
     conn.close()
     
     if implemento is None:
@@ -183,23 +202,22 @@ def editar_implemento(id):
 @admin_bp.route('/admin/catalogo/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar_implemento(id):
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
+    
     conn = get_db_connection()
     
     try:
-        # Obtener información de la imagen para eliminarla del sistema de archivos
-        implemento = conn.execute('SELECT imagen_url FROM catalogo WHERE id = ?', (id,)).fetchone()
+        implemento = conn.execute('SELECT imagen_url FROM implementos WHERE id = ?', (id,)).fetchone()
         
         if implemento and implemento['imagen_url']:
             try:
                 os.remove(os.path.join(UPLOAD_FOLDER, implemento['imagen_url']))
             except OSError:
-                pass  # Si el archivo no existe, continuar
+                pass
         
-        conn.execute('DELETE FROM catalogo WHERE id = ?', (id,))
+        conn.execute('DELETE FROM implementos WHERE id = ?', (id,))
         conn.commit()
         flash('Implemento eliminado correctamente', 'success')
     except sqlite3.Error as e:
@@ -213,7 +231,6 @@ def eliminar_implemento(id):
 @admin_bp.route('/admin/usuarios')
 @login_required
 def gestion_usuarios():
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
@@ -222,113 +239,41 @@ def gestion_usuarios():
     conn.close()
     return render_template('admin/gestion_usuarios.html', usuarios=usuarios)
 
-# Gestión de reservas
-@admin_bp.route('/admin/reservas')
-@login_required
-def gestion_reservas():
-    # VERIFICAR SI ES ADMIN
-    if not is_admin():
-        flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
-    conn = get_db_connection()
-    reservas = conn.execute('''
-        SELECT r.*, u.nombre as usuario_nombre, c.implemento 
-        FROM reservas r 
-        JOIN usuarios u ON r.fk_usuario = u.id 
-        JOIN catalogo c ON r.fk_implemento = c.id 
-        ORDER BY r.fecha_reserva DESC
-    ''').fetchall()
-    conn.close()
-    return render_template('admin/gestion_reservas.html', reservas=reservas)
-
-# API endpoint para obtener todos los implementos (útil para AJAX)
-@admin_bp.route('/api/admin/catalogo')
-def api_catalogo():
-    conn = get_db_connection()
-    implementos = conn.execute('SELECT * FROM catalogo ORDER BY id DESC').fetchall()
-    conn.close()
-    
-    # Convertir resultados a lista de diccionarios
-    result = []
-    for row in implementos:
-        result.append(dict(row))
-    
-    return jsonify(result)
-
-# API endpoint para obtener un implemento específico
-@admin_bp.route('/api/admin/catalogo/<int:id>')
-def api_implemento(id):
-    conn = get_db_connection()
-    implemento = conn.execute('SELECT * FROM catalogo WHERE id = ?', (id,)).fetchone()
-    conn.close()
-    
-    if implemento is None:
-        return jsonify({'error': 'Implemento no encontrado'}), 404
-    
-    return jsonify(dict(implemento))
-
-# API endpoint para obtener estadísticas
-@admin_bp.route('/api/admin/estadisticas')
-def api_estadisticas():
-    conn = get_db_connection()
-    
-    total_implementos = conn.execute('SELECT COUNT(*) as count FROM catalogo').fetchone()['count']
-    total_usuarios = conn.execute('SELECT COUNT(*) as count FROM usuarios').fetchone()['count']
-    total_reservas = conn.execute('SELECT COUNT(*) as count FROM reservas').fetchone()['count']
-    reservas_activas = conn.execute('SELECT COUNT(*) as count FROM reservas WHERE estado = "activa"').fetchone()['count']
-    
-    conn.close()
-    
-    return jsonify({
-        'total_implementos': total_implementos,
-        'total_usuarios': total_usuarios,
-        'total_reservas': total_reservas,
-        'reservas_activas': reservas_activas
-    })
-
-# 📌 Nueva ruta para gestión de devoluciones de préstamos
+# Gestión de préstamos - Devoluciones
 @admin_bp.route('/devolucion_prestamos')
 @login_required
 def devolucion_prestamos():
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
-
 
     conn = get_db_connection()
     
     try:
-        # Obtener préstamos activos (sin fecha_devolucion)
         prestamos_activos = conn.execute('''
-            SELECT p.*, u.nombre as usuario_nombre, c.implemento,
+            SELECT p.*, u.nombre as usuario_nombre, i.implemento,
                    julianday('now') - julianday(p.fecha_prestamo) as dias_transcurridos
             FROM prestamos p
             JOIN usuarios u ON p.fk_usuario = u.id
-            JOIN catalogo c ON p.fk_modelo = c.id
+            JOIN implementos i ON p.fk_implemento = i.id
             WHERE p.fecha_devolucion IS NULL
             ORDER BY p.fecha_prestamo DESC
         ''').fetchall()
         
-        # Convertir días transcurridos a entero
         prestamos_con_dias = []
         for prestamo in prestamos_activos:
             prestamo_dict = dict(prestamo)
             prestamo_dict['dias_transcurridos'] = int(prestamo['dias_transcurridos']) if prestamo['dias_transcurridos'] else 0
             prestamos_con_dias.append(prestamo_dict)
         
-        # Estadísticas
         total_prestamos = len(prestamos_con_dias)
+        implementos_unicos = len(set(p['fk_implemento'] for p in prestamos_con_dias))
         
-        # Contar implementos únicos prestados
-        implementos_unicos = len(set(p['fk_modelo'] for p in prestamos_con_dias))
-        
-        # Préstamos de hoy
         hoy = datetime.now().strftime("%Y-%m-%d")
         prestamos_hoy = conn.execute('''
             SELECT COUNT(*) as count FROM prestamos 
-            WHERE fecha_prestamo LIKE ? AND fecha_devolucion IS NULL
-        ''', (f'{hoy}%',)).fetchone()['count']
+            WHERE DATE(fecha_prestamo) = ? AND fecha_devolucion IS NULL
+        ''', (hoy,)).fetchone()['count']
         
     except Exception as e:
         flash(f'Error al cargar préstamos: {str(e)}', 'error')
@@ -345,22 +290,25 @@ def devolucion_prestamos():
                          total_implementos=implementos_unicos,
                          prestamos_hoy=prestamos_hoy)
 
-# 📌 Nueva ruta para procesar devolución desde el panel admin
+# Procesar devolución desde el panel admin
 @admin_bp.route('/devolver_prestamo_admin/<int:id>', methods=['POST'])
 @login_required
 def devolver_prestamo_admin(id):
-    # VERIFICAR SI ES ADMIN
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect(url_for('index'))
     
     conn = get_db_connection()
     try:
-        # Obtener información completa del préstamo
+        # Obtener datos del formulario
+        novedad = request.form.get('novedad', 'Ninguna')
+        estado_implemento = request.form.get('estado_implemento', 'Bueno')
+        observaciones = request.form.get('observaciones', '')
+        
         prestamo = conn.execute('''
-            SELECT p.*, c.implemento, c.disponibilidad, u.nombre as usuario_nombre
+            SELECT p.*, i.implemento, i.disponibilidad, u.nombre as usuario_nombre
             FROM prestamos p
-            JOIN catalogo c ON p.fk_modelo = c.id
+            JOIN implementos i ON p.fk_implemento = i.id
             JOIN usuarios u ON p.fk_usuario = u.id
             WHERE p.id = ?
         ''', (id,)).fetchone()
@@ -375,21 +323,42 @@ def devolver_prestamo_admin(id):
         
         # Registrar la devolución
         fecha_devolucion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        conn.execute(
-            'UPDATE prestamos SET fecha_devolucion = ? WHERE id = ?',
-            (fecha_devolucion, id)
-        )
+        conn.execute('''
+            UPDATE prestamos 
+            SET fecha_devolucion = ?, novedad = ?, estado_implemento_devolucion = ?, observaciones = ?
+            WHERE id = ?
+        ''', (fecha_devolucion, novedad, estado_implemento, observaciones, id))
         
         # Actualizar disponibilidad del implemento
         nueva_disponibilidad = prestamo['disponibilidad'] + 1
         conn.execute(
-            'UPDATE catalogo SET disponibilidad = ? WHERE id = ?',
-            (nueva_disponibilidad, prestamo['fk_modelo'])
+            'UPDATE implementos SET disponibilidad = ? WHERE id = ?',
+            (nueva_disponibilidad, prestamo['fk_implemento'])
         )
+        
+        # Actualizar estado del implemento si es necesario
+        if estado_implemento != 'Bueno':
+            conn.execute(
+                'UPDATE implementos SET estado = ? WHERE id = ?',
+                (estado_implemento, prestamo['fk_implemento'])
+            )
         
         conn.commit()
         
-        flash(f'Devolución registrada exitosamente: {prestamo["implemento"]} devuelto por {prestamo["nombre"]}', 'success')
+        # Crear notificación
+        mensaje_notif = f'Devolución de {prestamo["implemento"]} por {prestamo["usuario_nombre"]}'
+        if novedad != 'Ninguna':
+            mensaje_notif += f' - Novedad: {novedad}'
+        
+        crear_notificacion(
+            'devolucion',
+            'Devolución registrada',
+            mensaje_notif,
+            session.get('user_id'),
+            id
+        )
+        
+        flash(f'Devolución registrada exitosamente: {prestamo["implemento"]}', 'success')
         
     except Exception as e:
         flash(f'Error al procesar la devolución: {str(e)}', 'error')
@@ -398,116 +367,75 @@ def devolver_prestamo_admin(id):
     
     return redirect(url_for('admin.devolucion_prestamos'))
 
-# ===== GESTIÓN DE PERMISOS DE AMBIENTES =====
-
-@admin_bp.route('/gestion_permisos')
+# API para notificaciones
+@admin_bp.route('/api/notificaciones')
 @login_required
-def gestion_permisos():
-    """Vista principal para gestionar permisos de ambientes"""
-    # VERIFICAR SI ES ADMIN O INSTRUCTOR
-    if not is_admin() and not es_instructor(session.get('user_id')):
-        flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
-    
-    user_id = session.get('user_id')
-    
-    # Obtener permisos del instructor
-    permisos = obtener_permisos_instructor(user_id)
-    
-    # Obtener aprendices asignados
-    aprendices = obtener_aprendices_del_instructor(user_id)
-    
-    # Obtener ambientes disponibles
-    ambientes_disponibles = obtener_ambientes_disponibles()
-    
-    return render_template('admin/gestion_permisos.html',
-                         permisos=permisos,
-                         aprendices=aprendices,
-                         ambientes_disponibles=ambientes_disponibles)
-
-@admin_bp.route('/configurar_permiso_ambiente', methods=['POST'])
-@login_required
-def configurar_permiso_ambiente():
-    """Configura el permiso de un ambiente para un instructor"""
-    if not is_admin() and not es_instructor(session.get('user_id')):
-        flash('No tienes permisos para realizar esta acción', 'error')
-        return redirect(url_for('admin.gestion_permisos'))
-    
-    instructor_id = session.get('user_id')
-    ambiente = request.form.get('ambiente')
-    habilitado = request.form.get('habilitado') == 'on'
-    
-    if not ambiente:
-        flash('Debe seleccionar un ambiente', 'error')
-        return redirect(url_for('admin.gestion_permisos'))
-    
-    if crear_permiso_ambiente(instructor_id, ambiente, habilitado):
-        estado = "habilitado" if habilitado else "deshabilitado"
-        flash(f'Permiso para el ambiente "{ambiente}" {estado} correctamente', 'success')
-    else:
-        flash('Error al configurar el permiso', 'error')
-    
-    return redirect(url_for('admin.gestion_permisos'))
-
-@admin_bp.route('/asignar_aprendiz', methods=['POST'])
-@login_required
-def asignar_aprendiz():
-    """Asigna un aprendiz a un instructor en un ambiente específico"""
-    if not is_admin() and not es_instructor(session.get('user_id')):
-        flash('No tienes permisos para realizar esta acción', 'error')
-        return redirect(url_for('admin.gestion_permisos'))
-    
-    instructor_id = session.get('user_id')
-    aprendiz_id = request.form.get('aprendiz_id')
-    ambiente = request.form.get('ambiente')
-    
-    if not all([aprendiz_id, ambiente]):
-        flash('Debe seleccionar un aprendiz y un ambiente', 'error')
-        return redirect(url_for('admin.gestion_permisos'))
-    
-    # Verificar que el usuario seleccionado es realmente un aprendiz
-    if not es_aprendiz(aprendiz_id):
-        flash('El usuario seleccionado no es un aprendiz', 'error')
-        return redirect(url_for('admin.gestion_permisos'))
-    
-    if asignar_aprendiz_a_instructor(instructor_id, aprendiz_id, ambiente):
-        # Obtener nombre del aprendiz
-        conn = get_db_connection()
-        aprendiz = conn.execute('SELECT nombre FROM usuarios WHERE id = ?', (aprendiz_id,)).fetchone()
-        conn.close()
-        
-        flash(f'Aprendiz "{aprendiz["nombre"]}" asignado al ambiente "{ambiente}" correctamente', 'success')
-    else:
-        flash('Error al asignar el aprendiz', 'error')
-    
-    return redirect(url_for('admin.gestion_permisos'))
-
-@admin_bp.route('/obtener_aprendices_disponibles')
-@login_required
-def obtener_aprendices_disponibles():
-    """API endpoint para obtener aprendices disponibles para asignar"""
-    if not is_admin() and not es_instructor(session.get('user_id')):
+def api_notificaciones():
+    if not is_admin():
         return jsonify({'error': 'Sin permisos'}), 403
     
     conn = get_db_connection()
-    aprendices = conn.execute('''
-        SELECT id, nombre, email 
-        FROM usuarios 
-        WHERE tipo_usuario = 'aprendiz' AND activo = 1
-        ORDER BY nombre
+    notificaciones = conn.execute('''
+        SELECT n.*, u.nombre as usuario_nombre
+        FROM notificaciones n
+        LEFT JOIN usuarios u ON n.fk_usuario = u.id
+        WHERE n.leida = 0
+        ORDER BY n.fecha_creacion DESC
+        LIMIT 20
     ''').fetchall()
     conn.close()
     
-    return jsonify([dict(aprendiz) for aprendiz in aprendices])
+    return jsonify([dict(notif) for notif in notificaciones])
 
-@admin_bp.route('/verificar_permiso_prestamo/<ambiente>')
+# Marcar notificación como leída
+@admin_bp.route('/api/notificaciones/<int:id>/leer', methods=['POST'])
 @login_required
-def verificar_permiso_prestamo_api(ambiente):
-    """API endpoint para verificar si un usuario puede solicitar préstamos en un ambiente"""
-    user_id = session.get('user_id')
-    tiene_permiso, mensaje = verificar_permiso_prestamo(user_id, ambiente)
+def marcar_notificacion_leida(id):
+    if not is_admin():
+        return jsonify({'error': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE notificaciones SET leida = 1 WHERE id = ?', (id,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# Marcar todas las notificaciones como leídas
+@admin_bp.route('/api/notificaciones/leer_todas', methods=['POST'])
+@login_required
+def marcar_todas_leidas():
+    if not is_admin():
+        return jsonify({'error': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE notificaciones SET leida = 1 WHERE leida = 0')
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# API estadísticas
+@admin_bp.route('/api/admin/estadisticas')
+def api_estadisticas():
+    conn = get_db_connection()
+    
+    total_implementos = conn.execute('SELECT COUNT(*) as count FROM implementos').fetchone()['count']
+    total_usuarios = conn.execute('SELECT COUNT(*) as count FROM usuarios').fetchone()['count']
+    total_prestamos = conn.execute('SELECT COUNT(*) as count FROM prestamos').fetchone()['count']
+    prestamos_activos = conn.execute('SELECT COUNT(*) as count FROM prestamos WHERE fecha_devolucion IS NULL').fetchone()['count']
+    
+    conn.close()
     
     return jsonify({
-        'tiene_permiso': tiene_permiso,
-        'mensaje': mensaje
+        'total_implementos': total_implementos,
+        'total_usuarios': total_usuarios,
+        'total_prestamos': total_prestamos,
+        'prestamos_activos': prestamos_activos
     })
