@@ -28,6 +28,9 @@
       <a href="{{ url_for('admin.devolucion_prestamos') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <i class="fas fa-undo mr-2"></i> Gestión Devoluciones
       </a>
+      <a href="{{ url_for('admin.gestion_usuarios') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        <i class="fas fa-users mr-2"></i> Gestión Usuarios
+      </a>
       
     </nav>
     <div class="p-4 border-t border-green-700 flex items-center space-x-3">
@@ -166,6 +169,63 @@
     </div>
     {% endif %}
 
+    <!-- Usuarios pendientes de aprobación -->
+    {% if usuarios_pendientes %}
+    <div class="bg-white rounded-xl shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-user-clock mr-2 text-yellow-600"></i>
+                Usuarios Pendientes de Aprobación
+            </h2>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for usuario in usuarios_pendientes %}
+            <div class="px-6 py-4 hover:bg-gray-50 transition">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-yellow-600"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ usuario.nombre }}</p>
+                            <p class="text-sm text-gray-500">{{ usuario.email }}</p>
+                            <p class="text-xs text-gray-400">
+                                {% if usuario.rol == 'instructor' %}
+                                    <i class="fas fa-chalkboard-teacher mr-1"></i>Instructor
+                                {% else %}
+                                    <i class="fas fa-user-tie mr-1"></i>Funcionario
+                                {% endif %}
+                                • {{ usuario.fecha_registro[:10] if usuario.fecha_registro else 'Fecha no disponible' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="activarUsuario({{ usuario.id }}, '{{ usuario.nombre }}')"
+                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition duration-200">
+                            <i class="fas fa-check mr-1"></i>
+                            Activar
+                        </button>
+                        <a href="{{ url_for('admin.gestion_usuarios') }}" 
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition duration-200">
+                            <i class="fas fa-eye mr-1"></i>
+                            Ver Detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="px-6 py-3 bg-gray-50 text-center">
+            <a href="{{ url_for('admin.gestion_usuarios') }}" class="text-sm text-blue-600 hover:text-blue-800">
+                <i class="fas fa-users mr-1"></i>
+                Gestionar todos los usuarios
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Tabla -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
       <table class="w-full text-sm">
@@ -269,5 +329,32 @@
       <p>© 2025 Libratech - Sistema de Gestión de Implementos</p>
     </footer>
   </main>
+
+  <!-- Script para activación de usuarios -->
+  <script>
+  function activarUsuario(id, nombre) {
+      if (confirm(`¿Estás seguro de que deseas activar al usuario ${nombre}?`)) {
+          fetch(`/admin/activar_usuario/${id}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              }
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  alert('Usuario activado exitosamente');
+                  location.reload();
+              } else {
+                  alert('Error: ' + data.message);
+              }
+          })
+          .catch(error => {
+              alert('Error al activar usuario');
+              console.error('Error:', error);
+          });
+      }
+  }
+  </script>
 </body>
 </html>

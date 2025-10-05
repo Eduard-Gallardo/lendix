@@ -287,13 +287,6 @@
                                     </div>
                                 {% endif %}
                                 
-                                <!-- Acción de devolución solo para admin -->
-                                {% if session.get('rol') == 'admin' and item['disponibilidad'] < 10 %}
-                                    <button @click="devolverImplemento({{ item['id'] }})" :disabled="loading"
-                                            class="w-full bg-blue-600 text-white px-4 py-3 rounded-xl flex items-center justify-center hover:bg-blue-700 transition duration-300 disabled:opacity-50">
-                                        <i class="fas fa-undo mr-2"></i>Registrar Devolución
-                                    </button>
-                                {% endif %}
                                 
                                 <button @click="open = false" :disabled="loading"
                                         class="w-full bg-gray-200 text-gray-700 px-4 py-3 rounded-xl flex items-center justify-center hover:bg-gray-300 transition duration-300 disabled:opacity-50">
@@ -325,9 +318,11 @@
                             <input type="text" name="nombre_prestatario" id="nombre_prestatario" placeholder="Nombre del prestatario *" required 
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
                             
-                            <input type="text" name="instructor" id="instructor" placeholder="Instructor responsable *" required
-                                value="{{ session.get('user_nombre', '') }}"
+                            <select name="instructor" id="instructor" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+                                <option value="">Seleccionar instructor *</option>
+                                <!-- Los instructores se cargarán dinámicamente -->
+                            </select>
                             
                             <select name="jornada" id="jornada" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
@@ -390,31 +385,49 @@
     </div>
 </main>
 
-<!-- Script para manejar devoluciones -->
+
+<!-- Script para cargar instructores -->
 <script>
-function devolverImplemento(id) {
-    if (confirm('¿Estás seguro de que deseas registrar una devolución para este implemento?')) {
-        fetch(`/devolver/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Devolución registrada exitosamente');
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('Error al procesar la devolución');
-            console.error('Error:', error);
-        });
+// Cargar instructores disponibles al abrir el modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para cargar instructores
+    function cargarInstructores() {
+        fetch('/admin/api/instructores_disponibles')
+            .then(response => response.json())
+            .then(data => {
+                const selectInstructor = document.getElementById('instructor');
+                if (selectInstructor) {
+                    // Limpiar opciones existentes excepto la primera
+                    selectInstructor.innerHTML = '<option value="">Seleccionar instructor *</option>';
+                    
+                    // Agregar instructores
+                    data.forEach(instructor => {
+                        const option = document.createElement('option');
+                        option.value = instructor.nombre;
+                        option.textContent = instructor.nombre;
+                        selectInstructor.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar instructores:', error);
+            });
     }
-}
+    
+    // Cargar instructores cuando se abre el modal
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[x-data]') && e.target.textContent.includes('Registrar Préstamo')) {
+            setTimeout(cargarInstructores, 100); // Pequeño delay para asegurar que el modal esté abierto
+        }
+    });
+    
+    // También cargar cuando se cambia el tipo de préstamo
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'tipo_prestamo') {
+            setTimeout(cargarInstructores, 100);
+        }
+    });
+});
 </script>
 
 {% endblock %}

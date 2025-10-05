@@ -106,7 +106,7 @@ def prestamos():
         
         conn.close()
         
-        return render_template('views/gestion_prestamos.html',
+        return render_template('views/prestamos.html',
                              prestamos=prestamos_list,
                              stats=stats,
                              filtro_estado=filtro_estado,

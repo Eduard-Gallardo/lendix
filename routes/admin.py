@@ -67,6 +67,15 @@ def admin():
         LIMIT 10
     ''').fetchall()
     
+    # Obtener usuarios pendientes de aprobación
+    usuarios_pendientes = conn.execute('''
+        SELECT id, nombre, email, rol, fecha_registro
+        FROM usuarios 
+        WHERE activo = 0 
+        ORDER BY fecha_registro DESC
+        LIMIT 5
+    ''').fetchall()
+    
     conn.close()
     
     return render_template('admin/panel_administrador.html',
@@ -75,7 +84,8 @@ def admin():
                     total_prestamos=total_prestamos,
                     prestamos_activos=prestamos_activos,
                     implementos=implementos,
-                    notificaciones=notificaciones)
+                    notificaciones=notificaciones,
+                    usuarios_pendientes=usuarios_pendientes)
 
 @admin_bp.route('/admin/catalogo')
 @login_required
@@ -234,10 +244,41 @@ def gestion_usuarios():
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect('/')
+    
     conn = get_db_connection()
-    usuarios = conn.execute('SELECT * FROM usuarios ORDER BY id DESC').fetchall()
-    conn.close()
-    return render_template('admin/gestion_usuarios.html', usuarios=usuarios)
+    try:
+        # Obtener filtros
+        filtro_estado = request.args.get('estado', 'todos')
+        filtro_rol = request.args.get('rol', 'todos')
+        
+        # Construir query base
+        query = "SELECT * FROM usuarios WHERE 1=1"
+        params = []
+        
+        # Aplicar filtros
+        if filtro_estado == 'activos':
+            query += " AND activo = 1"
+        elif filtro_estado == 'pendientes':
+            query += " AND activo = 0"
+        
+        if filtro_rol != 'todos':
+            query += " AND rol = ?"
+            params.append(filtro_rol)
+        
+        query += " ORDER BY id DESC"
+        
+        usuarios = conn.execute(query, params).fetchall()
+        
+        conn.close()
+        
+        return render_template('admin/gestion_usuarios.html', 
+                             usuarios=usuarios,
+                             filtro_estado=filtro_estado,
+                             filtro_rol=filtro_rol)
+    except Exception as e:
+        flash(f'Error al cargar usuarios: {str(e)}', 'error')
+        conn.close()
+        return redirect('/admin')
 
 # Gestión de préstamos - Devoluciones
 @admin_bp.route('/devolucion_prestamos')
@@ -1076,3 +1117,227 @@ def editar_prestamo(id):
         conn.close()
 
     return redirect(url_for('admin.gestion_prestamos_admin'))
+
+# ==================== GESTIÓN DE USUARIOS ====================
+
+# Activar usuario
+@admin_bp.route('/activar_usuario/<int:id>', methods=['POST'])
+@login_required
+def activar_usuario(id):
+    if not is_admin():
+        return jsonify({'success': False, 'message': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        # Verificar que el usuario existe
+        usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (id,)).fetchone()
+        if not usuario:
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
+        
+        # Activar usuario
+        conn.execute('UPDATE usuarios SET activo = 1 WHERE id = ?', (id,))
+        conn.commit()
+        
+        # Crear notificación
+        crear_notificacion(
+            'usuario_activado',
+            'Usuario activado',
+            f'El usuario {usuario["nombre"]} ha sido activado por {session.get("user_nombre")}',
+            session.get('user_id')
+        )
+        
+        return jsonify({'success': True, 'message': 'Usuario activado exitosamente'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+# Desactivar usuario
+@admin_bp.route('/desactivar_usuario/<int:id>', methods=['POST'])
+@login_required
+def desactivar_usuario(id):
+    if not is_admin():
+        return jsonify({'success': False, 'message': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        # Verificar que el usuario existe
+        usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (id,)).fetchone()
+        if not usuario:
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
+        
+        # No permitir desactivar al admin principal
+        if usuario['email'] == 'Eduard@gmail.com':
+            return jsonify({'success': False, 'message': 'No se puede desactivar al administrador principal'}), 400
+        
+        # Desactivar usuario
+        conn.execute('UPDATE usuarios SET activo = 0 WHERE id = ?', (id,))
+        conn.commit()
+        
+        # Crear notificación
+        crear_notificacion(
+            'usuario_desactivado',
+            'Usuario desactivado',
+            f'El usuario {usuario["nombre"]} ha sido desactivado por {session.get("user_nombre")}',
+            session.get('user_id')
+        )
+        
+        return jsonify({'success': True, 'message': 'Usuario desactivado exitosamente'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+# Editar usuario
+@admin_bp.route('/editar_usuario/<int:id>', methods=['POST'])
+@login_required
+def editar_usuario(id):
+    if not is_admin():
+        flash('No tienes permisos para realizar esta acción', 'error')
+        return redirect('/admin/usuarios')
+    
+    conn = get_db_connection()
+    try:
+        # Obtener datos del formulario
+        nombre = request.form.get('nombre')
+        email = request.form.get('email')
+        telefono = request.form.get('telefono')
+        rol = request.form.get('rol')
+        
+        # Validar campos obligatorios
+        if not all([nombre, email, telefono, rol]):
+            flash('Todos los campos son obligatorios', 'error')
+            return redirect('/admin/usuarios')
+        
+        # Validar formato de email
+        import re
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            flash('Por favor, ingrese un correo electrónico válido', 'error')
+            return redirect('/admin/usuarios')
+        
+        # Verificar que el usuario existe
+        usuario_actual = conn.execute('SELECT * FROM usuarios WHERE id = ?', (id,)).fetchone()
+        if not usuario_actual:
+            flash('Usuario no encontrado', 'error')
+            return redirect('/admin/usuarios')
+        
+        # Verificar si el email ya existe en otro usuario
+        email_existente = conn.execute('SELECT id FROM usuarios WHERE email = ? AND id != ?', (email, id)).fetchone()
+        if email_existente:
+            flash('Este correo electrónico ya está registrado por otro usuario', 'error')
+            return redirect('/admin/usuarios')
+        
+        # Actualizar usuario
+        conn.execute('''
+            UPDATE usuarios 
+            SET nombre = ?, email = ?, telefono = ?, rol = ?
+            WHERE id = ?
+        ''', (nombre, email, telefono, rol, id))
+        
+        conn.commit()
+        
+        # Crear notificación
+        crear_notificacion(
+            'usuario_editado',
+            'Usuario editado',
+            f'El usuario {nombre} ha sido editado por {session.get("user_nombre")}',
+            session.get('user_id')
+        )
+        
+        flash(f'Usuario {nombre} actualizado exitosamente', 'success')
+        
+    except Exception as e:
+        flash(f'Error al actualizar usuario: {str(e)}', 'error')
+    finally:
+        conn.close()
+    
+    return redirect('/admin/usuarios')
+
+# Eliminar usuario
+@admin_bp.route('/eliminar_usuario/<int:id>', methods=['POST'])
+@login_required
+def eliminar_usuario(id):
+    if not is_admin():
+        return jsonify({'success': False, 'message': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        # Verificar que el usuario existe
+        usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (id,)).fetchone()
+        if not usuario:
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 404
+        
+        # No permitir eliminar al admin principal
+        if usuario['email'] == 'Eduard@gmail.com':
+            return jsonify({'success': False, 'message': 'No se puede eliminar al administrador principal'}), 400
+        
+        # Verificar si tiene préstamos activos
+        prestamos_activos = conn.execute(
+            'SELECT COUNT(*) as count FROM prestamos WHERE fk_usuario = ? AND fecha_devolucion IS NULL',
+            (id,)
+        ).fetchone()
+        
+        if prestamos_activos['count'] > 0:
+            return jsonify({'success': False, 'message': 'No se puede eliminar un usuario con préstamos activos'}), 400
+        
+        # Eliminar usuario
+        conn.execute('DELETE FROM usuarios WHERE id = ?', (id,))
+        conn.commit()
+        
+        # Crear notificación
+        crear_notificacion(
+            'usuario_eliminado',
+            'Usuario eliminado',
+            f'El usuario {usuario["nombre"]} ha sido eliminado por {session.get("user_nombre")}',
+            session.get('user_id')
+        )
+        
+        return jsonify({'success': True, 'message': 'Usuario eliminado exitosamente'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+    finally:
+        conn.close()
+
+# API para obtener usuarios pendientes
+@admin_bp.route('/api/usuarios_pendientes')
+@login_required
+def api_usuarios_pendientes():
+    if not is_admin():
+        return jsonify({'error': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        usuarios_pendientes = conn.execute('''
+            SELECT id, nombre, email, rol, fecha_registro
+            FROM usuarios 
+            WHERE activo = 0 
+            ORDER BY fecha_registro DESC
+        ''').fetchall()
+        
+        return jsonify([dict(usuario) for usuario in usuarios_pendientes])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# API para obtener instructores disponibles
+@admin_bp.route('/api/instructores_disponibles')
+@login_required
+def api_instructores_disponibles():
+    conn = get_db_connection()
+    try:
+        instructores = conn.execute('''
+            SELECT id, nombre, email
+            FROM usuarios 
+            WHERE rol = 'instructor' AND activo = 1
+            ORDER BY nombre ASC
+        ''').fetchall()
+        
+        return jsonify([dict(instructor) for instructor in instructores])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
