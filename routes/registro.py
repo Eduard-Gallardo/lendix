@@ -2,12 +2,11 @@ from flask import Blueprint, request, jsonify, render_template, flash, redirect,
 import sqlite3
 import re
 from utils.db import get_db_connection
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 
 # Configuración del Blueprint
 registro_bp = Blueprint('registro', __name__, template_folder='templates')
 
-# Rutas del Blueprint
 @registro_bp.route('/', methods=['GET', 'POST'])
 def registro_usuario():
     if request.method == 'POST':
@@ -17,7 +16,11 @@ def registro_usuario():
         telefono = request.form.get('telefono')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm-password')
-        tipo_usuario = request.form.get('tipo_usuario', 'aprendiz')  # Por defecto es aprendiz
+        tipo_usuario = request.form.get('tipo_usuario', 'funcionario')
+        
+        # Validar que el tipo de usuario sea válido (solo instructor o funcionario)
+        if tipo_usuario not in ['instructor', 'funcionario']:
+            tipo_usuario = 'funcionario'
         
         # Validar campos obligatorios
         if not all([nombre, email, telefono, password, confirm_password]):
@@ -51,11 +54,25 @@ def registro_usuario():
         conn = get_db_connection()
         try:
             conn.execute(
-                'INSERT INTO usuarios (nombre, email, telefono, password, tipo_usuario) VALUES (?, ?, ?, ?, ?)',
-                (nombre, email, telefono, hashed_password, tipo_usuario)
+                'INSERT INTO usuarios (nombre, email, telefono, password, rol, activo) VALUES (?, ?, ?, ?, ?, ?)',
+                (nombre, email, telefono, hashed_password, tipo_usuario, 0)
             )
             conn.commit()
-            flash('¡Cuenta creada exitosamente! Ya puede iniciar sesión.', 'success')
+            flash('¡Cuenta creada exitosamente! Un administrador debe aprobar tu acceso antes de poder iniciar sesión.', 'success')
+            
+            # Registrar en historial
+            try:
+                from utils.helpers import registrar_accion_historial
+                usuario_id = conn.execute('SELECT id FROM usuarios WHERE email = ?', (email,)).fetchone()['id']
+                registrar_accion_historial(
+                    usuario_id,
+                    'Registro de usuario',
+                    f'Nuevo usuario registrado: {nombre} ({tipo_usuario})',
+                    request.remote_addr
+                )
+            except:
+                pass
+                
         except sqlite3.IntegrityError as e:
             if 'UNIQUE constraint failed: usuarios.email' in str(e):
                 flash('Este correo electrónico ya está registrado', 'error')
@@ -70,7 +87,7 @@ def registro_usuario():
         finally:
             conn.close()
         
-        return redirect(url_for('registro.registro_usuario'))
+        return redirect(url_for('login.login'))
     
     return render_template('views/registro.html')
 
@@ -109,3 +126,21 @@ def verificar_telefono():
         return jsonify({'disponible': False, 'mensaje': 'Este teléfono ya está registrado'})
     else:
         return jsonify({'disponible': True, 'mensaje': 'Teléfono disponible'})
+
+# API endpoint para verificar nombre de usuario
+@registro_bp.route('/api/verificar-nombre', methods=['POST'])
+def verificar_nombre():
+    data = request.get_json()
+    nombre = data.get('nombre', '')
+    
+    if not nombre:
+        return jsonify({'disponible': False, 'mensaje': 'Nombre requerido'})
+    
+    conn = get_db_connection()
+    usuario = conn.execute('SELECT id FROM usuarios WHERE nombre = ?', (nombre,)).fetchone()
+    conn.close()
+    
+    if usuario:
+        return jsonify({'disponible': False, 'mensaje': 'Este nombre ya está registrado'})
+    else:
+        return jsonify({'disponible': True, 'mensaje': 'Nombre disponible'})

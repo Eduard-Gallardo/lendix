@@ -61,7 +61,7 @@
                 </div>
                 <div>
                     <label for="telefono" class="sr-only">Teléfono</label>
-                    <input id="telefono" name="telefono" type="tel" autocomplete="tel" required 
+                    <input id="telefono" name="telefono" type="number" autocomplete="tel" required 
                         class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
                         placeholder="Teléfono"
                         value="{{ request.form.telefono if request.form }}">
@@ -74,7 +74,8 @@
                     <label for="tipo_usuario" class="sr-only">Tipo de Usuario</label>
                     <select id="tipo_usuario" name="tipo_usuario" required 
                         class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm">
-                        <option value="aprendiz" {% if request.form and request.form.tipo_usuario == 'aprendiz' %}selected{% endif %}>Aprendiz</option>
+                        <option value="aprendiz" {% if request.form and request.form.tipo_usuario == 'aprendiz' %}selected{% endif %}>funcionario
+                        </option>
                         <option value="instructor" {% if request.form and request.form.tipo_usuario == 'instructor' %}selected{% endif %}>Instructor</option>
                     </select>
                 </div>

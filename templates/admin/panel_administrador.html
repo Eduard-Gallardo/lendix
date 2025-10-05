@@ -22,8 +22,14 @@
       <a href="{{ url_for('admin.agregar_implemento') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <i class="fas fa-plus mr-3"></i> Nuevo Implemento
       </a>
+      <a href="{{ url_for('admin.gestion_prestamos') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        <i class="fas fa-hand-holding mr-2"></i> Gestión Préstamos
+      </a>
       <a href="{{ url_for('admin.devolucion_prestamos') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
         <i class="fas fa-undo mr-2"></i> Gestión Devoluciones
+      </a>
+      <a href="{{ url_for('admin.gestion_usuarios') }}" class="flex items-center px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        <i class="fas fa-users mr-2"></i> Gestión Usuarios
       </a>
       
     </nav>
@@ -68,6 +74,157 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <i class="fas fa-box text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Implementos</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_implementos }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Usuarios</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_usuarios }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <div class="flex items-center">
+                <div class="p-3 bg-orange-100 rounded-lg">
+                    <i class="fas fa-hand-holding text-orange-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Préstamos Activos</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ prestamos_activos }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <i class="fas fa-bell text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Notificaciones</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ notificaciones|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificaciones recientes -->
+    {% if notificaciones %}
+    <div class="bg-white rounded-xl shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-bell mr-2 text-purple-600"></i>
+                Notificaciones Recientes
+            </h2>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for notificacion in notificaciones[:5] %}
+            <div class="px-6 py-4 hover:bg-gray-50 transition">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        {% if notificacion.tipo == 'prestamo_individual' %}
+                            <i class="fas fa-user text-green-600"></i>
+                        {% elif notificacion.tipo == 'prestamo_multiple' %}
+                            <i class="fas fa-users text-purple-600"></i>
+                        {% elif notificacion.tipo == 'devolucion' %}
+                            <i class="fas fa-undo text-blue-600"></i>
+                        {% elif notificacion.tipo == 'implemento_nuevo' %}
+                            <i class="fas fa-plus text-orange-600"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle text-gray-600"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900">{{ notificacion.titulo }}</p>
+                        <p class="text-sm text-gray-500">{{ notificacion.mensaje }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ notificacion.fecha_creacion[:16] }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if notificaciones|length > 5 %}
+        <div class="px-6 py-3 bg-gray-50 text-center">
+            <a href="#" class="text-sm text-blue-600 hover:text-blue-800">Ver todas las notificaciones</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Usuarios pendientes de aprobación -->
+    {% if usuarios_pendientes %}
+    <div class="bg-white rounded-xl shadow-lg mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-user-clock mr-2 text-yellow-600"></i>
+                Usuarios Pendientes de Aprobación
+            </h2>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for usuario in usuarios_pendientes %}
+            <div class="px-6 py-4 hover:bg-gray-50 transition">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-yellow-600"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ usuario.nombre }}</p>
+                            <p class="text-sm text-gray-500">{{ usuario.email }}</p>
+                            <p class="text-xs text-gray-400">
+                                {% if usuario.rol == 'instructor' %}
+                                    <i class="fas fa-chalkboard-teacher mr-1"></i>Instructor
+                                {% else %}
+                                    <i class="fas fa-user-tie mr-1"></i>Funcionario
+                                {% endif %}
+                                • {{ usuario.fecha_registro[:10] if usuario.fecha_registro else 'Fecha no disponible' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="activarUsuario({{ usuario.id }}, '{{ usuario.nombre }}')"
+                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition duration-200">
+                            <i class="fas fa-check mr-1"></i>
+                            Activar
+                        </button>
+                        <a href="{{ url_for('admin.gestion_usuarios') }}" 
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition duration-200">
+                            <i class="fas fa-eye mr-1"></i>
+                            Ver Detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="px-6 py-3 bg-gray-50 text-center">
+            <a href="{{ url_for('admin.gestion_usuarios') }}" class="text-sm text-blue-600 hover:text-blue-800">
+                <i class="fas fa-users mr-1"></i>
+                Gestionar todos los usuarios
+            </a>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Tabla -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -114,7 +271,15 @@
               {% endif %}
             </td>
             <td class="px-6 py-4">
-              <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Activo</span>
+              {% if implemento['estado'] == 'Bueno' %}
+                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Bueno</span>
+              {% elif implemento['estado'] == 'Desgaste notable' %}
+                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Desgaste notable</span>
+              {% elif implemento['estado'] == 'Dañado' %}
+                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Dañado</span>
+              {% else %}
+                <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded">{{ implemento['estado'] }}</span>
+              {% endif %}
             </td>
             <td class="px-6 py-4">
               <div class="flex justify-center space-x-3">
@@ -164,5 +329,32 @@
       <p>© 2025 Libratech - Sistema de Gestión de Implementos</p>
     </footer>
   </main>
+
+  <!-- Script para activación de usuarios -->
+  <script>
+  function activarUsuario(id, nombre) {
+      if (confirm(`¿Estás seguro de que deseas activar al usuario ${nombre}?`)) {
+          fetch(`/admin/activar_usuario/${id}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              }
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.success) {
+                  alert('Usuario activado exitosamente');
+                  location.reload();
+              } else {
+                  alert('Error: ' + data.message);
+              }
+          })
+          .catch(error => {
+              alert('Error al activar usuario');
+              console.error('Error:', error);
+          });
+      }
+  }
+  </script>
 </body>
 </html>

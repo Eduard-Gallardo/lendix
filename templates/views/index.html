@@ -2,296 +2,263 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="relative bg-cover bg-center bg-no-repeat h-screen" style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80');">
-    <div class="absolute inset-0 bg-white/75 sm:bg-transparent sm:bg-gradient-to-r sm:from-white/95 sm:to-white/25"></div>
+<section class="relative overflow-hidden bg-gradient-to-br from-green-50 via-white to-blue-50 pt-20 pb-28">
+    <div class="container mx-auto px-6">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Contenido Texto -->
+            <div class="text-center lg:text-left z-10">
+                <div class="inline-block mb-4">
+                    <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-semibold">
+                        Bienvenido a Lendix
+                    </span>
+                </div>
+                <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                    Tu biblioteca digital
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500">
+                        inteligente
+                    </span>
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 max-w-lg mx-auto lg:mx-0">
+                    Gestiona préstamos, explora recursos y accede a todo tu contenido bibliotecario desde un solo lugar.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('registro.registro_usuario') }}" 
+                       class="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                        Comenzar ahora
+                    </a>
+                    <a href="{{ url_for('catalogo.catalogo') }}" 
+                       class="px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-green-500 hover:text-green-600 transition-all duration-300">
+                        Ver catálogo
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('catalogo.catalogo') }}" 
+                       class="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                        Ir al catálogo
+                    </a>
+                    <a href="{{ url_for('prestamos.prestamos') }}" 
+                       class="px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-green-500 hover:text-green-600 transition-all duration-300">
+                        Mis préstamos
+                    </a>
+                    {% endif %}
+                </div>
 
-    <div class="relative mx-auto max-w-screen-xl px-4 py-32 sm:px-6 lg:flex lg:h-screen lg:items-center lg:px-8">
-        <div class="max-w-xl text-center sm:text-left">
-            <h1 class="text-3xl font-serif font-extrabold text-white sm:text-5xl">
-                Bienvenido a
-                <strong class="block font-extrabold text-green-400">
-                    LibraTech
-                </strong>
-            </h1>
+                <!-- Estadísticas -->
+                <div class="grid grid-cols-3 gap-6 mt-12 max-w-lg mx-auto lg:mx-0">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-900">5K+</div>
+                        <div class="text-sm text-gray-600 mt-1">Recursos</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-900">2.5K+</div>
+                        <div class="text-sm text-gray-600 mt-1">Usuarios</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-900">98%</div>
+                        <div class="text-sm text-gray-600 mt-1">Satisfacción</div>
+                    </div>
+                </div>
+            </div>
 
-            <p class="mt-4 max-w-lg text-lg text-gray-100 sm:text-xl">
-                Tu plataforma digital para gestionar recursos bibliotecarios. Descubre, reserva y disfruta de nuestro extenso catálogo de implementos.
+            <!-- Imagen Hero -->
+            <div class="relative hidden lg:block">
+                <div class="relative z-10">
+                    <img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         alt="Biblioteca moderna" 
+                         class="rounded-2xl shadow-2xl">
+                </div>
+                <!-- Elementos decorativos -->
+                <div class="absolute top-10 -right-10 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                <div class="absolute -bottom-10 -left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Características principales -->
+<section class="py-20 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">¿Por qué elegir Lendix?</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Una plataforma completa diseñada para hacer tu experiencia bibliotecaria simple y eficiente
             </p>
         </div>
-    </div>
-</section>
 
-<!-- Features Section -->
-<section class="bg-white py-16">
-    <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-serif font-bold text-gray-800">¿Por qué elegirnos?</h2>
-            <p class="text-gray-600 mt-2">Ofrecemos los mejores servicios para tu experiencia bibliotecaria</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="text-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-green-100 text-green-600">
-                    <i class="fas fa-book-open text-2xl"></i>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="group p-8 rounded-2xl bg-gradient-to-br from-green-50 to-white hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div class="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-search text-white text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800">Catálogo Digital</h3>
-                <p class="text-gray-600 mt-2">Accede a miles de recursos bibliográficos y tecnológicos desde cualquier dispositivo.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Búsqueda inteligente</h3>
+                <p class="text-gray-600">
+                    Encuentra recursos en segundos con nuestro sistema de búsqueda avanzado y filtros intuitivos.
+                </p>
             </div>
 
-            <div class="text-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-green-100 text-green-600">
-                    <i class="fas fa-calendar-check text-2xl"></i>
+            <!-- Feature 2 -->
+            <div class="group p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-white hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-calendar-alt text-white text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800">Reservas Inteligentes</h3>
-                <p class="text-gray-600 mt-2">Sistema de reservas eficiente que te permite planificar tu uso de recursos con anticipación.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Gestión de préstamos</h3>
+                <p class="text-gray-600">
+                    Administra todos tus préstamos activos, historial y renovaciones desde un solo panel.
+                </p>
             </div>
 
-            <div class="text-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <div class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-green-100 text-green-600">
-                    <i class="fas fa-clock text-2xl"></i>
+            <!-- Feature 3 -->
+            <div class="group p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-white hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-bell text-white text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800">Disponibilidad 24/7</h3>
-                <p class="text-gray-600 mt-2">Nuestra plataforma está disponible en todo momento para que accedas cuando lo necesites.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Carrusel de Imágenes -->
-<section class="bg-gray-100 py-16">
-    <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl font-serif font-bold text-gray-800">Nuestras Instalaciones</h2>
-            <p class="text-gray-600 mt-2">Conoce los espacios y recursos que tenemos para ti</p>
-        </div>
-
-        <div class="relative w-full max-w-6xl mx-auto">
-            <!-- Carrusel Container -->
-            <div class="carousel-container overflow-hidden rounded-xl shadow-2xl">
-                <div class="carousel-track flex transition-transform duration-500 ease-in-out" id="carousel-track">
-                    <!-- Slide 1 -->
-                    <div class="carousel-slide min-w-full">
-                        <div class="relative h-96">
-                            <img src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                alt="Biblioteca moderna" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                                <div class="text-center text-white p-6">
-                                    <h3 class="text-2xl font-bold mb-2">Salas de Estudio</h3>
-                                    <p class="text-lg">Espacios tranquilos y confortables para el estudio individual y grupal</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Slide 2 -->
-                    <div class="carousel-slide min-w-full">
-                        <div class="relative h-96">
-                            <img src="https://images.unsplash.com/photo-1568667256549-094345857637?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                alt="Tecnología disponible" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                                <div class="text-center text-white p-6">
-                                    <h3 class="text-2xl font-bold mb-2">Recursos Tecnológicos</h3>
-                                    <p class="text-lg">Computadoras, tablets y equipos especializados a tu disposición</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Slide 3 -->
-                    <div class="carousel-slide min-w-full">
-                        <div class="relative h-96">
-                            <img src="https://images.unsplash.com/photo-1532012197267-da84d127e765?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                alt="Colección de libros" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                                <div class="text-center text-white p-6">
-                                    <h3 class="text-2xl font-bold mb-2">Amplia Colección</h3>
-                                    <p class="text-lg">Miles de libros y recursos académicos en diferentes áreas del conocimiento</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Slide 4 -->
-                    <div class="carousel-slide min-w-full">
-                        <div class="relative h-96">
-                            <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1350&q=80" 
-                                alt="Espacios colaborativos" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                                <div class="text-center text-white p-6">
-                                    <h3 class="text-2xl font-bold mb-2">Áreas Colaborativas</h3>
-                                    <p class="text-lg">Espacios diseñados para el trabajo en equipo y la innovación colaborativa</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Notificaciones</h3>
+                <p class="text-gray-600">
+                    Recibe recordatorios automáticos de devoluciones y alertas de disponibilidad de recursos.
+                </p>
             </div>
 
-            <!-- Navigation Buttons -->
-            <button class="carousel-prev absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-md hover:bg-gray-100 transition-colors">
-                <i class="fas fa-chevron-left text-green-600"></i>
-            </button>
-            <button class="carousel-next absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-3 shadow-md hover:bg-gray-100 transition-colors">
-                <i class="fas fa-chevron-right text-green-600"></i>
-            </button>
+            <!-- Feature 4 -->
+            <div class="group p-8 rounded-2xl bg-gradient-to-br from-orange-50 to-white hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-mobile-alt text-white text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">100% Responsive</h3>
+                <p class="text-gray-600">
+                    Accede desde cualquier dispositivo: computadora, tablet o móvil con la misma experiencia.
+                </p>
+            </div>
 
-            <!-- Indicators -->
-            <div class="flex justify-center mt-4 space-x-2">
-                <button class="carousel-indicator w-3 h-3 rounded-full bg-gray-300 hover:bg-green-600 transition-colors" data-index="0"></button>
-                <button class="carousel-indicator w-3 h-3 rounded-full bg-gray-300 hover:bg-green-600 transition-colors" data-index="1"></button>
-                <button class="carousel-indicator w-3 h-3 rounded-full bg-gray-300 hover:bg-green-600 transition-colors" data-index="2"></button>
-                <button class="carousel-indicator w-3 h-3 rounded-full bg-gray-300 hover:bg-green-600 transition-colors" data-index="3"></button>
+            <!-- Feature 5 -->
+            <div class="group p-8 rounded-2xl bg-gradient-to-br from-teal-50 to-white hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div class="w-14 h-14 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-lock text-white text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Seguro y confiable</h3>
+                <p class="text-gray-600">
+                    Tus datos están protegidos con los más altos estándares de seguridad y encriptación.
+                </p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="group p-8 rounded-2xl bg-gradient-to-br from-pink-50 to-white hover:shadow-xl transition-all duration-300 border border-gray-100">
+                <div class="w-14 h-14 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-chart-line text-white text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Reportes y análisis</h3>
+                <p class="text-gray-600">
+                    Visualiza estadísticas de uso y genera reportes detallados de tu actividad bibliotecaria.
+                </p>
             </div>
         </div>
     </div>
 </section>
 
+<!-- Cómo funciona -->
+<section class="py-20 bg-gradient-to-b from-gray-50 to-white">
+    <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">Cómo funciona</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Comenzar es fácil y rápido, en solo 3 pasos
+            </p>
+        </div>
 
-<!-- CTA Section -->
-<section class="bg-white py-16">
-    <div class="container mx-auto px-4 text-center">
-        <h2 class="text-3xl font-serif font-bold text-gray-800 mb-4">¿Listo para comenzar?</h2>
-        <p class="text-gray-600 mb-8 max-w-2xl mx-auto">Únete a nuestra comunidad y descubre todo lo que LibraTech tiene para ofrecerte. Regístrate hoy mismo y comienza a explorar.</p>
+        <div class="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+            <!-- Paso 1 -->
+            <div class="text-center relative">
+                <div class="relative inline-block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mx-auto mb-6">
+                        1
+                    </div>
+                    <div class="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-ping"></div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Regístrate</h3>
+                <p class="text-gray-600">
+                    Crea tu cuenta gratuita en menos de 2 minutos con tu correo institucional
+                </p>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="text-center relative">
+                <div class="relative inline-block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mx-auto mb-6">
+                        2
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Explora</h3>
+                <p class="text-gray-600">
+                    Navega por nuestro catálogo y encuentra los recursos que necesitas
+                </p>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="text-center relative">
+                <div class="relative inline-block">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mx-auto mb-6">
+                        3
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Solicita</h3>
+                <p class="text-gray-600">
+                    Realiza tu préstamo con un clic y recoge en la biblioteca o accede digitalmente
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Final -->
+<section class="py-20 bg-gradient-to-r from-green-500 to-blue-500 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
+    </div>
+    
+    <div class="container mx-auto px-6 text-center relative z-10">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+            ¿Listo para empezar?
+        </h2>
+        <p class="text-xl text-white/90 mb-10 max-w-2xl mx-auto">
+            Únete a miles de usuarios que ya disfrutan de la mejor experiencia bibliotecaria digital
+        </p>
         
-        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-            {% if not current_user.is_authenticated %}
-            <a href="{{ url_for('registro.registro_usuario') }}" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
-                Crear Cuenta
+        {% if not current_user.is_authenticated %}
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{{ url_for('registro.registro_usuario') }}" 
+               class="px-10 py-4 bg-white text-green-600 rounded-xl font-bold text-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300 shadow-xl">
+                Crear cuenta gratis
             </a>
-            <a href="{{ url_for('catalogo.catalogo') }}" class="border border-green-600 text-green-600 px-8 py-3 rounded-lg hover:bg-green-600 hover:text-white transition-colors">
-                Explorar Catálogo
+            <a href="{{ url_for('login.login') }}" 
+               class="px-10 py-4 bg-transparent border-2 border-white text-white rounded-xl font-bold text-lg hover:bg-white hover:text-green-600 transition-all duration-300">
+                Iniciar sesión
             </a>
-            {% else %}
-            <a href="{{ url_for('catalogo.catalogo') }}" class="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors">
-                Ver Catálogo
-            </a>
-            
-            {% endif %}
         </div>
+        {% else %}
+        <a href="{{ url_for('catalogo.catalogo') }}" 
+           class="inline-block px-10 py-4 bg-white text-green-600 rounded-xl font-bold text-lg hover:bg-gray-50 transform hover:scale-105 transition-all duration-300 shadow-xl">
+            Explorar catálogo ahora
+        </a>
+        {% endif %}
     </div>
 </section>
 
 <style>
-    .carousel-container {
-        position: relative;
-        max-width: 100%;
-    }
-    
-    .carousel-track {
-        display: flex;
-        transition: transform 0.5s ease-in-out;
-    }
-    
-    .carousel-slide {
-        flex: 0 0 auto;
-        width: 100%;
-    }
-    
-    .carousel-prev,
-    .carousel-next {
-        z-index: 10;
-        opacity: 0.8;
-    }
-    
-    .carousel-prev:hover,
-    .carousel-next:hover {
-        opacity: 1;
-    }
-    
-    .carousel-indicator.active {
-        background-color: #16a34a;
-    }
+@keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
 </style>
 
-{% block scripts %}
-<script>
-    // Carrusel functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const track = document.getElementById('carousel-track');
-        const slides = document.querySelectorAll('.carousel-slide');
-        const prevBtn = document.querySelector('.carousel-prev');
-        const nextBtn = document.querySelector('.carousel-next');
-        const indicators = document.querySelectorAll('.carousel-indicator');
-        
-        let currentIndex = 0;
-        const slideCount = slides.length;
-        
-        // Update carousel position
-        function updateCarousel() {
-            track.style.transform = `translateX(-${currentIndex * 100}%)`;
-            
-            // Update indicators
-            indicators.forEach((indicator, index) => {
-                if (index === currentIndex) {
-                    indicator.classList.add('active');
-                } else {
-                    indicator.classList.remove('active');
-                }
-            });
-        }
-        
-        // Next slide
-        function nextSlide() {
-            currentIndex = (currentIndex + 1) % slideCount;
-            updateCarousel();
-        }
-        
-        // Previous slide
-        function prevSlide() {
-            currentIndex = (currentIndex - 1 + slideCount) % slideCount;
-            updateCarousel();
-        }
-        
-        // Go to specific slide
-        function goToSlide(index) {
-            currentIndex = index;
-            updateCarousel();
-        }
-        
-        // Event listeners
-        nextBtn.addEventListener('click', nextSlide);
-        prevBtn.addEventListener('click', prevSlide);
-        
-        indicators.forEach((indicator, index) => {
-            indicator.addEventListener('click', () => goToSlide(index));
-        });
-        
-        // Auto-advance slides
-        setInterval(nextSlide, 5000);
-        
-        // Initialize first indicator as active
-        updateCarousel();
-        
-        // Animate stats counters
-        function animateCounter(element, target, duration) {
-            let start = 0;
-            const increment = target / (duration / 16);
-            const updateCounter = () => {
-                start += increment;
-                if (start < target) {
-                    element.textContent = Math.ceil(start) + '+';
-                    requestAnimationFrame(updateCounter);
-                } else {
-                    element.textContent = target + '+';
-                }
-            };
-            updateCounter();
-        }
-        
-        // Start counter animation when stats section is in view
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    animateCounter(document.getElementById('stat-books'), 5000, 2000);
-                    animateCounter(document.getElementById('stat-users'), 2500, 2000);
-                    animateCounter(document.getElementById('stat-tech'), 500, 2000);
-                    observer.disconnect();
-                }
-            });
-        }, { threshold: 0.5 });
-        
-        observer.observe(document.getElementById('stat-books').parentElement.parentElement.parentElement);
-    });
-</script>
-{% endblock %}
 {% endblock %}

@@ -5,7 +5,7 @@
     <!-- Header con estadísticas -->
     <div class="text-center mb-8">
         <h1 class="text-4xl font-serif font-bold text-green-800 mb-3">Catálogo de Implementos</h1>
-        <p class="text-gray-600 text-lg mb-4">Gestiona los recursos disponibles para préstamos y reservas</p>
+        <p class="text-gray-600 text-lg mb-4">Gestiona los recursos disponibles para préstamos</p>
         
         <!-- Estadísticas rápidas -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
@@ -160,7 +160,27 @@
     <!-- Grid de implementos -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {% for item in catalogo %}
-        <div x-data="{ open: false, action: '', loading: false }" class="group">
+        <div x-data="{ open: false, action: '', loading: false, tipoPrestamo: '', actualizarCampos() { 
+            if (this.tipoPrestamo === 'individual') {
+                document.getElementById('ficha').required = false;
+                document.getElementById('horario').required = false;
+                document.getElementById('ambiente').required = false;
+                document.getElementById('ambiente_individual').required = true;
+                document.getElementById('ficha').value = 'No';
+                document.getElementById('horario').value = '';
+                document.getElementById('ambiente').value = 'SENA';
+                document.getElementById('ambiente_individual').value = '';
+            } else if (this.tipoPrestamo === 'multiple') {
+                document.getElementById('ficha').required = true;
+                document.getElementById('horario').required = true;
+                document.getElementById('ambiente').required = true;
+                document.getElementById('ambiente_individual').required = false;
+                document.getElementById('ficha').value = '';
+                document.getElementById('horario').value = '';
+                document.getElementById('ambiente').value = '';
+                document.getElementById('ambiente_individual').value = '';
+            }
+        } }" class="group">
             <!-- Tarjeta del implemento -->
             <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition cursor-pointer overflow-hidden h-full flex flex-col border border-gray-100 group-hover:border-green-200"
                  @click="if(!loading) { open = true; action = '' }">
@@ -259,25 +279,14 @@
                                             class="w-full bg-green-600 text-white px-4 py-3 rounded-xl flex items-center justify-center hover:bg-green-700 transition duration-300 disabled:opacity-50">
                                         <i class="fas fa-hand-holding mr-2"></i>Registrar Préstamo
                                     </button>
-                                    <button @click="action = 'reserva'" :disabled="loading"
-                                            class="w-full bg-yellow-600 text-white px-4 py-3 rounded-xl flex items-center justify-center hover:bg-yellow-700 transition duration-300 disabled:opacity-50">
-                                        <i class="fas fa-calendar-check mr-2"></i>Registrar Reserva
-                                    </button>
                                 {% else %}
                                     <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
                                         <i class="fas fa-exclamation-circle text-red-600 text-xl mb-2"></i>
                                         <p class="text-red-800 font-semibold">Este implemento no está disponible</p>
-                                        <p class="text-red-600 text-sm mt-1">No hay unidades disponibles para préstamo o reserva</p>
+                                        <p class="text-red-600 text-sm mt-1">No hay unidades disponibles para préstamo</p>
                                     </div>
                                 {% endif %}
                                 
-                                <!-- Acción de devolución solo para admin -->
-                                {% if session.get('rol') == 'admin' and item['disponibilidad'] < 10 %}
-                                    <button @click="devolverImplemento({{ item['id'] }})" :disabled="loading"
-                                            class="w-full bg-blue-600 text-white px-4 py-3 rounded-xl flex items-center justify-center hover:bg-blue-700 transition duration-300 disabled:opacity-50">
-                                        <i class="fas fa-undo mr-2"></i>Registrar Devolución
-                                    </button>
-                                {% endif %}
                                 
                                 <button @click="open = false" :disabled="loading"
                                         class="w-full bg-gray-200 text-gray-700 px-4 py-3 rounded-xl flex items-center justify-center hover:bg-gray-300 transition duration-300 disabled:opacity-50">
@@ -294,19 +303,52 @@
                             </h2>
                             <p class="text-sm text-gray-500">Disponibles: {{ item['disponibilidad'] }} unidades</p>
                             
-                            <input type="text" name="nombre" placeholder="Nombre completo *" required 
+                            <!-- Tipo de préstamo -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Préstamo *</label>
+                                <select name="tipo_prestamo" required x-model="tipoPrestamo" @change="actualizarCampos()"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+                                    <option value="">-- Seleccionar tipo --</option>
+                                    <option value="individual">Préstamo Individual</option>
+                                    <option value="multiple">Préstamo Múltiple (Para Ficha)</option>
+                                </select>
+                            </div>
+
+                            <!-- Campos comunes -->
+                            <input type="text" name="nombre_prestatario" id="nombre_prestatario" placeholder="Nombre del prestatario *" required 
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
-                            <input type="text" name="instructor" placeholder="Nombre del instructor *" required
+                            
+                            <select name="instructor" id="instructor" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
-                            <select name="jornada" required
+                                <option value="">Seleccionar instructor *</option>
+                                <!-- Los instructores se cargarán dinámicamente -->
+                            </select>
+                            
+                            <select name="jornada" id="jornada" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
                                 <option value="">Seleccionar jornada *</option>
                                 <option value="Mañana">Mañana</option>
                                 <option value="Tarde">Tarde</option>
                                 <option value="Noche">Noche</option>
                             </select>
-                            <input type="text" name="ambiente" placeholder="Número de ambiente *" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+
+                            <!-- Campos específicos para préstamo múltiple -->
+                            <div x-show="tipoPrestamo === 'multiple'" x-transition class="space-y-4">
+                                <input type="text" name="ficha" id="ficha" placeholder="Número de ficha *"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+                                
+                                <input type="text" name="horario" id="horario" placeholder="Horario (ej: 8:00 AM - 12:00 PM) *"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+                                
+                                <input type="text" name="ambiente" id="ambiente" placeholder="Número de ambiente *"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+                            </div>
+
+                            <!-- Campos específicos para préstamo individual -->
+                            <div x-show="tipoPrestamo === 'individual'" x-transition>
+                                <input type="text" name="ambiente" id="ambiente_individual" placeholder="Número de ambiente *"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
+                            </div>
 
                             <div class="flex justify-between gap-3">
                                 <button type="submit" :disabled="loading"
@@ -322,42 +364,6 @@
                             </div>
                         </form>
 
-                        <!-- Formulario de reserva -->
-                        <form x-show="action === 'reserva'" @submit="loading = true"
-                              action="{{ url_for('catalogo.reservar', id=item['id']) }}" method="post" class="space-y-4">
-                            <h2 class="text-lg font-bold text-gray-800 flex items-center">
-                                <i class="fas fa-calendar-check mr-2 text-yellow-600"></i>Registrar Reserva
-                            </h2>
-                            <p class="text-sm text-gray-500">Disponibles: {{ item['disponibilidad'] }} unidades</p>
-                            
-                            <input type="text" name="nombre" placeholder="Nombre completo *" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
-                            <input type="text" name="lugar" placeholder="Lugar de la reserva *" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y hora de inicio *</label>
-                                <input type="datetime-local" name="hora_inicio" required
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y hora de fin *</label>
-                                <input type="datetime-local" name="hora_fin" required
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-transparent transition">
-                            </div>
-
-                            <div class="flex justify-between gap-3">
-                                <button type="submit" :disabled="loading"
-                                    class="flex-1 bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition duration-300 disabled:opacity-50 flex items-center justify-center">
-                                    <i class="fas fa-spinner fa-spin mr-2" x-show="loading"></i>
-                                    <span x-show="!loading">Confirmar</span>
-                                    <span x-show="loading">Procesando...</span>
-                                </button>
-                                <button type="button" @click="action = ''; loading = false" :disabled="loading"
-                                    class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition duration-300 disabled:opacity-50">
-                                    Atrás
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>
@@ -379,31 +385,49 @@
     </div>
 </main>
 
-<!-- Script para manejar devoluciones -->
+
+<!-- Script para cargar instructores -->
 <script>
-function devolverImplemento(id) {
-    if (confirm('¿Estás seguro de que deseas registrar una devolución para este implemento?')) {
-        fetch(`/devolver/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Devolución registrada exitosamente');
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('Error al procesar la devolución');
-            console.error('Error:', error);
-        });
+// Cargar instructores disponibles al abrir el modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para cargar instructores
+    function cargarInstructores() {
+        fetch('/admin/api/instructores_disponibles')
+            .then(response => response.json())
+            .then(data => {
+                const selectInstructor = document.getElementById('instructor');
+                if (selectInstructor) {
+                    // Limpiar opciones existentes excepto la primera
+                    selectInstructor.innerHTML = '<option value="">Seleccionar instructor *</option>';
+                    
+                    // Agregar instructores
+                    data.forEach(instructor => {
+                        const option = document.createElement('option');
+                        option.value = instructor.nombre;
+                        option.textContent = instructor.nombre;
+                        selectInstructor.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar instructores:', error);
+            });
     }
-}
+    
+    // Cargar instructores cuando se abre el modal
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[x-data]') && e.target.textContent.includes('Registrar Préstamo')) {
+            setTimeout(cargarInstructores, 100); // Pequeño delay para asegurar que el modal esté abierto
+        }
+    });
+    
+    // También cargar cuando se cambia el tipo de préstamo
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'tipo_prestamo') {
+            setTimeout(cargarInstructores, 100);
+        }
+    });
+});
 </script>
 
 {% endblock %}
