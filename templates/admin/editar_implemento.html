@@ -63,7 +63,7 @@
                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">{{ implemento['descripcion'] }}</textarea>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-gray-700 mb-2 font-medium" for="disponibilidad">Disponibilidad *</label>
                         <input type="number" id="disponibilidad" name="disponibilidad" value="{{ implemento['disponibilidad'] }}" min="0" required 
@@ -80,6 +80,16 @@
                             <option value="mouses" {% if implemento['categoria'] == 'mouses' %}selected{% endif %}>Mouses</option>
                             <option value="teclados" {% if implemento['categoria'] == 'teclados' %}selected{% endif %}>Teclados</option>
                             <option value="otros" {% if implemento['categoria'] == 'otros' %}selected{% endif %}>Otros</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 mb-2 font-medium" for="estado">Estado *</label>
+                        <select id="estado" name="estado" required 
+                                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option value="Bueno" {% if implemento['estado'] == 'Bueno' %}selected{% endif %}>Bueno</option>
+                            <option value="Desgaste notable" {% if implemento['estado'] == 'Desgaste notable' %}selected{% endif %}>Desgaste notable</option>
+                            <option value="Dañado" {% if implemento['estado'] == 'Dañado' %}selected{% endif %}>Dañado</option>
                         </select>
                     </div>
                 </div>

@@ -38,13 +38,13 @@ def crear_notificacion(tipo, titulo, mensaje, fk_usuario=None, fk_prestamo=None)
         conn.close()
 
 # Rutas del Blueprint
-@admin_bp.route('/admin')
-@admin_bp.route('/admin/')
+@admin_bp.route('/')
+@admin_bp.route('/')
 @login_required
 def admin():
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
     
     conn = get_db_connection()
     
@@ -82,7 +82,7 @@ def admin():
 def ver_catalogo():
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
     conn = get_db_connection()
     implementos = conn.execute('SELECT * FROM implementos ORDER BY id DESC').fetchall()
     conn.close()
@@ -93,7 +93,7 @@ def ver_catalogo():
 def agregar_implemento():
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
     
     if request.method == 'POST':
         implemento = request.form.get('implemento')
@@ -146,7 +146,7 @@ def agregar_implemento():
 def editar_implemento(id):
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
     
     conn = get_db_connection()
     
@@ -204,7 +204,7 @@ def editar_implemento(id):
 def eliminar_implemento(id):
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
     
     conn = get_db_connection()
     
@@ -233,7 +233,7 @@ def eliminar_implemento(id):
 def gestion_usuarios():
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
     conn = get_db_connection()
     usuarios = conn.execute('SELECT * FROM usuarios ORDER BY id DESC').fetchall()
     conn.close()
@@ -245,7 +245,7 @@ def gestion_usuarios():
 def devolucion_prestamos():
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
 
     conn = get_db_connection()
     
@@ -296,7 +296,7 @@ def devolucion_prestamos():
 def devolver_prestamo_admin(id):
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
-        return redirect(url_for('index'))
+        return redirect('/')
     
     conn = get_db_connection()
     try:
@@ -421,6 +421,279 @@ def marcar_todas_leidas():
     finally:
         conn.close()
 
+# Gestión de préstamos - Vista principal
+@admin_bp.route('/gestion_prestamos')
+@login_required
+def gestion_prestamos():
+    conn = get_db_connection()
+    try:
+        # Obtener implementos disponibles
+        implementos_disponibles = conn.execute('''
+            SELECT id, implemento, disponibilidad, categoria 
+            FROM implementos 
+            WHERE disponibilidad > 0 
+            ORDER BY implemento
+        ''').fetchall()
+        
+        # Obtener préstamos con filtros
+        filtro_estado = request.args.get('estado', 'todos')
+        filtro_dias = int(request.args.get('dias', 30))
+        
+        # Construir query base para préstamos
+        query = '''
+            SELECT p.*, u.nombre as usuario, i.implemento,
+                   julianday('now') - julianday(p.fecha_prestamo) as dias_transcurridos
+            FROM prestamos p
+            JOIN usuarios u ON p.fk_usuario = u.id
+            JOIN implementos i ON p.fk_implemento = i.id
+            WHERE 1=1
+        '''
+        params = []
+        
+        # Aplicar filtros
+        if filtro_estado == 'activos':
+            query += " AND p.fecha_devolucion IS NULL"
+        elif filtro_estado == 'devueltos':
+            query += " AND p.fecha_devolucion IS NOT NULL"
+        
+        # Filtro por días
+        if filtro_dias > 0:
+            fecha_limite = (datetime.now() - timedelta(days=filtro_dias)).strftime("%Y-%m-%d")
+            query += " AND DATE(p.fecha_prestamo) >= ?"
+            params.append(fecha_limite)
+        
+        query += " ORDER BY p.fecha_prestamo DESC"
+        
+        prestamos = conn.execute(query, params).fetchall()
+        
+    except Exception as e:
+        flash(f'Error al cargar datos: {str(e)}', 'error')
+        implementos_disponibles = []
+        prestamos = []
+    finally:
+        conn.close()
+    
+    return render_template('views/gestion_prestamos.html',
+                         implementos_disponibles=implementos_disponibles,
+                         prestamos=prestamos,
+                         filtro_estado=filtro_estado,
+                         filtro_dias=filtro_dias)
+
+# Registrar préstamo individual
+@admin_bp.route('/registrar_prestamo_individual', methods=['POST'])
+@login_required
+def registrar_prestamo_individual():
+    # Solo instructores y funcionarios pueden hacer préstamos
+    if session.get('rol') not in ['instructor', 'funcionario']:
+        flash('No tienes permiso para realizar préstamos.', 'error')
+        return redirect(url_for('admin.gestion_prestamos'))
+    
+    conn = get_db_connection()
+    try:
+        implemento_id = request.form.get('implemento_id')
+        nombre_prestatario = request.form.get('nombre_prestatario')
+        instructor = request.form.get('instructor')
+        jornada = request.form.get('jornada')
+        ambiente = request.form.get('ambiente')
+        
+        # Verificar disponibilidad del implemento
+        implemento = conn.execute(
+            'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (implemento_id,)
+        ).fetchone()
+
+        if not implemento:
+            flash('El implemento no existe.', 'error')
+            return redirect(url_for('admin.gestion_prestamos'))
+
+        if implemento['disponibilidad'] <= 0:
+            flash('Este implemento no está disponible para préstamo.', 'error')
+            return redirect(url_for('admin.gestion_prestamos'))
+
+        fk_usuario = session.get('user_id')
+        fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Registrar el préstamo individual
+        cursor = conn.execute('''
+            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                instructor, jornada, ambiente, fecha_prestamo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (fk_usuario, implemento_id, 'individual', nombre_prestatario, instructor, jornada, ambiente, fecha_prestamo))
+        
+        prestamo_id = cursor.lastrowid
+
+        # Actualizar la disponibilidad del implemento
+        nueva_disponibilidad = implemento['disponibilidad'] - 1
+        conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
+                    (nueva_disponibilidad, implemento_id))
+
+        conn.commit()
+        
+        # Crear notificación para admin
+        crear_notificacion(
+            'prestamo_individual',
+            'Nuevo préstamo individual',
+            f'{nombre_prestatario} ha solicitado un préstamo de {implemento["implemento"]}',
+            fk_usuario,
+            prestamo_id
+        )
+        
+        flash(f"Préstamo de '{implemento['implemento']}' registrado con éxito", "success")
+        
+    except Exception as e:
+        flash(f"Error en el préstamo: {str(e)}", "error")
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin.gestion_prestamos'))
+
+# Registrar préstamo múltiple
+@admin_bp.route('/registrar_prestamo_multiple', methods=['POST'])
+@login_required
+def registrar_prestamo_multiple():
+    # Solo instructores y funcionarios pueden hacer préstamos
+    if session.get('rol') not in ['instructor', 'funcionario']:
+        flash('No tienes permiso para realizar préstamos.', 'error')
+        return redirect(url_for('admin.gestion_prestamos'))
+    
+    conn = get_db_connection()
+    try:
+        implemento_id = request.form.get('implemento_id')
+        ficha = request.form.get('ficha')
+        ambiente = request.form.get('ambiente')
+        horario = request.form.get('horario')
+        
+        # El nombre del prestatario es el usuario que hace el préstamo
+        nombre_prestatario = session.get('user_nombre')
+        
+        # Verificar disponibilidad del implemento
+        implemento = conn.execute(
+            'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (implemento_id,)
+        ).fetchone()
+
+        if not implemento:
+            flash('El implemento no existe.', 'error')
+            return redirect(url_for('admin.gestion_prestamos'))
+
+        if implemento['disponibilidad'] <= 0:
+            flash('Este implemento no está disponible para préstamo.', 'error')
+            return redirect(url_for('admin.gestion_prestamos'))
+
+        fk_usuario = session.get('user_id')
+        fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Registrar el préstamo múltiple
+        cursor = conn.execute('''
+            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                ficha, ambiente, horario, fecha_prestamo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (fk_usuario, implemento_id, 'multiple', nombre_prestatario, ficha, ambiente, horario, fecha_prestamo))
+        
+        prestamo_id = cursor.lastrowid
+
+        # Actualizar la disponibilidad del implemento
+        nueva_disponibilidad = implemento['disponibilidad'] - 1
+        conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
+                    (nueva_disponibilidad, implemento_id))
+
+        conn.commit()
+        
+        # Crear notificación para admin
+        crear_notificacion(
+            'prestamo_multiple',
+            'Nuevo préstamo múltiple',
+            f'{nombre_prestatario} ha solicitado un préstamo múltiple de {implemento["implemento"]} para ficha {ficha}',
+            fk_usuario,
+            prestamo_id
+        )
+        
+        flash(f"Préstamo múltiple de '{implemento['implemento']}' registrado con éxito", "success")
+        
+    except Exception as e:
+        flash(f"Error en el préstamo: {str(e)}", "error")
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin.gestion_prestamos'))
+
+# Procesar devolución de préstamo (solo admin)
+@admin_bp.route('/devolver_prestamo/<int:id>', methods=['POST'])
+@login_required
+def devolver_prestamo(id):
+    if not is_admin():
+        flash('No tienes permiso para procesar devoluciones.', 'error')
+        return redirect(url_for('admin.gestion_prestamos'))
+
+    conn = get_db_connection()
+    try:
+        # Obtener datos del formulario
+        novedad = request.form.get('novedad', 'Ninguna')
+        estado_implemento = request.form.get('estado_implemento', 'Bueno')
+        observaciones = request.form.get('observaciones', '')
+        
+        # Obtener información completa del préstamo
+        prestamo = conn.execute('''
+            SELECT p.*, i.implemento, i.disponibilidad, u.nombre as usuario_nombre
+            FROM prestamos p
+            JOIN implementos i ON p.fk_implemento = i.id
+            JOIN usuarios u ON p.fk_usuario = u.id
+            WHERE p.id = ?
+        ''', (id,)).fetchone()
+
+        if not prestamo:
+            flash('No se encontró el préstamo.', 'error')
+            return redirect(url_for('admin.gestion_prestamos'))
+
+        if prestamo['fecha_devolucion'] is not None:
+            flash('Este préstamo ya fue devuelto anteriormente.', 'warning')
+            return redirect(url_for('admin.gestion_prestamos'))
+
+        # Registrar la devolución
+        fecha_devolucion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute('''
+            UPDATE prestamos 
+            SET fecha_devolucion = ?, novedad = ?, estado_implemento_devolucion = ?, observaciones = ?
+            WHERE id = ?
+        ''', (fecha_devolucion, novedad, estado_implemento, observaciones, id))
+
+        # Actualizar disponibilidad del implemento
+        nueva_disponibilidad = prestamo['disponibilidad'] + 1
+        conn.execute(
+            'UPDATE implementos SET disponibilidad = ? WHERE id = ?',
+            (nueva_disponibilidad, prestamo['fk_implemento'])
+        )
+        
+        # Actualizar estado del implemento si es necesario
+        if estado_implemento != 'Bueno':
+            conn.execute(
+                'UPDATE implementos SET estado = ? WHERE id = ?',
+                (estado_implemento, prestamo['fk_implemento'])
+            )
+
+        conn.commit()
+        
+        # Crear notificación
+        mensaje_notif = f'Devolución de {prestamo["implemento"]} por {prestamo["usuario_nombre"]}'
+        if novedad != 'Ninguna':
+            mensaje_notif += f' - Novedad: {novedad}'
+        if estado_implemento != 'Bueno':
+            mensaje_notif += f' - Estado: {estado_implemento}'
+        
+        crear_notificacion(
+            'devolucion',
+            'Devolución registrada',
+            mensaje_notif,
+            session.get('user_id'),
+            id
+        )
+        
+        flash(f'Devolución registrada exitosamente: {prestamo["implemento"]}', 'success')
+    except Exception as e:
+        flash(f'Error al procesar la devolución: {str(e)}', 'error')
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin.gestion_prestamos'))
+
 # API estadísticas
 @admin_bp.route('/api/admin/estadisticas')
 def api_estadisticas():
@@ -439,3 +712,367 @@ def api_estadisticas():
         'total_prestamos': total_prestamos,
         'prestamos_activos': prestamos_activos
     })
+
+# Gestión de préstamos para instructores
+@admin_bp.route('/gestion_prestamos_instructores')
+@login_required
+def gestion_prestamos_instructores():
+    # Solo instructores y funcionarios pueden acceder
+    if session.get('rol') not in ['instructor', 'funcionario']:
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        # Obtener préstamos del usuario actual con filtros
+        filtro_estado = request.args.get('estado', 'todos')
+        
+        # Construir query base para préstamos del usuario actual
+        query = '''
+            SELECT p.*, i.implemento
+            FROM prestamos p
+            JOIN implementos i ON p.fk_implemento = i.id
+            WHERE p.fk_usuario = ?
+        '''
+        params = [session.get('user_id')]
+        
+        # Aplicar filtros
+        if filtro_estado == 'activos':
+            query += " AND p.fecha_devolucion IS NULL"
+        elif filtro_estado == 'devueltos':
+            query += " AND p.fecha_devolucion IS NOT NULL"
+        
+        query += " ORDER BY p.fecha_prestamo DESC"
+        
+        prestamos = conn.execute(query, params).fetchall()
+        
+    except Exception as e:
+        flash(f'Error al cargar datos: {str(e)}', 'error')
+        prestamos = []
+    finally:
+        conn.close()
+    
+    return render_template('views/gestion_prestamos_instructores.html',
+                         prestamos=prestamos,
+                         filtro_estado=filtro_estado)
+
+# Agregar novedad a préstamo (solo instructores/funcionarios para sus préstamos)
+@admin_bp.route('/agregar_novedad/<int:id>', methods=['POST'])
+@login_required
+def agregar_novedad(id):
+    # Solo instructores y funcionarios pueden agregar novedades
+    if session.get('rol') not in ['instructor', 'funcionario']:
+        flash('No tienes permisos para agregar novedades', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        # Verificar que el préstamo pertenece al usuario actual
+        prestamo = conn.execute('''
+            SELECT p.*, i.implemento
+            FROM prestamos p
+            JOIN implementos i ON p.fk_implemento = i.id
+            WHERE p.id = ? AND p.fk_usuario = ?
+        ''', (id, session.get('user_id'))).fetchone()
+
+        if not prestamo:
+            flash('No se encontró el préstamo o no tienes permisos para modificarlo.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_instructores'))
+
+        if prestamo['fecha_devolucion'] is not None:
+            flash('No se pueden agregar novedades a préstamos ya devueltos.', 'warning')
+            return redirect(url_for('admin.gestion_prestamos_instructores'))
+
+        # Obtener datos del formulario
+        novedad = request.form.get('novedad')
+        descripcion = request.form.get('descripcion')
+        
+        if not all([novedad, descripcion]):
+            flash('Todos los campos son obligatorios.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_instructores'))
+
+        # Actualizar el préstamo con la novedad
+        conn.execute('''
+            UPDATE prestamos 
+            SET novedad = ?, observaciones = ?
+            WHERE id = ?
+        ''', (novedad, descripcion, id))
+        
+        conn.commit()
+        
+        # Crear notificación para admin
+        crear_notificacion(
+            'novedad_prestamo',
+            'Novedad en préstamo',
+            f'{session.get("user_nombre")} agregó una novedad al préstamo de {prestamo["implemento"]}: {novedad}',
+            session.get('user_id'),
+            id
+        )
+        
+        flash(f'Novedad agregada exitosamente al préstamo de {prestamo["implemento"]}', 'success')
+        
+    except Exception as e:
+        flash(f'Error al agregar novedad: {str(e)}', 'error')
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin.gestion_prestamos_instructores'))
+
+# Gestión de préstamos para administradores
+@admin_bp.route('/gestion_prestamos_admin')
+@login_required
+def gestion_prestamos_admin():
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        # Obtener implementos disponibles
+        implementos_disponibles = conn.execute('''
+            SELECT id, implemento, disponibilidad, categoria 
+            FROM implementos 
+            WHERE disponibilidad > 0 
+            ORDER BY implemento
+        ''').fetchall()
+        
+        # Obtener préstamos con filtros
+        filtro_estado = request.args.get('estado', 'todos')
+        filtro_dias = int(request.args.get('dias', 30))
+        
+        # Construir query base para préstamos
+        query = '''
+            SELECT p.*, u.nombre as usuario, i.implemento,
+                   julianday('now') - julianday(p.fecha_prestamo) as dias_transcurridos
+            FROM prestamos p
+            JOIN usuarios u ON p.fk_usuario = u.id
+            JOIN implementos i ON p.fk_implemento = i.id
+            WHERE 1=1
+        '''
+        params = []
+        
+        # Aplicar filtros
+        if filtro_estado == 'activos':
+            query += " AND p.fecha_devolucion IS NULL"
+        elif filtro_estado == 'devueltos':
+            query += " AND p.fecha_devolucion IS NOT NULL"
+        
+        # Filtro por días
+        if filtro_dias > 0:
+            fecha_limite = (datetime.now() - timedelta(days=filtro_dias)).strftime("%Y-%m-%d")
+            query += " AND DATE(p.fecha_prestamo) >= ?"
+            params.append(fecha_limite)
+        
+        query += " ORDER BY p.fecha_prestamo DESC"
+        
+        prestamos = conn.execute(query, params).fetchall()
+        
+    except Exception as e:
+        flash(f'Error al cargar datos: {str(e)}', 'error')
+        implementos_disponibles = []
+        prestamos = []
+    finally:
+        conn.close()
+    
+    return render_template('admin/gestion_prestamos_admin.html',
+                         implementos_disponibles=implementos_disponibles,
+                         prestamos=prestamos,
+                         filtro_estado=filtro_estado,
+                         filtro_dias=filtro_dias)
+
+# Registrar préstamo individual como admin
+@admin_bp.route('/registrar_prestamo_admin_individual', methods=['POST'])
+@login_required
+def registrar_prestamo_admin_individual():
+    if not is_admin():
+        flash('No tienes permisos para realizar esta acción', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        implemento_id = request.form.get('implemento_id')
+        nombre_prestatario = request.form.get('nombre_prestatario')
+        instructor = request.form.get('instructor')
+        jornada = request.form.get('jornada')
+        ambiente = request.form.get('ambiente')
+        
+        # Verificar disponibilidad del implemento
+        implemento = conn.execute(
+            'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (implemento_id,)
+        ).fetchone()
+
+        if not implemento:
+            flash('El implemento no existe.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_admin'))
+
+        if implemento['disponibilidad'] <= 0:
+            flash('Este implemento no está disponible para préstamo.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_admin'))
+
+        fk_usuario = session.get('user_id')
+        fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Registrar el préstamo individual
+        cursor = conn.execute('''
+            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                instructor, jornada, ambiente, fecha_prestamo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (fk_usuario, implemento_id, 'individual', nombre_prestatario, instructor, jornada, ambiente, fecha_prestamo))
+        
+        prestamo_id = cursor.lastrowid
+
+        # Actualizar la disponibilidad del implemento
+        nueva_disponibilidad = implemento['disponibilidad'] - 1
+        conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
+                    (nueva_disponibilidad, implemento_id))
+
+        conn.commit()
+        
+        # Crear notificación
+        crear_notificacion(
+            'prestamo_admin',
+            'Préstamo registrado por admin',
+            f'Admin registró préstamo individual de {implemento["implemento"]} para {nombre_prestatario}',
+            fk_usuario,
+            prestamo_id
+        )
+        
+        flash(f"Préstamo de '{implemento['implemento']}' registrado con éxito", "success")
+        
+    except Exception as e:
+        flash(f"Error en el préstamo: {str(e)}", "error")
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin.gestion_prestamos_admin'))
+
+# Registrar préstamo múltiple como admin
+@admin_bp.route('/registrar_prestamo_admin_multiple', methods=['POST'])
+@login_required
+def registrar_prestamo_admin_multiple():
+    if not is_admin():
+        flash('No tienes permisos para realizar esta acción', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        implemento_id = request.form.get('implemento_id')
+        ficha = request.form.get('ficha')
+        instructor = request.form.get('instructor')
+        ambiente = request.form.get('ambiente')
+        horario = request.form.get('horario')
+        
+        # El nombre del prestatario es el usuario que hace el préstamo
+        nombre_prestatario = session.get('user_nombre')
+        
+        # Verificar disponibilidad del implemento
+        implemento = conn.execute(
+            'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (implemento_id,)
+        ).fetchone()
+
+        if not implemento:
+            flash('El implemento no existe.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_admin'))
+
+        if implemento['disponibilidad'] <= 0:
+            flash('Este implemento no está disponible para préstamo.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_admin'))
+
+        fk_usuario = session.get('user_id')
+        fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Registrar el préstamo múltiple
+        cursor = conn.execute('''
+            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                instructor, jornada, ficha, ambiente, horario, fecha_prestamo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (fk_usuario, implemento_id, 'multiple', nombre_prestatario, instructor, 'N/A', ficha, ambiente, horario, fecha_prestamo))
+        
+        prestamo_id = cursor.lastrowid
+
+        # Actualizar la disponibilidad del implemento
+        nueva_disponibilidad = implemento['disponibilidad'] - 1
+        conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
+                    (nueva_disponibilidad, implemento_id))
+
+        conn.commit()
+        
+        # Crear notificación
+        crear_notificacion(
+            'prestamo_admin',
+            'Préstamo múltiple registrado por admin',
+            f'Admin registró préstamo múltiple de {implemento["implemento"]} para ficha {ficha}',
+            fk_usuario,
+            prestamo_id
+        )
+        
+        flash(f"Préstamo múltiple de '{implemento['implemento']}' registrado con éxito", "success")
+        
+    except Exception as e:
+        flash(f"Error en el préstamo: {str(e)}", "error")
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin.gestion_prestamos_admin'))
+
+# Editar préstamo (solo admin)
+@admin_bp.route('/editar_prestamo/<int:id>', methods=['POST'])
+@login_required
+def editar_prestamo(id):
+    if not is_admin():
+        flash('No tienes permisos para editar préstamos', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        # Obtener datos del formulario
+        instructor = request.form.get('instructor')
+        jornada = request.form.get('jornada')
+        ambiente = request.form.get('ambiente')
+        
+        if not all([instructor, jornada, ambiente]):
+            flash('Todos los campos son obligatorios.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_admin'))
+        
+        # Verificar que el préstamo existe y está activo
+        prestamo = conn.execute('''
+            SELECT p.*, i.implemento
+            FROM prestamos p
+            JOIN implementos i ON p.fk_implemento = i.id
+            WHERE p.id = ?
+        ''', (id,)).fetchone()
+
+        if not prestamo:
+            flash('No se encontró el préstamo.', 'error')
+            return redirect(url_for('admin.gestion_prestamos_admin'))
+
+        if prestamo['fecha_devolucion'] is not None:
+            flash('No se pueden editar préstamos ya devueltos.', 'warning')
+            return redirect(url_for('admin.gestion_prestamos_admin'))
+
+        # Actualizar el préstamo
+        conn.execute('''
+            UPDATE prestamos 
+            SET instructor = ?, jornada = ?, ambiente = ?
+            WHERE id = ?
+        ''', (instructor, jornada, ambiente, id))
+        
+        conn.commit()
+        
+        # Crear notificación
+        crear_notificacion(
+            'prestamo_editado',
+            'Préstamo editado',
+            f'Admin editó préstamo de {prestamo["implemento"]} - Instructor: {instructor}',
+            session.get('user_id'),
+            id
+        )
+        
+        flash(f'Préstamo de {prestamo["implemento"]} actualizado exitosamente', 'success')
+        
+    except Exception as e:
+        flash(f'Error al editar préstamo: {str(e)}', 'error')
+    finally:
+        conn.close()
+
+    return redirect(url_for('admin.gestion_prestamos_admin'))

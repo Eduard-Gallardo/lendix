@@ -18,7 +18,7 @@ def init_db():
                 telefono TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
                 rol TEXT DEFAULT 'funcionario' CHECK(rol IN ('admin', 'instructor', 'funcionario')),
-                activo BOOLEAN DEFAULT 0,
+                activo BOOLEAN DEFAULT 1,
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -32,7 +32,7 @@ def init_db():
                 disponibilidad INTEGER NOT NULL DEFAULT 0,
                 categoria TEXT,
                 imagen_url TEXT,
-                estado TEXT DEFAULT 'Bueno' CHECK(estado IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')),
+                estado TEXT DEFAULT 'Bueno' CHECK(estado IN ('Bueno', 'Desgaste notable', 'Dañado')),
                 fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
@@ -49,10 +49,12 @@ def init_db():
                 ficha TEXT,
                 ambiente TEXT,
                 horario TEXT,
+                instructor TEXT,
+                jornada TEXT,
                 fecha_prestamo TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 fecha_devolucion TIMESTAMP,
                 novedad TEXT DEFAULT 'Ninguna',
-                estado_implemento_devolucion TEXT DEFAULT 'Bueno' CHECK(estado_implemento_devolucion IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')),
+                estado_implemento_devolucion TEXT DEFAULT 'Bueno' CHECK(estado_implemento_devolucion IN ('Bueno', 'Desgaste notable', 'Dañado')),
                 observaciones TEXT,
                 FOREIGN KEY (fk_usuario) REFERENCES usuarios(id),
                 FOREIGN KEY (fk_implemento) REFERENCES implementos(id)
@@ -87,6 +89,7 @@ def init_db():
                 FOREIGN KEY (fk_usuario) REFERENCES usuarios(id)
             )
         ''')
+        
         
     conn.close()
 
@@ -130,6 +133,18 @@ def migrar_base_datos():
         columns = [column[1] for column in cursor.fetchall()]
         
         # Agregar columnas faltantes si no existen
+        if 'instructor' not in columns:
+            conn.execute('''
+                ALTER TABLE prestamos ADD COLUMN instructor TEXT
+            ''')
+            print("Columna instructor agregada a prestamos")
+        
+        if 'jornada' not in columns:
+            conn.execute('''
+                ALTER TABLE prestamos ADD COLUMN jornada TEXT
+            ''')
+            print("Columna jornada agregada a prestamos")
+        
         if 'estado_implemento_devolucion' not in columns:
             conn.execute('''
                 ALTER TABLE prestamos ADD COLUMN estado_implemento_devolucion TEXT DEFAULT 'Bueno'
@@ -142,21 +157,25 @@ def migrar_base_datos():
             ''')
             print("Columna observaciones agregada a prestamos")
         
-        # Verificar tabla implementos
-        cursor = conn.execute("PRAGMA table_info(implementos)")
-        columns = [column[1] for column in cursor.fetchall()]
+        # Eliminar tablas de permisos si existen
+        try:
+            conn.execute('DROP TABLE IF EXISTS permisos_ambientes')
+            conn.execute('DROP TABLE IF EXISTS permisos_aprendices')
+            print("Tablas de permisos eliminadas")
+        except Exception as e:
+            print(f"Error al eliminar tablas de permisos: {e}")
         
         # Actualizar constraint de estado si es necesario
         try:
-            # Intentar actualizar registros existentes con valores inválidos
+            # Actualizar estados a los nuevos valores
             conn.execute('''
                 UPDATE implementos SET estado = 'Bueno' 
-                WHERE estado NOT IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')
+                WHERE estado NOT IN ('Bueno', 'Desgaste notable', 'Dañado')
             ''')
             
             conn.execute('''
                 UPDATE prestamos SET estado_implemento_devolucion = 'Bueno' 
-                WHERE estado_implemento_devolucion NOT IN ('Bueno', 'Regular', 'Malo', 'Fuera de servicio')
+                WHERE estado_implemento_devolucion NOT IN ('Bueno', 'Desgaste notable', 'Dañado')
                 OR estado_implemento_devolucion IS NULL
             ''')
             

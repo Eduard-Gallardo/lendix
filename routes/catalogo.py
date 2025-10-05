@@ -113,7 +113,7 @@ def filtrar_catalogo():
                            categoria=categoria,
                            disponibilidad=disponibilidad)
 
-# Registrar préstamo individual
+# Registrar préstamo
 @catalogo_bp.route('/prestar/<int:id>', methods=['POST'])
 @login_required
 def prestar(id):
@@ -124,6 +124,16 @@ def prestar(id):
     
     conn = get_db_connection()
     try:
+        # Obtener datos del formulario
+        tipo_prestamo = request.form.get('tipo_prestamo')
+        nombre_prestatario = request.form.get('nombre_prestatario')
+        instructor = request.form.get('instructor')
+        jornada = request.form.get('jornada')
+        
+        if not all([tipo_prestamo, nombre_prestatario, instructor, jornada]):
+            flash('Todos los campos obligatorios deben ser completados.', 'error')
+            return redirect(url_for('catalogo.catalogo'))
+
         # Verificar disponibilidad del implemento
         implemento = conn.execute(
             'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (id,)
@@ -140,15 +150,37 @@ def prestar(id):
         fk_usuario = session.get('user_id')
         fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # El nombre del prestatario es el usuario que hace el préstamo
-        nombre_prestatario = session.get('user_nombre')
-
-        # Registrar el préstamo individual
-        cursor = conn.execute('''
-            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
-                                fecha_prestamo)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (fk_usuario, id, 'individual', nombre_prestatario, fecha_prestamo))
+        if tipo_prestamo == 'individual':
+            ambiente = request.form.get('ambiente') or 'SENA'
+            
+            # Registrar el préstamo individual
+            cursor = conn.execute('''
+                INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                    instructor, jornada, ambiente, fecha_prestamo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (fk_usuario, id, 'individual', nombre_prestatario, instructor, jornada, ambiente, fecha_prestamo))
+            
+            tipo_notificacion = 'prestamo_individual'
+            mensaje_notificacion = f'{nombre_prestatario} ha solicitado un préstamo individual de {implemento["implemento"]}'
+            
+        else:  # tipo_prestamo == 'multiple'
+            ficha = request.form.get('ficha')
+            horario = request.form.get('horario')
+            ambiente = request.form.get('ambiente')
+            
+            if not all([ficha, horario, ambiente]):
+                flash('Para préstamo múltiple, ficha, horario y ambiente son obligatorios.', 'error')
+                return redirect(url_for('catalogo.catalogo'))
+            
+            # Registrar el préstamo múltiple
+            cursor = conn.execute('''
+                INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                    instructor, jornada, ficha, horario, ambiente, fecha_prestamo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (fk_usuario, id, 'multiple', nombre_prestatario, instructor, jornada, ficha, horario, ambiente, fecha_prestamo))
+            
+            tipo_notificacion = 'prestamo_multiple'
+            mensaje_notificacion = f'{nombre_prestatario} ha solicitado un préstamo múltiple de {implemento["implemento"]} - Ficha: {ficha}'
         
         prestamo_id = cursor.lastrowid
 
@@ -161,14 +193,14 @@ def prestar(id):
         
         # Crear notificación para admin
         crear_notificacion(
-            'prestamo_individual',
-            'Nuevo préstamo individual',
-            f'{nombre_prestatario} ha solicitado un préstamo de {implemento["implemento"]}',
+            tipo_notificacion,
+            f'Nuevo préstamo {tipo_prestamo}',
+            mensaje_notificacion,
             fk_usuario,
             prestamo_id
         )
         
-        flash(f"Préstamo de '{implemento['implemento']}' registrado con éxito", "success")
+        flash(f"Préstamo {tipo_prestamo} de '{implemento['implemento']}' registrado con éxito", "success")
         
     except Exception as e:
         flash(f"Error en el préstamo: {str(e)}", "error")

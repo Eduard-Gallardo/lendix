@@ -47,7 +47,7 @@ def clear_failed_attempts(email):
 def login():
     if request.method == 'POST':
         # Obtener datos del formulario
-        email = request.form.get('email', '').strip().lower()
+        email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         remember_me = request.form.get('remember-me')
         
@@ -73,10 +73,11 @@ def login():
         ).fetchone()
         conn.close()
         
+        
         # Verificar si el usuario existe y la contraseña es correcta
-        if usuario and check_password_hash(usuario['password'], password):
+        if usuario and check_password_hash(usuario[4], password):
             # Verificar si el usuario está activo (1 = activo, 0 = inactivo)
-            if usuario['activo'] != 1:
+            if usuario[6] != 1:
                 flash('Tu cuenta está pendiente de aprobación por un administrador. Por favor, espera a ser activado.', 'warning')
                 return render_template('views/login.html')
             
@@ -84,25 +85,25 @@ def login():
             clear_failed_attempts(email)
             
             # Login exitoso - guardar datos en sesión
-            session['user_id'] = usuario['id']
-            session['user_nombre'] = usuario['nombre']
-            session['user_email'] = usuario['email']
-            session['user_telefono'] = usuario['telefono']
-            session['rol'] = usuario['rol']
+            session['user_id'] = usuario[0]
+            session['user_nombre'] = usuario[1]
+            session['user_email'] = usuario[2]
+            session['user_telefono'] = usuario[3]
+            session['rol'] = usuario[5]
             session['login_time'] = datetime.now().isoformat()
             
             # Configurar sesión persistente si "Recordarme" está marcado
             if remember_me:
                 session.permanent = True
             
-            flash(f'¡Bienvenido de nuevo, {usuario["nombre"]}!', 'success')
+            flash(f'¡Bienvenido de nuevo, {usuario[1]}!', 'success')
             
             # Redirección según el rol del usuario
-            if usuario['rol'] == 'admin':
-                return redirect(url_for('admin.admin'))
+            if usuario[5] == 'admin':
+                return redirect('/admin')
             else:
                 # Instructor y funcionario van al índice
-                return redirect(url_for('index'))
+                return redirect('/')
         else:
             # Login fallido - registrar intento
             record_failed_attempt(email)
@@ -167,7 +168,7 @@ def admin_required(view):
             return redirect(url_for('login.login'))
         if session.get('rol') != 'admin':
             flash('No tienes permisos para acceder a esta página', 'error')
-            return redirect(url_for('index'))
+            return redirect('/')
         return view(*args, **kwargs)
     return wrapped_view
 
@@ -181,7 +182,7 @@ def prestamo_required(view):
             return redirect(url_for('login.login'))
         if session.get('rol') not in ['admin', 'instructor', 'funcionario']:
             flash('No tienes permisos para realizar préstamos', 'error')
-            return redirect(url_for('index'))
+            return redirect('/')
         return view(*args, **kwargs)
     return wrapped_view
 
@@ -201,18 +202,18 @@ def api_login():
     ).fetchone()
     conn.close()
     
-    if usuario and check_password_hash(usuario['password'], password):
-        if usuario['activo'] != 1:
+    if usuario and check_password_hash(usuario[4], password):
+        if usuario[6] != 1:
             return jsonify({'success': False, 'message': 'Cuenta pendiente de aprobación'}), 403
             
         return jsonify({
             'success': True, 
             'message': 'Login exitoso',
             'user': {
-                'id': usuario['id'],
-                'nombre': usuario['nombre'],
-                'email': usuario['email'],
-                'rol': usuario['rol']
+                'id': usuario[0],
+                'nombre': usuario[1],
+                'email': usuario[2],
+                'rol': usuario[5]
             }
         })
     else:

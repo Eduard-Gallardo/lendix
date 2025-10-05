@@ -24,9 +24,9 @@ with app.app_context():
         init_db()
         migrar_base_datos()  # Migrar estructura existente
         crear_admin_inicial()
-        print("✓ Base de datos inicializada y migrada correctamente")
+        print("Base de datos inicializada y migrada correctamente")
     except Exception as e:
-        print(f"✗ Error al inicializar base de datos: {e}")
+        print(f"Error al inicializar base de datos: {e}")
 
 @app.route('/')
 def index():
@@ -47,7 +47,7 @@ def inject_user():
 
 # Registrar blueprints
 app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(login_bp, url_prefix='/login')
+app.register_blueprint(login_bp)
 app.register_blueprint(registro_bp, url_prefix='/registro')
 app.register_blueprint(prestamos_bp, url_prefix='/prestamos')
 app.register_blueprint(catalogo_bp, url_prefix='/catalogo')
