@@ -1,1 +1,412 @@
-/// sistema de gestion de notificaciones cuando los instructores hacen prestamos///
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Notificaciones - Panel Administrador - Lendix{% endblock %}
+
+{% block page_title %}Centro de Notificaciones{% endblock %}
+{% block page_subtitle %}Gestiona y supervisa todas las notificaciones del sistema{% endblock %}
+
+{% block content %}
+<!-- Estadísticas de notificaciones -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Notificaciones -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Total Notificaciones</p>
+                <p class="text-3xl font-bold text-gray-900">{{ notificaciones|length }}</p>
+                <p class="text-xs text-blue-600 mt-1">
+                    <i class="fas fa-bell mr-1"></i>
+                    Todas las notificaciones
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-bell text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sin Leer -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.1s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Sin Leer</p>
+                <p class="text-3xl font-bold text-gray-900">{{ notificaciones|selectattr('leida', 'eq', 0)|list|length }}</p>
+                <p class="text-xs text-red-600 mt-1">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    Requieren atención
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-exclamation-circle text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Préstamos -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.2s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Préstamos</p>
+                <p class="text-3xl font-bold text-gray-900">{{ notificaciones|selectattr('tipo', 'in', ['prestamo_individual', 'prestamo_multiple'])|list|length }}</p>
+                <p class="text-xs text-green-600 mt-1">
+                    <i class="fas fa-hand-holding mr-1"></i>
+                    Solicitudes de préstamo
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-hand-holding text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Devoluciones -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.3s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Devoluciones</p>
+                <p class="text-3xl font-bold text-gray-900">{{ notificaciones|selectattr('tipo', 'eq', 'devolucion')|list|length }}</p>
+                <p class="text-xs text-purple-600 mt-1">
+                    <i class="fas fa-undo mr-1"></i>
+                    Devoluciones registradas
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-undo text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros y acciones -->
+<div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 animate-fade-in-up">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por tipo</label>
+                <select id="filtroTipo" class="px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <option value="todos">Todos los tipos</option>
+                    <option value="prestamo_individual">Préstamos Individuales</option>
+                    <option value="prestamo_multiple">Préstamos Múltiples</option>
+                    <option value="devolucion">Devoluciones</option>
+                    <option value="implemento_nuevo">Implementos Nuevos</option>
+                    <option value="usuario_nuevo">Usuarios Nuevos</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por estado</label>
+                <select id="filtroEstado" class="px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <option value="todos">Todas las notificaciones</option>
+                    <option value="sin_leer">Sin leer</option>
+                    <option value="leidas">Leídas</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="marcarTodasComoLeidas()" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-300 flex items-center">
+                <i class="fas fa-check-double mr-2"></i>
+                Marcar todas como leídas
+            </button>
+            <button onclick="eliminarTodasLeidas()" 
+                    class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-300 flex items-center">
+                <i class="fas fa-trash mr-2"></i>
+                Limpiar leídas
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de notificaciones -->
+<div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mr-3">
+                <i class="fas fa-bell text-white"></i>
+            </div>
+            Notificaciones del Sistema
+        </h2>
+    </div>
+    
+    <div class="divide-y divide-gray-200">
+        {% if notificaciones %}
+            {% for notificacion in notificaciones %}
+            <div class="p-6 hover:bg-gray-50 transition-colors notification-item {% if notificacion.leida == 0 %}bg-blue-50 border-l-4 border-blue-500{% endif %}" 
+                 data-tipo="{{ notificacion.tipo }}" data-estado="{% if notificacion.leida == 0 %}sin_leer{% else %}leidas{% endif %}">
+                <div class="flex items-start space-x-4">
+                    <!-- Icono de tipo -->
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center
+                            {% if notificacion.tipo == 'prestamo_individual' %}bg-green-100 text-green-600
+                            {% elif notificacion.tipo == 'prestamo_multiple' %}bg-purple-100 text-purple-600
+                            {% elif notificacion.tipo == 'devolucion' %}bg-blue-100 text-blue-600
+                            {% elif notificacion.tipo == 'implemento_nuevo' %}bg-orange-100 text-orange-600
+                            {% elif notificacion.tipo == 'usuario_nuevo' %}bg-yellow-100 text-yellow-600
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {% if notificacion.tipo == 'prestamo_individual' %}
+                                <i class="fas fa-user text-xl"></i>
+                            {% elif notificacion.tipo == 'prestamo_multiple' %}
+                                <i class="fas fa-users text-xl"></i>
+                            {% elif notificacion.tipo == 'devolucion' %}
+                                <i class="fas fa-undo text-xl"></i>
+                            {% elif notificacion.tipo == 'implemento_nuevo' %}
+                                <i class="fas fa-plus text-xl"></i>
+                            {% elif notificacion.tipo == 'usuario_nuevo' %}
+                                <i class="fas fa-user-plus text-xl"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle text-xl"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Contenido de la notificación -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900">{{ notificacion.titulo }}</h3>
+                            <div class="flex items-center space-x-2">
+                                {% if notificacion.leida == 0 %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-circle mr-1 text-xs"></i>
+                                        Sin leer
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1 text-xs"></i>
+                                        Leída
+                                    </span>
+                                {% endif %}
+                                <button onclick="eliminarNotificacion('{{ notificacion.id }}')" 
+                                        class="text-gray-400 hover:text-red-500 transition-colors"
+                                        title="Eliminar notificación">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-700 mb-3">{{ notificacion.mensaje }}</p>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                                <span>
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {{ notificacion.fecha_creacion[:16] }}
+                                </span>
+                                <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                                    {% if notificacion.tipo == 'prestamo_individual' %}
+                                        Préstamo Individual
+                                    {% elif notificacion.tipo == 'prestamo_multiple' %}
+                                        Préstamo Múltiple
+                                    {% elif notificacion.tipo == 'devolucion' %}
+                                        Devolución
+                                    {% elif notificacion.tipo == 'implemento_nuevo' %}
+                                        Implemento Nuevo
+                                    {% elif notificacion.tipo == 'usuario_nuevo' %}
+                                        Usuario Nuevo
+                                    {% else %}
+                                        General
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            {% if notificacion.leida == 0 %}
+                                <button onclick="marcarComoLeida('{{ notificacion.id }}')" 
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                                    <i class="fas fa-check mr-1"></i>
+                                    Marcar como leída
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-bell-slash text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay notificaciones</h3>
+                <p class="text-gray-500">El sistema está al día, no hay notificaciones pendientes.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Función para marcar notificación como leída
+function marcarComoLeida(notificacionId) {
+    fetch(`/admin/api/notificaciones/${notificacionId}/leer`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar la UI
+            const notificationItem = document.querySelector(`button[onclick="marcarComoLeida(${notificacionId})"]`).closest('.notification-item');
+            notificationItem.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+            
+            // Cambiar el botón por el estado "leída"
+            const buttonContainer = notificationItem.querySelector('.flex.items-center.justify-between .flex.items-center.space-x-2');
+            buttonContainer.innerHTML = `
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-check-circle mr-1 text-xs"></i>
+                    Leída
+                </span>
+            `;
+            
+            showNotification('Notificación marcada como leída', 'success');
+            actualizarContadores();
+        } else {
+            showNotification('Error al marcar la notificación', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error al marcar la notificación', 'error');
+        console.error('Error:', error);
+    });
+}
+
+// Función para eliminar notificación
+function eliminarNotificacion(notificacionId) {
+    if (confirm('¿Estás seguro de que deseas eliminar esta notificación?')) {
+        fetch(`/admin/api/notificaciones/${notificacionId}/eliminar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const notificationItem = document.querySelector(`button[onclick="eliminarNotificacion(${notificacionId})"]`).closest('.notification-item');
+                notificationItem.remove();
+                showNotification('Notificación eliminada', 'success');
+                actualizarContadores();
+            } else {
+                showNotification('Error al eliminar la notificación', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error al eliminar la notificación', 'error');
+            console.error('Error:', error);
+        });
+    }
+}
+
+// Función para marcar todas como leídas
+function marcarTodasComoLeidas() {
+    if (confirm('¿Estás seguro de que deseas marcar todas las notificaciones como leídas?')) {
+        fetch('/admin/api/notificaciones/leer_todas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showNotification('Error al marcar las notificaciones', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error al marcar las notificaciones', 'error');
+            console.error('Error:', error);
+        });
+    }
+}
+
+// Función para eliminar todas las leídas
+function eliminarTodasLeidas() {
+    if (confirm('¿Estás seguro de que deseas eliminar todas las notificaciones leídas?')) {
+        fetch('/admin/api/notificaciones/eliminar_leidas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showNotification('Error al eliminar las notificaciones', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error al eliminar las notificaciones', 'error');
+            console.error('Error:', error);
+        });
+    }
+}
+
+// Función para mostrar notificaciones toast
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animación de entrada
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Función para actualizar contadores
+function actualizarContadores() {
+    // Aquí podrías actualizar los contadores en tiempo real
+    // Por simplicidad, recargamos la página
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+// Filtros de notificaciones
+document.getElementById('filtroTipo').addEventListener('change', function() {
+    filtrarNotificaciones();
+});
+
+document.getElementById('filtroEstado').addEventListener('change', function() {
+    filtrarNotificaciones();
+});
+
+function filtrarNotificaciones() {
+    const filtroTipo = document.getElementById('filtroTipo').value;
+    const filtroEstado = document.getElementById('filtroEstado').value;
+    const notificaciones = document.querySelectorAll('.notification-item');
+    
+    notificaciones.forEach(notificacion => {
+        const tipo = notificacion.dataset.tipo;
+        const estado = notificacion.dataset.estado;
+        
+        const mostrarTipo = filtroTipo === 'todos' || tipo === filtroTipo;
+        const mostrarEstado = filtroEstado === 'todos' || estado === filtroEstado;
+        
+        if (mostrarTipo && mostrarEstado) {
+            notificacion.style.display = 'block';
+        } else {
+            notificacion.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

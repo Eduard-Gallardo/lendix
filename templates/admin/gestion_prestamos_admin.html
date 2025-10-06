@@ -1,47 +1,31 @@
-{% extends "base.html" %}
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Gestión de Préstamos - Panel Administrador - Lendix{% endblock %}
+
+{% block page_title %}Gestión Completa de Préstamos{% endblock %}
+{% block page_subtitle %}Administra todos los préstamos del sistema con control total{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-serif font-bold text-gray-800 mb-2">
-                <i class="fas fa-cogs mr-3 text-blue-600"></i>
-                Gestión Completa de Préstamos - Administrador
-            </h1>
-            <p class="text-gray-600">
-                Administra todos los préstamos del sistema con control total
-            </p>
+<!-- Sección para crear préstamos como admin -->
+<div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8 animate-fade-in-up">
+    <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-plus-circle text-white text-3xl"></i>
         </div>
-
-        <!-- Mostrar mensajes flash -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="mb-6 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700 border border-red-300{% else %}bg-green-100 text-green-700 border border-green-300{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
-                            {{ message }}
-                        </div>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <!-- Sección para crear préstamos como admin -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">
-                <i class="fas fa-plus-circle mr-2 text-blue-600"></i>
-                Registrar Nuevos Préstamos (Admin)
-            </h2>
+        <h2 class="text-2xl font-bold text-gray-900 font-serif mb-2">Registrar Nuevos Préstamos</h2>
+        <p class="text-gray-600">Cree préstamos individuales o múltiples desde el panel de administración</p>
+    </div>
             
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Préstamo Individual -->
-                <div class="border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                        <i class="fas fa-user mr-2 text-green-600"></i>
-                        Préstamo Individual
-                    </h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Préstamo Individual -->
+        <div class="bg-gradient-to-br from-green-50 to-white rounded-2xl border border-green-200 p-6 hover:shadow-lg transition-all duration-300">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-user text-white text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Préstamo Individual</h3>
+                <p class="text-sm text-gray-600">Para un estudiante específico</p>
+            </div>
                     
                     <form action="{{ url_for('admin.registrar_prestamo_admin_individual') }}" method="POST" class="space-y-4">
                         <div>
@@ -107,12 +91,15 @@
                     </form>
                 </div>
 
-                <!-- Préstamo Múltiple -->
-                <div class="border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                        <i class="fas fa-users mr-2 text-purple-600"></i>
-                        Préstamo Múltiple (Para Ficha)
-                    </h3>
+        <!-- Préstamo Múltiple -->
+        <div class="bg-gradient-to-br from-purple-50 to-white rounded-2xl border border-purple-200 p-6 hover:shadow-lg transition-all duration-300">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-users text-white text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Préstamo Múltiple</h3>
+                <p class="text-sm text-gray-600">Para una ficha completa</p>
+            </div>
                     
                     <form action="{{ url_for('admin.registrar_prestamo_admin_multiple') }}" method="POST" class="space-y-4">
                         <div>
@@ -176,12 +163,15 @@
             </div>
         </div>
 
-        <!-- Sección de Préstamos Realizados -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">
-                <i class="fas fa-list-alt mr-2 text-orange-600"></i>
-                Todos los Préstamos del Sistema
-            </h2>
+<!-- Sección de Préstamos Realizados -->
+<div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 p-8 animate-fade-in-up">
+    <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-list-alt text-white text-3xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 font-serif mb-2">Todos los Préstamos del Sistema</h2>
+        <p class="text-gray-600">Gestiona y supervisa todos los préstamos activos y completados</p>
+    </div>
             
             <!-- Filtros para préstamos -->
             <div class="mb-6">

@@ -87,7 +87,7 @@ def admin():
                     notificaciones=notificaciones,
                     usuarios_pendientes=usuarios_pendientes)
 
-@admin_bp.route('/admin/catalogo')
+@admin_bp.route('/catalogo')
 @login_required
 def ver_catalogo():
     if not is_admin():
@@ -98,7 +98,7 @@ def ver_catalogo():
     conn.close()
     return render_template('admin/panel_administrador.html', implementos=implementos)
 
-@admin_bp.route('/admin/catalogo/agregar', methods=['GET', 'POST'])
+@admin_bp.route('/catalogo/agregar', methods=['GET', 'POST'])
 @login_required
 def agregar_implemento():
     if not is_admin():
@@ -151,7 +151,7 @@ def agregar_implemento():
     
     return render_template('admin/agregar_implemento.html')
 
-@admin_bp.route('/admin/catalogo/editar/<int:id>', methods=['GET', 'POST'])
+@admin_bp.route('/catalogo/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_implemento(id):
     if not is_admin():
@@ -209,7 +209,7 @@ def editar_implemento(id):
     
     return render_template('admin/editar_implemento.html', implemento=implemento)
 
-@admin_bp.route('/admin/catalogo/eliminar/<int:id>', methods=['POST'])
+@admin_bp.route('/catalogo/eliminar/<int:id>', methods=['POST'])
 @login_required
 def eliminar_implemento(id):
     if not is_admin():
@@ -238,7 +238,7 @@ def eliminar_implemento(id):
     return redirect(url_for('admin.ver_catalogo'))
 
 # Gestión de usuarios
-@admin_bp.route('/admin/usuarios')
+@admin_bp.route('/usuarios')
 @login_required
 def gestion_usuarios():
     if not is_admin():
@@ -455,6 +455,67 @@ def marcar_todas_leidas():
     conn = get_db_connection()
     try:
         conn.execute('UPDATE notificaciones SET leida = 1 WHERE leida = 0')
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# Página de notificaciones
+@admin_bp.route('/notificaciones')
+@login_required
+def notificaciones():
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        # Obtener todas las notificaciones
+        notificaciones = conn.execute('''
+            SELECT n.*, u.nombre as usuario_nombre
+            FROM notificaciones n
+            LEFT JOIN usuarios u ON n.fk_usuario = u.id
+            ORDER BY n.fecha_creacion DESC
+            LIMIT 50
+        ''').fetchall()
+        
+        conn.close()
+        
+        return render_template('admin/notificaciones.html', notificaciones=notificaciones)
+    except Exception as e:
+        flash(f'Error al cargar notificaciones: {str(e)}', 'error')
+        conn.close()
+        return redirect('/admin')
+
+# Eliminar notificación individual
+@admin_bp.route('/api/notificaciones/<int:id>/eliminar', methods=['POST'])
+@login_required
+def eliminar_notificacion(id):
+    if not is_admin():
+        return jsonify({'error': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM notificaciones WHERE id = ?', (id,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+# Eliminar todas las notificaciones leídas
+@admin_bp.route('/api/notificaciones/eliminar_leidas', methods=['POST'])
+@login_required
+def eliminar_notificaciones_leidas():
+    if not is_admin():
+        return jsonify({'error': 'Sin permisos'}), 403
+    
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM notificaciones WHERE leida = 1')
         conn.commit()
         return jsonify({'success': True})
     except Exception as e:

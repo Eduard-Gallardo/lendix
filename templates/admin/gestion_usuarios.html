@@ -1,90 +1,90 @@
-{% extends "base.html" %}
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Gestión de Usuarios - Panel Administrador - Lendix{% endblock %}
+
+{% block page_title %}Gestión de Usuarios{% endblock %}
+{% block page_subtitle %}Administra usuarios del sistema, aprueba nuevos registros y gestiona permisos{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-serif font-bold text-gray-800 mb-2">
-                <i class="fas fa-users mr-3 text-blue-600"></i>
-                Gestión de Usuarios
-            </h1>
-            <p class="text-gray-600">
-                Administra usuarios del sistema, aprueba nuevos registros y gestiona permisos
-            </p>
-        </div>
-
-        <!-- Mostrar mensajes flash -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="mb-6 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700 border border-red-300{% else %}bg-green-100 text-green-700 border border-green-300{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
-                            {{ message }}
-                        </div>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <!-- Estadísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                        <i class="fas fa-users text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Total Usuarios</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ usuarios|length }}</p>
-                    </div>
-                </div>
+<!-- Estadísticas de usuarios -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Usuarios -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Total Usuarios</p>
+                <p class="text-3xl font-bold text-gray-900">{{ usuarios|length }}</p>
+                <p class="text-xs text-blue-600 mt-1">
+                    <i class="fas fa-users mr-1"></i>
+                    Registrados
+                </p>
             </div>
-            
-            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100 text-green-600">
-                        <i class="fas fa-check-circle text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Usuarios Activos</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ usuarios|selectattr('activo', 'eq', 1)|list|length }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                        <i class="fas fa-clock text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Pendientes</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ usuarios|selectattr('activo', 'eq', 0)|list|length }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                        <i class="fas fa-user-tie text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Administradores</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ usuarios|selectattr('rol', 'eq', 'admin')|list|length }}</p>
-                    </div>
-                </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-users text-white text-2xl"></i>
             </div>
         </div>
+    </div>
+    
+    <!-- Usuarios Activos -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.1s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Usuarios Activos</p>
+                <p class="text-3xl font-bold text-gray-900">{{ usuarios|selectattr('activo', 'eq', 1)|list|length }}</p>
+                <p class="text-xs text-green-600 mt-1">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    Aprobados
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-check-circle text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pendientes -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.2s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Pendientes</p>
+                <p class="text-3xl font-bold text-gray-900">{{ usuarios|selectattr('activo', 'eq', 0)|list|length }}</p>
+                <p class="text-xs text-yellow-600 mt-1">
+                    <i class="fas fa-clock mr-1"></i>
+                    Por aprobar
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-clock text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Administradores -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.3s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Administradores</p>
+                <p class="text-3xl font-bold text-gray-900">{{ usuarios|selectattr('rol', 'eq', 'admin')|list|length }}</p>
+                <p class="text-xs text-purple-600 mt-1">
+                    <i class="fas fa-crown mr-1"></i>
+                    Con privilegios
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-crown text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- Filtros -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">
-                <i class="fas fa-filter mr-2 text-blue-600"></i>
-                Filtros
-            </h2>
+<!-- Filtros -->
+<div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 animate-fade-in-up">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+        <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mr-3">
+            <i class="fas fa-filter text-white"></i>
+        </div>
+        Filtros de Búsqueda
+    </h2>
             
             <form method="GET" action="{{ url_for('admin.gestion_usuarios') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -113,36 +113,38 @@
             </form>
         </div>
         
-        <!-- Lista de usuarios -->
-        <div class="bg-white rounded-lg shadow-md">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-800">
-                    <i class="fas fa-users mr-2 text-blue-600"></i>
-                    Usuarios del Sistema
-                </h2>
+<!-- Lista de usuarios -->
+<div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mr-3">
+                <i class="fas fa-users text-white"></i>
             </div>
+            Usuarios del Sistema
+        </h2>
+    </div>
             
             {% if usuarios %}
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-gradient-to-r from-green-50 to-green-100">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">
                                     Usuario
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">
                                     Contacto
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">
                                     Rol
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">
                                     Estado
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">
                                     Fecha Registro
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th class="px-6 py-4 text-center font-semibold text-gray-700">
                                     Acciones
                                 </th>
                             </tr>
@@ -206,27 +208,27 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <div class="flex space-x-2">
                                         {% if usuario.activo == 0 %}
-                                            <button onclick="activarUsuario({{ usuario.id }}, '{{ usuario.nombre }}')"
+                                            <button onclick="activarUsuario('{{ usuario.id }}', '{{ usuario.nombre }}')"
                                                     class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition duration-200">
                                                 <i class="fas fa-check mr-1"></i>
                                                 Activar
                                             </button>
                                         {% else %}
-                                            <button onclick="desactivarUsuario({{ usuario.id }}, '{{ usuario.nombre }}')"
+                                            <button onclick="desactivarUsuario('{{ usuario.id }}', '{{ usuario.nombre }}')"
                                                     class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm transition duration-200">
                                                 <i class="fas fa-pause mr-1"></i>
                                                 Desactivar
                                             </button>
                                         {% endif %}
                                         
-                                        <button onclick="editarUsuario({{ usuario.id }}, '{{ usuario.nombre }}', '{{ usuario.email }}', '{{ usuario.telefono }}', '{{ usuario.rol }}')"
+                                        <button onclick="editarUsuario('{{ usuario.id }}', '{{ usuario.nombre }}', '{{ usuario.email }}', '{{ usuario.telefono }}', '{{ usuario.rol }}')"
                                                 class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition duration-200">
                                             <i class="fas fa-edit mr-1"></i>
                                             Editar
                                         </button>
                                         
                                         {% if usuario.rol != 'admin' %}
-                                            <button onclick="eliminarUsuario({{ usuario.id }}, '{{ usuario.nombre }}')"
+                                            <button onclick="eliminarUsuario('{{ usuario.id }}', '{{ usuario.nombre }}')"
                                                     class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition duration-200">
                                                 <i class="fas fa-trash mr-1"></i>
                                                 Eliminar
@@ -385,5 +387,108 @@ document.addEventListener('click', function(event) {
         cerrarModalEditar();
     }
 });
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Funciones mejoradas para gestión de usuarios con notificaciones
+function activarUsuario(id, nombre) {
+    if (confirm(`¿Estás seguro de que deseas activar al usuario ${nombre}?`)) {
+        fetch(`/admin/activar_usuario/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Usuario activado exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Error: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error al activar usuario', 'error');
+            console.error('Error:', error);
+        });
+    }
+}
+
+function desactivarUsuario(id, nombre) {
+    if (confirm(`¿Estás seguro de que deseas desactivar al usuario ${nombre}?`)) {
+        fetch(`/admin/desactivar_usuario/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Usuario desactivado exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Error: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error al desactivar usuario', 'error');
+            console.error('Error:', error);
+        });
+    }
+}
+
+function eliminarUsuario(id, nombre) {
+    if (confirm(`¿Estás seguro de que deseas eliminar al usuario ${nombre}? Esta acción no se puede deshacer.`)) {
+        fetch(`/admin/eliminar_usuario/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Usuario eliminado exitosamente', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showNotification('Error: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error al eliminar usuario', 'error');
+            console.error('Error:', error);
+        });
+    }
+}
+
+// Función para mostrar notificaciones
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animación de entrada
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
 </script>
 {% endblock %}
