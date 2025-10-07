@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y Condiciones - Lendix</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
+    
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mr-4">
+                        <i class="fas fa-file-contract text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 font-serif">Términos y Condiciones</h1>
+                        <p class="text-gray-600">Lendix - Sistema de Gestión de Implementos</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('registro.registro_usuario') }}" 
+                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Volver al Registro
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            
+            <!-- Información de actualización -->
+            <div class="bg-blue-50 border-b border-blue-200 p-4">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                    <div>
+                        <p class="text-blue-800 font-medium">Última actualización: 15/12/2024</p>
+                        <p class="text-blue-600 text-sm">Estos términos rigen el uso del sistema Lendix</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 space-y-8">
+                
+                <!-- Introducción -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-book-open text-green-600 mr-3"></i>
+                        1. Introducción
+                    </h2>
+                    <div class="prose prose-gray max-w-none">
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            Bienvenido a <strong>Lendix</strong>, el sistema de gestión de implementos diseñado para facilitar el control y administración de recursos educativos e institucionales. Al utilizar nuestro servicio, usted acepta cumplir con estos términos y condiciones.
+                        </p>
+                        <p class="text-gray-700 leading-relaxed">
+                            Estos términos constituyen un acuerdo legal entre usted y Lendix. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro servicio.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Definiciones -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-list-alt text-green-600 mr-3"></i>
+                        2. Definiciones
+                    </h2>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                                <div>
+                                    <strong>"Lendix"</strong> se refiere al sistema de gestión de implementos y todos sus servicios relacionados.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                                <div>
+                                    <strong>"Usuario"</strong> es cualquier persona que acceda y utilice el sistema Lendix.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                                <div>
+                                    <strong>"Implementos"</strong> son los recursos materiales gestionados a través del sistema (libros, equipos, herramientas, etc.).
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                                <div>
+                                    <strong>"Préstamos"</strong> son las transacciones de asignación temporal de implementos a usuarios.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Uso del Servicio -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-user-check text-green-600 mr-3"></i>
+                        3. Uso del Servicio
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-green-800 mb-2">3.1 Registro de Usuario</h3>
+                            <ul class="text-green-700 space-y-2">
+                                <li>• Debe proporcionar información veraz y actualizada durante el registro</li>
+                                <li>• Es responsable de mantener la confidencialidad de su cuenta</li>
+                                <li>• Debe notificar inmediatamente cualquier uso no autorizado de su cuenta</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-blue-800 mb-2">3.2 Tipos de Usuario</h3>
+                            <ul class="text-blue-700 space-y-2">
+                                <li>• <strong>Funcionarios:</strong> Pueden gestionar implementos y realizar préstamos</li>
+                                <li>• <strong>Instructores:</strong> Pueden solicitar préstamos para actividades educativas</li>
+                                <li>• <strong>Administradores:</strong> Tienen acceso completo al sistema y gestión de usuarios</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Responsabilidades del Usuario -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-shield-alt text-green-600 mr-3"></i>
+                        4. Responsabilidades del Usuario
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-yellow-800 mb-3">4.1 Uso Apropiado</h3>
+                            <ul class="text-yellow-700 space-y-2 text-sm">
+                                <li>• Utilizar el sistema únicamente para fines legítimos</li>
+                                <li>• No intentar acceder a áreas restringidas</li>
+                                <li>• Respetar los derechos de otros usuarios</li>
+                                <li>• No realizar actividades que puedan dañar el sistema</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-red-800 mb-3">4.2 Uso Prohibido</h3>
+                            <ul class="text-red-700 space-y-2 text-sm">
+                                <li>• Compartir credenciales de acceso</li>
+                                <li>• Modificar o alterar el sistema</li>
+                                <li>• Usar el sistema para actividades ilegales</li>
+                                <li>• Intentar obtener acceso no autorizado</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Gestión de Implementos -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-boxes text-green-600 mr-3"></i>
+                        5. Gestión de Implementos
+                    </h2>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h3 class="font-semibold text-gray-800 mb-3">5.1 Préstamos de Implementos</h3>
+                            <ul class="text-gray-700 space-y-2">
+                                <li>• Los préstamos deben ser registrados correctamente en el sistema</li>
+                                <li>• El usuario es responsable del cuidado y devolución oportuna</li>
+                                <li>• Se debe reportar cualquier daño o pérdida inmediatamente</li>
+                                <li>• Los implementos deben devolverse en el estado recibido</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-purple-800 mb-2">5.2 Disponibilidad</h3>
+                            <p class="text-purple-700">
+                                La disponibilidad de implementos está sujeta a inventario actual. Lendix no garantiza la disponibilidad permanente de ningún implemento específico.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Privacidad y Datos -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-lock text-green-600 mr-3"></i>
+                        6. Privacidad y Protección de Datos
+                    </h2>
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-6">
+                        <ul class="text-indigo-700 space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-database text-indigo-500 mr-3 mt-1"></i>
+                                <div>
+                                    <strong>Recopilación de Datos:</strong> Recopilamos únicamente la información necesaria para el funcionamiento del sistema.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-shield-alt text-indigo-500 mr-3 mt-1"></i>
+                                <div>
+                                    <strong>Seguridad:</strong> Implementamos medidas de seguridad para proteger su información personal.
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-user-secret text-indigo-500 mr-3 mt-1"></i>
+                                <div>
+                                    <strong>Confidencialidad:</strong> No compartimos su información personal con terceros sin su consentimiento.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Limitaciones de Responsabilidad -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-exclamation-triangle text-green-600 mr-3"></i>
+                        7. Limitaciones de Responsabilidad
+                    </h2>
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                        <p class="text-orange-800 mb-4">
+                            <strong>Lendix se proporciona "tal como está"</strong> sin garantías de ningún tipo. No nos hacemos responsables por:
+                        </p>
+                        <ul class="text-orange-700 space-y-2">
+                            <li>• Pérdida de datos o interrupciones del servicio</li>
+                            <li>• Daños a implementos durante préstamos</li>
+                            <li>• Decisiones tomadas basadas en información del sistema</li>
+                            <li>• Problemas técnicos o de conectividad</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Modificaciones -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-edit text-green-600 mr-3"></i>
+                        8. Modificaciones de los Términos
+                    </h2>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <p class="text-gray-700 leading-relaxed">
+                            Nos reservamos el derecho de modificar estos términos y condiciones en cualquier momento. 
+                            Las modificaciones entrarán en vigor inmediatamente después de su publicación en el sistema. 
+                            El uso continuado del servicio después de las modificaciones constituye su aceptación de los nuevos términos.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Terminación -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-times-circle text-green-600 mr-3"></i>
+                        9. Terminación del Servicio
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-red-800 mb-2">9.1 Por Parte del Usuario</h3>
+                            <p class="text-red-700 text-sm">
+                                Puede solicitar la terminación de su cuenta en cualquier momento contactando a los administradores del sistema.
+                            </p>
+                        </div>
+                        
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-orange-800 mb-2">9.2 Por Parte de Lendix</h3>
+                            <p class="text-orange-700 text-sm">
+                                Podemos suspender o terminar su acceso si viola estos términos o por razones de seguridad del sistema.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contacto -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-envelope text-green-600 mr-3"></i>
+                        10. Contacto
+                    </h2>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                        <p class="text-green-800 mb-4">
+                            Si tiene preguntas sobre estos términos y condiciones, puede contactarnos a través de:
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-envelope text-green-600 mr-3"></i>
+                                <span class="text-green-700">admin@lendix.com</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-phone text-green-600 mr-3"></i>
+                                <span class="text-green-700">+57 (1) 234-5678</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer -->
+                <div class="border-t border-gray-200 pt-6">
+                    <div class="text-center">
+                        <p class="text-gray-600 text-sm">
+                            Al utilizar Lendix, usted acepta estos términos y condiciones en su totalidad.
+                        </p>
+                        <p class="text-gray-500 text-xs mt-2">
+                            © 2024 Lendix. Todos los derechos reservados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

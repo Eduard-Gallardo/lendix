@@ -144,3 +144,12 @@ def verificar_nombre():
         return jsonify({'disponible': False, 'mensaje': 'Este nombre ya está registrado'})
     else:
         return jsonify({'disponible': True, 'mensaje': 'Nombre disponible'})
+
+# Rutas para términos y condiciones
+@registro_bp.route('/terminos')
+def terminos():
+    return render_template('views/terminos.html')
+
+@registro_bp.route('/politica-privacidad')
+def politica_privacidad():
+    return render_template('views/politica_privacidad.html')

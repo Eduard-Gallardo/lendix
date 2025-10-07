@@ -58,38 +58,55 @@ body {
 /* ===== MEJORAS ESPECÍFICAS PARA LOGIN ===== */
 .login {
     background: 
-        
-        url('https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2076&q=80') no-repeat center center fixed;
+        url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80') no-repeat center center fixed;
+    background-size: cover;
+}
+
+/* ===== MEJORAS ESPECÍFICAS PARA REGISTRO ===== */
+.registro {
+    background: 
+        url('https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80') no-repeat center center fixed;
     background-size: cover;
 }
 /* Mejoras de tipografía para consistencia con index.html */
-.login-container h1 {
+.login-container h1,
+.registro-container h1 {
     font-family: 'Merriweather', serif;
     font-weight: 700;
     line-height: 1.2;
 }
 
-.login-container .text-lg {
+.login-container .text-lg,
+.registro-container .text-lg {
     font-size: 1.125rem;
     line-height: 1.7;
 }
 
 /* Mejoras específicas para inputs del login */
 .login-container input[type="email"],
-.login-container input[type="password"] {
+.login-container input[type="password"],
+.registro-container input[type="email"],
+.registro-container input[type="password"],
+.registro-container input[type="text"],
+.registro-container input[type="tel"] {
     font-size: 1rem;
     font-weight: 500;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .login-container input[type="email"]:focus,
-.login-container input[type="password"]:focus {
+.login-container input[type="password"]:focus,
+.registro-container input[type="email"]:focus,
+.registro-container input[type="password"]:focus,
+.registro-container input[type="text"]:focus,
+.registro-container input[type="tel"]:focus {
     transform: translateY(-1px);
     box-shadow: 0 8px 25px rgba(107, 142, 90, 0.15);
 }
 
 /* Mejoras para el botón de login */
-.login-container .btn-primary {
+.login-container .btn-primary,
+.registro-container .btn-primary {
     font-weight: 700;
     letter-spacing: 0.025em;
 }
@@ -127,6 +144,19 @@ body {
 }
 
 .login-container {
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 0 40px rgba(107, 142, 90, 0.1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+.registro-container {
     backdrop-filter: blur(16px);
     background: rgba(255, 255, 255, 0.88);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -245,7 +275,8 @@ body {
 
 /* ===== FORM SECTION ANIMATIONS ===== */
 .login-container .space-y-6 > *,
-.register-container .space-y-6 > * {
+.register-container .space-y-6 > *,
+.registro-container .space-y-6 > * {
     animation: fadeInUp 0.6s ease-out forwards;
     opacity: 0;
 }
@@ -255,6 +286,12 @@ body {
 .login-container .space-y-6 > *:nth-child(3) { animation-delay: 0.3s; }
 .login-container .space-y-6 > *:nth-child(4) { animation-delay: 0.4s; }
 .login-container .space-y-6 > *:nth-child(5) { animation-delay: 0.5s; }
+
+.registro-container .space-y-6 > *:nth-child(1) { animation-delay: 0.1s; }
+.registro-container .space-y-6 > *:nth-child(2) { animation-delay: 0.2s; }
+.registro-container .space-y-6 > *:nth-child(3) { animation-delay: 0.3s; }
+.registro-container .space-y-6 > *:nth-child(4) { animation-delay: 0.4s; }
+.registro-container .space-y-6 > *:nth-child(5) { animation-delay: 0.5s; }
 
 /* ===== PASSWORD TOGGLE ENHANCEMENT ===== */
 .password-toggle {
@@ -354,12 +391,12 @@ body {
 
 /* ===== RESPONSIVE ENHANCEMENTS ===== */
 @media (max-width: 640px) {
-    .login-container, .register-container {
+    .login-container, .register-container, .registro-container {
         margin: 1rem;
         padding: 1.5rem !important;
     }
     
-    .login, .register {
+    .login, .register, .registro {
         background-attachment: scroll;
     }
 }

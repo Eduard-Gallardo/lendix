@@ -3,178 +3,370 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LibraTech - Registro</title>
+    <title>Lendix - Registro</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 register">
-    <div class="max-w-md w-full space-y-8 p-10 register-container rounded-xl shadow-2xl">
-        <div>
-            <div class="flex justify-center">
-                <div class="rounded-full bg-green-100 p-4">
-                    <i class="fas fa-user-plus text-green-700 text-3xl"></i>
-                </div>
+<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 registro">
+    
+    <!-- Contenedor principal simplificado -->
+    <div class="max-w-lg w-full space-y-8 p-10 registro-container rounded-2xl shadow-2xl">
+        
+        <!-- Header simplificado -->
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <i class="fas fa-user-plus text-white text-2xl"></i>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-serif font-bold text-green-800">
-                Crear Cuenta
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Regístrate para acceder a nuestro catálogo
-            </p>
+            <h1 class="text-3xl font-serif font-bold text-gray-900 mb-2">Crear Cuenta</h1>
+            <p class="text-gray-600">Únete a Lendix y gestiona implementos fácilmente</p>
         </div>
 
-        <!-- Mostrar mensajes flash -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="p-3 rounded {% if category == 'error' %}bg-red-100 text-red-700 border border-red-300{% else %}bg-green-100 text-green-700 border border-green-300{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
-                            {{ message }}
+        <!-- Formulario principal -->
+        <div class="bg-white/88 backdrop-blur-lg rounded-2xl shadow-xl border border-white/30 overflow-hidden">
+            
+            <!-- Mostrar mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="p-4 bg-blue-50 border-b border-blue-200">
+                        {% for category, message in messages %}
+                            <div class="flex items-center p-3 rounded-lg {% if category == 'error' %}bg-red-50 border border-red-200{% else %}bg-green-50 border border-green-200{% endif %}">
+                                <div class="w-8 h-8 {% if category == 'error' %}bg-red-500{% else %}bg-green-500{% endif %} rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold {% if category == 'error' %}text-red-800{% else %}text-green-800{% endif %} text-sm">
+                                        {% if category == 'error' %}Error{% else %}Éxito{% endif %}
+                                    </h4>
+                                    <p class="{% if category == 'error' %}text-red-600{% else %}text-green-600{% endif %} text-xs">{{ message }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form class="p-6 space-y-6" action="{{ url_for('registro.registro_usuario') }}" method="POST" x-data="registrationForm()">
+                
+                <!-- Campos del formulario -->
+                <div class="space-y-4">
+                    <!-- Nombre completo -->
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700 mb-2">Nombre completo *</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input id="nombre" name="nombre" type="text" autocomplete="name" required 
+                                class="w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                                placeholder="Tu nombre completo"
+                                value="{{ request.form.nombre if request.form }}"
+                                x-model="formData.nombre"
+                                @blur="validateField('nombre')">
+                        </div>
+                        <p x-show="errors.nombre" x-transition class="text-red-500 text-xs mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <span x-text="errors.nombre"></span>
+                        </p>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Correo electrónico *</label>
+                        <div class="relative">
+                            <i class="fas fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input id="email" name="email" type="email" autocomplete="email" required 
+                                class="w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                                placeholder="tu@email.com"
+                                value="{{ request.form.email if request.form }}"
+                                x-model="formData.email"
+                                @blur="validateField('email')">
+                            <div x-show="emailStatus === 'available'" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                            </div>
+                            <div x-show="emailStatus === 'taken'" class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-times-circle text-red-500"></i>
+                            </div>
+                        </div>
+                        <p x-show="errors.email" x-transition class="text-red-500 text-xs mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <span x-text="errors.email"></span>
+                        </p>
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div>
+                        <label for="telefono" class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
+                        <div class="relative">
+                            <i class="fas fa-phone absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input id="telefono" name="telefono" type="tel" autocomplete="tel" required 
+                                class="w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                                placeholder="300 123 4567"
+                                value="{{ request.form.telefono if request.form }}"
+                                x-model="formData.telefono"
+                                @blur="validateField('telefono')">
+                        </div>
+                        <p x-show="errors.telefono" x-transition class="text-red-500 text-xs mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <span x-text="errors.telefono"></span>
+                        </p>
+                    </div>
+
+                    <!-- Tipo de Usuario -->
+                    <div>
+                        <label for="tipo_usuario" class="block text-sm font-medium text-gray-700 mb-2">Tipo de Usuario *</label>
+                        <div class="relative">
+                            <i class="fas fa-user-tag absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <select id="tipo_usuario" name="tipo_usuario" required 
+                                class="w-full px-3 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 bg-white">
+                                <option value="funcionario" {% if request.form and request.form.tipo_usuario == 'funcionario' %}selected{% endif %}>👤 Funcionario</option>
+                                <option value="instructor" {% if request.form and request.form.tipo_usuario == 'instructor' %}selected{% endif %}>👨‍🏫 Instructor</option>
+                            </select>
                         </div>
                     </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
 
-        <form class="mt-4 space-y-4" action="{{ url_for('registro.registro_usuario') }}" method="POST">
-            <div class="rounded-md shadow-sm -space-y-px">
-                <div>
-                    <label for="nombre" class="sr-only">Nombre completo</label>
-                    <input id="nombre" name="nombre" type="text" autocomplete="name" required 
-                        class="appearance-none rounded-t-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
-                        placeholder="Nombre completo"
-                        value="{{ request.form.nombre if request.form }}">
-                </div>
-                <div>
-                    <label for="email" class="sr-only">Correo electrónico</label>
-                    <input id="email" name="email" type="email" autocomplete="email" required 
-                        class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
-                        placeholder="Correo electrónico"
-                        value="{{ request.form.email if request.form }}">
-                    <div id="email-validation" class="validation-message text-red-500 hidden">
-                        <i class="fas fa-exclamation-circle mr-1"></i>
-                        <span></span>
+                    <!-- Contraseña -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input id="password" name="password" type="password" autocomplete="new-password" required 
+                                class="w-full px-3 py-3 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                                placeholder="Mínimo 8 caracteres"
+                                x-model="formData.password"
+                                @blur="validateField('password')">
+                            <button type="button" @click="togglePassword('password')" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                            </button>
+                        </div>
+                        <p x-show="errors.password" x-transition class="text-red-500 text-xs mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <span x-text="errors.password"></span>
+                        </p>
                     </div>
-                </div>
-                <div>
-                    <label for="telefono" class="sr-only">Teléfono</label>
-                    <input id="telefono" name="telefono" type="number" autocomplete="tel" required 
-                        class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
-                        placeholder="Teléfono"
-                        value="{{ request.form.telefono if request.form }}">
-                    <div id="telefono-validation" class="validation-message text-red-500 hidden">
-                        <i class="fas fa-exclamation-circle mr-1"></i>
-                        <span></span>
-                    </div>
-                </div>
-                <div>
-                    <label for="tipo_usuario" class="sr-only">Tipo de Usuario</label>
-                    <select id="tipo_usuario" name="tipo_usuario" required 
-                        class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm">
-                        <option value="aprendiz" {% if request.form and request.form.tipo_usuario == 'aprendiz' %}selected{% endif %}>funcionario
-                        </option>
-                        <option value="instructor" {% if request.form and request.form.tipo_usuario == 'instructor' %}selected{% endif %}>Instructor</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="password" class="sr-only">Contraseña</label>
-                    <div class="relative">
-                        <input id="password" name="password" type="password" autocomplete="new-password" required 
-                            class="appearance-none relative block w-full px-3 py-3 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
-                            placeholder="Contraseña">
-                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
-                            <i id="passwordIcon" class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <div class="mt-1 flex space-x-1">
-                        <div id="strength-1" class="password-strength w-1/4 bg-gray-200 rounded"></div>
-                        <div id="strength-2" class="password-strength w-1/4 bg-gray-200 rounded"></div>
-                        <div id="strength-3" class="password-strength w-1/4 bg-gray-200 rounded"></div>
-                        <div id="strength-4" class="password-strength w-1/4 bg-gray-200 rounded"></div>
-                    </div>
-                    <div id="password-validation" class="validation-message text-red-500 hidden">
-                        <i class="fas fa-exclamation-circle mr-1"></i>
-                        <span>La contraseña debe tener al menos 8 caracteres</span>
-                    </div>
-                </div>
-                <div>
-                    <label for="confirm-password" class="sr-only">Confirmar contraseña</label>
-                    <div class="relative">
-                        <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required 
-                            class="appearance-none rounded-b-lg relative block w-full px-3 py-3 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm" 
-                            placeholder="Confirmar contraseña">
-                        <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
-                            <i id="confirmPasswordIcon" class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <div id="confirm-validation" class="validation-message text-red-500 hidden">
-                        <i class="fas fa-exclamation-circle mr-1"></i>
-                        <span>Las contraseñas no coinciden</span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="flex items-center">
-                <input id="terms" name="terms" type="checkbox" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded" required>
-                <label for="terms" class="ml-2 block text-sm text-gray-900">
-                    Acepto los <a href="#" class="text-green-600 hover:text-green-500">términos y condiciones</a> y la <a href="#" class="text-green-600 hover:text-green-500">política de privacidad</a>
-                </label>
-            </div>
-
-            <div>
-                <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-700 hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 btn-primary">
-                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <i class="fas fa-user-plus text-green-300 group-hover:text-green-200"></i>
-                    </span>
-                    Crear Cuenta
-                </button>
-            </div>
-            
-            <div class="text-center">
-                <div class="text-sm text-gray-600 mt-4">
-                    ¿Ya tienes una cuenta? 
-                    <a href="{{ url_for('login.login') }}" class="font-medium text-green-600 hover:text-green-500 ml-1">
-                        Inicia sesión
-                    </a>
+                    <!-- Confirmar contraseña -->
+                    <div>
+                        <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-2">Confirmar contraseña *</label>
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required 
+                                class="w-full px-3 py-3 pl-10 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                                placeholder="Repite tu contraseña"
+                                x-model="formData.confirmPassword"
+                                @input="validatePasswordMatch()"
+                                @blur="validateField('confirmPassword')">
+                            <button type="button" @click="togglePassword('confirm-password')" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                                <i :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                            </button>
+                            <div x-show="passwordMatch === 'match'" class="absolute right-10 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                            </div>
+                            <div x-show="passwordMatch === 'mismatch'" class="absolute right-10 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-times-circle text-red-500"></i>
+                            </div>
+                        </div>
+                        <p x-show="errors.confirmPassword" x-transition class="text-red-500 text-xs mt-1">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            <span x-text="errors.confirmPassword"></span>
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </form>
+
+                <!-- Términos y condiciones -->
+                <div class="flex items-start space-x-3">
+                    <div class="flex items-center h-5">
+                        <input id="terms" name="terms" type="checkbox" required
+                            class="w-4 h-4 text-green-600 focus:ring-green-500 border-gray-300 rounded transition-colors">
+                    </div>
+                    <label for="terms" class="text-sm text-gray-700 leading-relaxed">
+                        Acepto los <a href="{{ url_for('registro.terminos') }}" target="_blank" class="text-green-600 hover:text-green-700 font-medium underline">términos y condiciones</a> 
+                        y la <a href="{{ url_for('registro.politica_privacidad') }}" target="_blank" class="text-green-600 hover:text-green-700 font-medium underline">política de privacidad</a> 
+                        de Lendix
+                    </label>
+                </div>
+
+                <!-- Botón de envío -->
+                <div>
+                    <button type="submit" 
+                        class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        :disabled="!isFormValid()">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        <span class="font-semibold">Crear Cuenta</span>
+                    </button>
+                </div>
+                
+                <!-- Enlace a login -->
+                <div class="text-center pt-4 border-t border-gray-200">
+                    <p class="text-gray-600 text-sm">
+                        ¿Ya tienes una cuenta? 
+                        <a href="{{ url_for('login.login') }}" class="font-semibold text-green-600 hover:text-green-700 transition-colors">
+                            Inicia sesión aquí
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <!-- Estilos CSS simplificados -->
+    <style>
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <!-- Scripts simplificados -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
-        // Funcionalidad del ojito para mostrar/ocultar contraseña principal
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            const passwordIcon = document.getElementById('passwordIcon');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                passwordIcon.classList.remove('fa-eye');
-                passwordIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                passwordIcon.classList.remove('fa-eye-slash');
-                passwordIcon.classList.add('fa-eye');
+        function registrationForm() {
+            return {
+                formData: {
+                    nombre: '',
+                    email: '',
+                    telefono: '',
+                    password: '',
+                    confirmPassword: ''
+                },
+                errors: {},
+                showPassword: false,
+                showConfirmPassword: false,
+                passwordMatch: '',
+                emailStatus: '',
+                
+                togglePassword(field) {
+                    if (field === 'password') {
+                        this.showPassword = !this.showPassword;
+                        document.getElementById('password').type = this.showPassword ? 'text' : 'password';
+                    } else {
+                        this.showConfirmPassword = !this.showConfirmPassword;
+                        document.getElementById('confirm-password').type = this.showConfirmPassword ? 'text' : 'password';
+                    }
+                },
+                
+                validateField(field) {
+                    const value = this.formData[field];
+                    
+                    switch(field) {
+                        case 'nombre':
+                            if (!value || value.length < 2) {
+                                this.errors.nombre = 'El nombre debe tener al menos 2 caracteres';
+                            } else {
+                                delete this.errors.nombre;
+                            }
+                            break;
+                            
+                        case 'email':
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!value || !emailRegex.test(value)) {
+                                this.errors.email = 'Ingresa un correo electrónico válido';
+                            } else {
+                                delete this.errors.email;
+                                this.checkEmailAvailability(value);
+                            }
+                            break;
+                            
+                        case 'telefono':
+                            if (!value || value.length < 10) {
+                                this.errors.telefono = 'El teléfono debe tener al menos 10 caracteres';
+                            } else {
+                                delete this.errors.telefono;
+                            }
+                            break;
+                            
+                        case 'password':
+                            if (!value || value.length < 8) {
+                                this.errors.password = 'La contraseña debe tener al menos 8 caracteres';
+                            } else {
+                                delete this.errors.password;
+                            }
+                            break;
+                            
+                        case 'confirmPassword':
+                            if (value !== this.formData.password) {
+                                this.errors.confirmPassword = 'Las contraseñas no coinciden';
+                            } else {
+                                delete this.errors.confirmPassword;
+                            }
+                            break;
+                    }
+                },
+                
+                validatePasswordMatch() {
+                    if (this.formData.confirmPassword && this.formData.password) {
+                        if (this.formData.confirmPassword === this.formData.password) {
+                            this.passwordMatch = 'match';
+                            delete this.errors.confirmPassword;
+                        } else {
+                            this.passwordMatch = 'mismatch';
+                            this.errors.confirmPassword = 'Las contraseñas no coinciden';
+                        }
+                    } else {
+                        this.passwordMatch = '';
+                    }
+                },
+                
+                async checkEmailAvailability(email) {
+                    if (!email) return;
+                    
+                    try {
+                        const response = await fetch('/registro/api/verificar-email', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email: email })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.disponible) {
+                            this.emailStatus = 'available';
+                        } else {
+                            this.emailStatus = 'taken';
+                            this.errors.email = data.mensaje;
+                        }
+                    } catch (error) {
+                        console.error('Error checking email:', error);
+                        this.emailStatus = '';
+                    }
+                },
+                
+                isFormValid() {
+                    return Object.keys(this.errors).length === 0 && 
+                           this.formData.nombre && 
+                           this.formData.email && 
+                           this.formData.telefono && 
+                           this.formData.password && 
+                           this.formData.confirmPassword &&
+                           this.passwordMatch === 'match' &&
+                           document.getElementById('terms').checked;
+                }
             }
-        });
-
-        // Funcionalidad del ojito para mostrar/ocultar confirmar contraseña
-        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
-            const confirmPasswordInput = document.getElementById('confirm-password');
-            const confirmPasswordIcon = document.getElementById('confirmPasswordIcon');
+        }
+        
+        // Animación de entrada para el contenedor
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.registro-container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
             
-            if (confirmPasswordInput.type === 'password') {
-                confirmPasswordInput.type = 'text';
-                confirmPasswordIcon.classList.remove('fa-eye');
-                confirmPasswordIcon.classList.add('fa-eye-slash');
-            } else {
-                confirmPasswordInput.type = 'password';
-                confirmPasswordIcon.classList.remove('fa-eye-slash');
-                confirmPasswordIcon.classList.add('fa-eye');
-            }
+            setTimeout(() => {
+                container.style.transition = 'all 0.6s ease-out';
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
         });
     </script>
 </body>

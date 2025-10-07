@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad - Lendix</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50">
+    
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-4xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mr-4">
+                        <i class="fas fa-shield-alt text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 font-serif">Política de Privacidad</h1>
+                        <p class="text-gray-600">Lendix - Protección de Datos Personales</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('registro.registro_usuario') }}" 
+                   class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Volver al Registro
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            
+            <!-- Información de actualización -->
+            <div class="bg-green-50 border-b border-green-200 p-4">
+                <div class="flex items-center">
+                    <i class="fas fa-calendar-alt text-green-600 mr-3"></i>
+                    <div>
+                        <p class="text-green-800 font-medium">Última actualización: 15/12/2024</p>
+                        <p class="text-green-600 text-sm">Esta política describe cómo protegemos su información personal</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 space-y-8">
+                
+                <!-- Introducción -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-info-circle text-green-600 mr-3"></i>
+                        1. Introducción
+                    </h2>
+                    <div class="prose prose-gray max-w-none">
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            En <strong>Lendix</strong>, valoramos y respetamos su privacidad. Esta Política de Privacidad describe cómo recopilamos, utilizamos, almacenamos y protegemos su información personal cuando utiliza nuestro sistema de gestión de implementos.
+                        </p>
+                        <p class="text-gray-700 leading-relaxed">
+                            Al utilizar nuestros servicios, usted acepta las prácticas descritas en esta política. Si no está de acuerdo con alguna parte de esta política, le recomendamos que no utilice nuestro sistema.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Información que Recopilamos -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-database text-green-600 mr-3"></i>
+                        2. Información que Recopilamos
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h3 class="font-semibold text-blue-800 mb-3 flex items-center">
+                                <i class="fas fa-user text-blue-600 mr-2"></i>
+                                2.1 Información Personal
+                            </h3>
+                            <ul class="text-blue-700 space-y-2 text-sm">
+                                <li>• <strong>Nombre completo:</strong> Para identificación y registro</li>
+                                <li>• <strong>Correo electrónico:</strong> Para comunicación y autenticación</li>
+                                <li>• <strong>Número de teléfono:</strong> Para contacto directo</li>
+                                <li>• <strong>Tipo de usuario:</strong> Funcionario, Instructor o Administrador</li>
+                                <li>• <strong>Contraseña:</strong> Encriptada para seguridad del acceso</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                            <h3 class="font-semibold text-purple-800 mb-3 flex items-center">
+                                <i class="fas fa-chart-line text-purple-600 mr-2"></i>
+                                2.2 Información de Uso
+                            </h3>
+                            <ul class="text-purple-700 space-y-2 text-sm">
+                                <li>• <strong>Actividad de préstamos:</strong> Historial de implementos solicitados</li>
+                                <li>• <strong>Horarios de acceso:</strong> Cuándo utiliza el sistema</li>
+                                <li>• <strong>Acciones realizadas:</strong> Operaciones en el sistema</li>
+                                <li>• <strong>Dirección IP:</strong> Para seguridad y auditoría</li>
+                                <li>• <strong>Navegador y dispositivo:</strong> Para compatibilidad técnica</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Cómo Utilizamos su Información -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-cogs text-green-600 mr-3"></i>
+                        3. Cómo Utilizamos su Información
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                            <h3 class="font-semibold text-green-800 mb-3">3.1 Propósitos Principales</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <ul class="text-green-700 space-y-2 text-sm">
+                                    <li>• Gestión de cuentas de usuario</li>
+                                    <li>• Procesamiento de préstamos</li>
+                                    <li>• Control de inventario</li>
+                                    <li>• Generación de reportes</li>
+                                </ul>
+                                <ul class="text-green-700 space-y-2 text-sm">
+                                    <li>• Comunicación del sistema</li>
+                                    <li>• Seguridad y autenticación</li>
+                                    <li>• Mejora del servicio</li>
+                                    <li>• Cumplimiento legal</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-yellow-800 mb-2">3.2 Base Legal</h3>
+                            <p class="text-yellow-700 text-sm">
+                                Procesamos su información personal basándonos en el consentimiento que nos otorga al registrarse, 
+                                así como en la necesidad de cumplir con nuestros servicios contractuales y obligaciones legales.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Compartir Información -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-share-alt text-green-600 mr-3"></i>
+                        4. Compartir su Información
+                    </h2>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                        <h3 class="font-semibold text-red-800 mb-3">4.1 Principio de No Divulgación</h3>
+                        <p class="text-red-700 mb-4">
+                            <strong>No vendemos, alquilamos ni compartimos su información personal con terceros</strong> 
+                            para fines comerciales o de marketing.
+                        </p>
+                        
+                        <h4 class="font-semibold text-red-800 mb-2">Excepciones Limitadas:</h4>
+                        <ul class="text-red-700 space-y-2 text-sm">
+                            <li>• <strong>Autoridades competentes:</strong> Solo cuando sea requerido por ley</li>
+                            <li>• <strong>Proveedores de servicios:</strong> Empresas que nos ayudan a operar el sistema</li>
+                            <li>• <strong>Emergencias:</strong> Para proteger la seguridad de usuarios</li>
+                            <li>• <strong>Consentimiento explícito:</strong> Cuando usted autorice específicamente</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Seguridad de Datos -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-lock text-green-600 mr-3"></i>
+                        5. Seguridad de Datos
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-6">
+                            <h3 class="font-semibold text-indigo-800 mb-3">5.1 Medidas Técnicas</h3>
+                            <ul class="text-indigo-700 space-y-2 text-sm">
+                                <li>• Encriptación de datos en tránsito y reposo</li>
+                                <li>• Acceso restringido con autenticación</li>
+                                <li>• Copias de seguridad regulares</li>
+                                <li>• Monitoreo de seguridad 24/7</li>
+                                <li>• Actualizaciones de seguridad</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-teal-50 border border-teal-200 rounded-lg p-6">
+                            <h3 class="font-semibold text-teal-800 mb-3">5.2 Medidas Organizacionales</h3>
+                            <ul class="text-teal-700 space-y-2 text-sm">
+                                <li>• Capacitación del personal en privacidad</li>
+                                <li>• Políticas de acceso estrictas</li>
+                                <li>• Auditorías regulares de seguridad</li>
+                                <li>• Procedimientos de respuesta a incidentes</li>
+                                <li>• Contratos de confidencialidad</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sus Derechos -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-user-shield text-green-600 mr-3"></i>
+                        6. Sus Derechos
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h3 class="font-semibold text-blue-800 mb-3">6.1 Derechos Fundamentales</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-3">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-eye text-blue-600 mr-3 mt-1"></i>
+                                        <div>
+                                            <strong class="text-blue-800">Acceso:</strong>
+                                            <p class="text-blue-700 text-sm">Ver qué información tenemos sobre usted</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <i class="fas fa-edit text-blue-600 mr-3 mt-1"></i>
+                                        <div>
+                                            <strong class="text-blue-800">Rectificación:</strong>
+                                            <p class="text-blue-700 text-sm">Corregir información incorrecta</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-trash text-blue-600 mr-3 mt-1"></i>
+                                        <div>
+                                            <strong class="text-blue-800">Eliminación:</strong>
+                                            <p class="text-blue-700 text-sm">Solicitar la eliminación de sus datos</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <i class="fas fa-ban text-blue-600 mr-3 mt-1"></i>
+                                        <div>
+                                            <strong class="text-blue-800">Oposición:</strong>
+                                            <p class="text-blue-700 text-sm">Oponerse al procesamiento de datos</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-green-800 mb-2">6.2 Cómo Ejercer sus Derechos</h3>
+                            <p class="text-green-700 text-sm">
+                                Para ejercer cualquiera de estos derechos, puede contactarnos a través de los medios proporcionados 
+                                en la sección de contacto. Responderemos a su solicitud dentro de 30 días hábiles.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Retención de Datos -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-clock text-green-600 mr-3"></i>
+                        7. Retención de Datos
+                    </h2>
+                    
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-user text-green-600 text-xl"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-800 mb-2">Cuentas Activas</h4>
+                                <p class="text-gray-600 text-sm">Mientras su cuenta esté activa</p>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-history text-blue-600 text-xl"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-800 mb-2">Historial de Préstamos</h4>
+                                <p class="text-gray-600 text-sm">5 años para auditoría</p>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="fas fa-chart-bar text-purple-600 text-xl"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-800 mb-2">Datos Anónimos</h4>
+                                <p class="text-gray-600 text-sm">Indefinidamente para estadísticas</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Cookies y Tecnologías -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-cookie-bite text-green-600 mr-3"></i>
+                        8. Cookies y Tecnologías Similares
+                    </h2>
+                    
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                        <h3 class="font-semibold text-orange-800 mb-3">8.1 Uso de Cookies</h3>
+                        <p class="text-orange-700 mb-4">
+                            Utilizamos cookies y tecnologías similares para mejorar su experiencia en nuestro sistema:
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-semibold text-orange-800 mb-2">Cookies Esenciales</h4>
+                                <ul class="text-orange-700 space-y-1 text-sm">
+                                    <li>• Autenticación de usuario</li>
+                                    <li>• Preferencias de sesión</li>
+                                    <li>• Seguridad del sistema</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-orange-800 mb-2">Cookies de Funcionalidad</h4>
+                                <ul class="text-orange-700 space-y-1 text-sm">
+                                    <li>• Recordar configuraciones</li>
+                                    <li>• Mejorar rendimiento</li>
+                                    <li>• Personalizar experiencia</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Menores de Edad -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-child text-green-600 mr-3"></i>
+                        9. Protección de Menores
+                    </h2>
+                    
+                    <div class="bg-pink-50 border border-pink-200 rounded-lg p-6">
+                        <h3 class="font-semibold text-pink-800 mb-3">9.1 Política para Menores</h3>
+                        <p class="text-pink-700 mb-4">
+                            Nuestro sistema está diseñado para uso institucional y no recopilamos intencionalmente 
+                            información personal de menores de 18 años sin el consentimiento de sus padres o tutores.
+                        </p>
+                        
+                        <div class="bg-pink-100 rounded-lg p-4">
+                            <p class="text-pink-800 text-sm">
+                                <strong>Si usted es menor de edad:</strong> Debe obtener el consentimiento de sus padres 
+                                o tutores antes de utilizar nuestro sistema. Si descubrimos que hemos recopilado 
+                                información de un menor sin consentimiento, la eliminaremos inmediatamente.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Cambios en la Política -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-sync-alt text-green-600 mr-3"></i>
+                        10. Cambios en esta Política
+                    </h2>
+                    
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <p class="text-gray-700 leading-relaxed mb-4">
+                            Podemos actualizar esta Política de Privacidad ocasionalmente para reflejar cambios en nuestras 
+                            prácticas o por razones legales. Le notificaremos sobre cambios significativos a través de:
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <ul class="text-gray-700 space-y-2 text-sm">
+                                <li>• Notificación en el sistema</li>
+                                <li>• Correo electrónico</li>
+                            </ul>
+                            <ul class="text-gray-700 space-y-2 text-sm">
+                                <li>• Actualización de fecha en esta página</li>
+                                <li>• Banner informativo en el sistema</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contacto -->
+                <section>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-envelope text-green-600 mr-3"></i>
+                        11. Contacto y Consultas
+                    </h2>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                        <h3 class="font-semibold text-green-800 mb-3">11.1 Oficial de Protección de Datos</h3>
+                        <p class="text-green-700 mb-4">
+                            Para cualquier consulta relacionada con esta política de privacidad o para ejercer sus derechos, 
+                            puede contactar a nuestro Oficial de Protección de Datos:
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-envelope text-green-600 mr-3"></i>
+                                    <div>
+                                        <p class="text-green-800 font-medium">Correo Electrónico</p>
+                                        <p class="text-green-700 text-sm">privacidad@lendix.com</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-phone text-green-600 mr-3"></i>
+                                    <div>
+                                        <p class="text-green-800 font-medium">Teléfono</p>
+                                        <p class="text-green-700 text-sm">+57 (1) 234-5678</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-green-600 mr-3"></i>
+                                    <div>
+                                        <p class="text-green-800 font-medium">Dirección</p>
+                                        <p class="text-green-700 text-sm">Calle 123 #45-67<br>Bogotá, Colombia</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-clock text-green-600 mr-3"></i>
+                                    <div>
+                                        <p class="text-green-800 font-medium">Horario</p>
+                                        <p class="text-green-700 text-sm">Lunes a Viernes<br>8:00 AM - 5:00 PM</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer -->
+                <div class="border-t border-gray-200 pt-6">
+                    <div class="text-center">
+                        <p class="text-gray-600 text-sm mb-2">
+                            Esta política de privacidad está diseñada para proteger sus derechos y garantizar la transparencia en el manejo de su información personal.
+                        </p>
+                        <p class="text-gray-500 text-xs">
+                            © 2024 Lendix. Todos los derechos reservados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -127,10 +127,12 @@ def prestar(id):
         # Obtener datos del formulario
         tipo_prestamo = request.form.get('tipo_prestamo')
         nombre_prestatario = request.form.get('nombre_prestatario')
-        instructor = request.form.get('instructor')
         jornada = request.form.get('jornada')
         
-        if not all([tipo_prestamo, nombre_prestatario, instructor, jornada]):
+        # El instructor es el usuario logueado
+        instructor = session.get('user_nombre', 'Usuario')
+        
+        if not all([tipo_prestamo, nombre_prestatario, jornada]):
             flash('Todos los campos obligatorios deben ser completados.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
