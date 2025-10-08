@@ -136,6 +136,11 @@
                     Gestión Devoluciones
                 </a>
                 
+                <a href="{{ url_for('admin.reportes') }}" class="sidebar-link flex items-center px-4 py-3 rounded-xl hover:bg-green-700 transition-all duration-300 {% if request.endpoint == 'admin.reportes' %}bg-green-700 shadow-lg{% endif %}">
+                    <i class="fas fa-chart-line mr-3 text-lg"></i>
+                    Reportes
+                </a>
+                
                 <a href="{{ url_for('admin.gestion_usuarios') }}" class="sidebar-link flex items-center px-4 py-3 rounded-xl hover:bg-green-700 transition-all duration-300 {% if request.endpoint == 'admin.gestion_usuarios' %}bg-green-700 shadow-lg{% endif %}">
                     <i class="fas fa-users-cog mr-3 text-lg"></i>
                     Gestión Usuarios

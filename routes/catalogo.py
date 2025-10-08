@@ -136,6 +136,12 @@ def prestar(id):
             flash('Todos los campos obligatorios deben ser completados.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
+        # Obtener cantidad solicitada
+        try:
+            cantidad_solicitada = int(request.form.get('cantidad', 1))
+        except (ValueError, TypeError):
+            cantidad_solicitada = 1
+        
         # Verificar disponibilidad del implemento
         implemento = conn.execute(
             'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (id,)
@@ -148,46 +154,63 @@ def prestar(id):
         if implemento['disponibilidad'] <= 0:
             flash('Este implemento no está disponible para préstamo.', 'error')
             return redirect(url_for('catalogo.catalogo'))
+            
+        # Validar cantidad solicitada vs disponibilidad
+        if cantidad_solicitada > implemento['disponibilidad']:
+            flash(f'Solo hay {implemento["disponibilidad"]} unidad{"es" if implemento["disponibilidad"] > 1 else ""} disponible{"s" if implemento["disponibilidad"] > 1 else ""} de {implemento["implemento"]}. Has solicitado {cantidad_solicitada}.', 'error')
+            return redirect(url_for('catalogo.catalogo'))
+            
+        if cantidad_solicitada <= 0:
+            flash('La cantidad debe ser mayor a 0.', 'error')
+            return redirect(url_for('catalogo.catalogo'))
 
         fk_usuario = session.get('user_id')
         fecha_prestamo = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        if tipo_prestamo == 'individual':
-            ambiente = request.form.get('ambiente') or 'SENA'
-            
-            # Registrar el préstamo individual
-            cursor = conn.execute('''
-                INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
-                                    instructor, jornada, ambiente, fecha_prestamo)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (fk_usuario, id, 'individual', nombre_prestatario, instructor, jornada, ambiente, fecha_prestamo))
-            
-            tipo_notificacion = 'prestamo_individual'
-            mensaje_notificacion = f'{nombre_prestatario} ha solicitado un préstamo individual de {implemento["implemento"]}'
-            
-        else:  # tipo_prestamo == 'multiple'
-            ficha = request.form.get('ficha')
-            horario = request.form.get('horario')
-            ambiente = request.form.get('ambiente')
-            
-            if not all([ficha, horario, ambiente]):
-                flash('Para préstamo múltiple, ficha, horario y ambiente son obligatorios.', 'error')
-                return redirect(url_for('catalogo.catalogo'))
-            
-            # Registrar el préstamo múltiple
-            cursor = conn.execute('''
-                INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
-                                    instructor, jornada, ficha, horario, ambiente, fecha_prestamo)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (fk_usuario, id, 'multiple', nombre_prestatario, instructor, jornada, ficha, horario, ambiente, fecha_prestamo))
-            
-            tipo_notificacion = 'prestamo_multiple'
-            mensaje_notificacion = f'{nombre_prestatario} ha solicitado un préstamo múltiple de {implemento["implemento"]} - Ficha: {ficha}'
+        # Crear registros de préstamo según la cantidad solicitada
+        prestamos_ids = []
         
-        prestamo_id = cursor.lastrowid
+        for i in range(cantidad_solicitada):
+            if tipo_prestamo == 'individual':
+                ambiente = request.form.get('ambiente') or 'SENA'
+                
+                # Registrar el préstamo individual
+                cursor = conn.execute('''
+                    INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                        instructor, jornada, ambiente, fecha_prestamo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (fk_usuario, id, 'individual', nombre_prestatario, instructor, jornada, ambiente, fecha_prestamo))
+                
+                if i == 0:  # Solo para el primer préstamo
+                    tipo_notificacion = 'prestamo_individual'
+                    mensaje_notificacion = f'{nombre_prestatario} ha solicitado {cantidad_solicitada} préstamo{"s" if cantidad_solicitada > 1 else ""} individual{"es" if cantidad_solicitada > 1 else ""} de {implemento["implemento"]}'
+                
+            else:  # tipo_prestamo == 'multiple'
+                ficha = request.form.get('ficha')
+                horario = request.form.get('horario')
+                ambiente = request.form.get('ambiente')
+                
+                if not all([ficha, horario, ambiente]):
+                    flash('Para préstamo múltiple, ficha, horario y ambiente son obligatorios.', 'error')
+                    return redirect(url_for('catalogo.catalogo'))
+                
+                # Registrar el préstamo múltiple
+                cursor = conn.execute('''
+                    INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                        instructor, jornada, ficha, horario, ambiente, fecha_prestamo)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (fk_usuario, id, 'multiple', nombre_prestatario, instructor, jornada, ficha, horario, ambiente, fecha_prestamo))
+                
+                if i == 0:  # Solo para el primer préstamo
+                    tipo_notificacion = 'prestamo_multiple'
+                    mensaje_notificacion = f'{nombre_prestatario} ha solicitado {cantidad_solicitada} préstamo{"s" if cantidad_solicitada > 1 else ""} múltiple{"s" if cantidad_solicitada > 1 else ""} de {implemento["implemento"]} - Ficha: {ficha}'
+            
+            prestamos_ids.append(cursor.lastrowid)
+
+        prestamo_id = prestamos_ids[0]  # Usar el primer ID para la notificación
 
         # Actualizar la disponibilidad del implemento
-        nueva_disponibilidad = implemento['disponibilidad'] - 1
+        nueva_disponibilidad = implemento['disponibilidad'] - cantidad_solicitada
         conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
                     (nueva_disponibilidad, id))
 
@@ -202,7 +225,7 @@ def prestar(id):
             prestamo_id
         )
         
-        flash(f"Préstamo {tipo_prestamo} de '{implemento['implemento']}' registrado con éxito", "success")
+        flash(f"{cantidad_solicitada} préstamo{'s' if cantidad_solicitada > 1 else ''} {tipo_prestamo}{'s' if cantidad_solicitada > 1 else ''} de '{implemento['implemento']}' registrado{'s' if cantidad_solicitada > 1 else ''} con éxito", "success")
         
     except Exception as e:
         flash(f"Error en el préstamo: {str(e)}", "error")
@@ -222,6 +245,12 @@ def prestar_multiple(id):
     
     conn = get_db_connection()
     try:
+        # Obtener cantidad solicitada
+        try:
+            cantidad_solicitada = int(request.form.get('cantidad', 1))
+        except (ValueError, TypeError):
+            cantidad_solicitada = 1
+        
         # Verificar disponibilidad del implemento
         implemento = conn.execute(
             'SELECT id, implemento, disponibilidad FROM implementos WHERE id = ?', (id,)
@@ -233,6 +262,15 @@ def prestar_multiple(id):
 
         if implemento['disponibilidad'] <= 0:
             flash('Este implemento no está disponible para préstamo.', 'error')
+            return redirect(url_for('catalogo.catalogo'))
+            
+        # Validar cantidad solicitada vs disponibilidad
+        if cantidad_solicitada > implemento['disponibilidad']:
+            flash(f'Solo hay {implemento["disponibilidad"]} unidad{"es" if implemento["disponibilidad"] > 1 else ""} disponible{"s" if implemento["disponibilidad"] > 1 else ""} de {implemento["implemento"]}. Has solicitado {cantidad_solicitada}.', 'error')
+            return redirect(url_for('catalogo.catalogo'))
+            
+        if cantidad_solicitada <= 0:
+            flash('La cantidad debe ser mayor a 0.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
         fk_usuario = session.get('user_id')
@@ -251,17 +289,23 @@ def prestar_multiple(id):
             flash('Para préstamo múltiple, ficha, ambiente y horario son obligatorios.', 'error')
             return redirect(url_for('catalogo.catalogo'))
 
-        # Registrar el préstamo múltiple
-        cursor = conn.execute('''
-            INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
-                                ficha, ambiente, horario, fecha_prestamo)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (fk_usuario, id, 'multiple', nombre_prestatario, ficha, ambiente, horario, fecha_prestamo))
+        # Crear registros de préstamo según la cantidad solicitada
+        prestamos_ids = []
         
-        prestamo_id = cursor.lastrowid
+        for i in range(cantidad_solicitada):
+            # Registrar el préstamo múltiple
+            cursor = conn.execute('''
+                INSERT INTO prestamos (fk_usuario, fk_implemento, tipo_prestamo, nombre_prestatario, 
+                                    ficha, ambiente, horario, fecha_prestamo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (fk_usuario, id, 'multiple', nombre_prestatario, ficha, ambiente, horario, fecha_prestamo))
+            
+            prestamos_ids.append(cursor.lastrowid)
+        
+        prestamo_id = prestamos_ids[0]  # Usar el primer ID para la notificación
 
         # Actualizar la disponibilidad del implemento
-        nueva_disponibilidad = implemento['disponibilidad'] - 1
+        nueva_disponibilidad = implemento['disponibilidad'] - cantidad_solicitada
         conn.execute('UPDATE implementos SET disponibilidad = ? WHERE id = ?', 
                     (nueva_disponibilidad, id))
 
@@ -271,12 +315,12 @@ def prestar_multiple(id):
         crear_notificacion(
             'prestamo_multiple',
             'Nuevo préstamo múltiple',
-            f'{nombre_prestatario} ha solicitado un préstamo múltiple de {implemento["implemento"]} - Ficha: {ficha}, Ambiente: {ambiente}',
+            f'{nombre_prestatario} ha solicitado {cantidad_solicitada} préstamo{"s" if cantidad_solicitada > 1 else ""} múltiple{"s" if cantidad_solicitada > 1 else ""} de {implemento["implemento"]} - Ficha: {ficha}, Ambiente: {ambiente}',
             fk_usuario,
             prestamo_id
         )
         
-        flash(f"Préstamo múltiple de '{implemento['implemento']}' registrado con éxito", "success")
+        flash(f"{cantidad_solicitada} préstamo{'s' if cantidad_solicitada > 1 else ''} múltiple{'s' if cantidad_solicitada > 1 else ''} de '{implemento['implemento']}' registrado{'s' if cantidad_solicitada > 1 else ''} con éxito", "success")
         
     except Exception as e:
         flash(f"Error en el préstamo: {str(e)}", "error")

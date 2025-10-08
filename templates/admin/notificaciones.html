@@ -234,44 +234,88 @@
 
 {% block scripts %}
 <script>
-// Función para marcar notificación como leída
-function marcarComoLeida(notificacionId) {
+// Función para marcar notificación como leída - Hacer global
+window.marcarComoLeida = function(notificacionId) {
+    console.log('Marcando notificación como leída:', notificacionId);
+    
+    // Verificar que el ID sea válido
+    if (!notificacionId || notificacionId === 'undefined') {
+        showNotification('Error: ID de notificación no válido', 'error');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    const button = document.querySelector(`button[onclick="marcarComoLeida('${notificacionId}')"]`);
+    if (button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Procesando...';
+        button.disabled = true;
+        
+        // Restaurar botón después de 5 segundos si hay error
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 5000);
+    }
+    
     fetch(`/admin/api/notificaciones/${notificacionId}/leer`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-        }
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Respuesta del servidor:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response.json();
+    })
     .then(data => {
+        console.log('Datos recibidos:', data);
+        
         if (data.success) {
             // Actualizar la UI
-            const notificationItem = document.querySelector(`button[onclick="marcarComoLeida(${notificacionId})"]`).closest('.notification-item');
-            notificationItem.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+            const notificationItem = document.querySelector(`button[onclick="marcarComoLeida('${notificacionId}')"]`).closest('.notification-item');
+            if (notificationItem) {
+                notificationItem.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+                
+                // Cambiar el botón por el estado "leída"
+                const buttonContainer = notificationItem.querySelector('.flex.items-center.justify-between .flex.items-center.space-x-2');
+                if (buttonContainer) {
+                    buttonContainer.innerHTML = `
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1 text-xs"></i>
+                            Leída
+                        </span>
+                    `;
+                }
+                
+                // Remover el botón de "Marcar como leída"
+                const markAsReadButton = notificationItem.querySelector(`button[onclick="marcarComoLeida('${notificacionId}')"]`);
+                if (markAsReadButton) {
+                    markAsReadButton.remove();
+                }
+            }
             
-            // Cambiar el botón por el estado "leída"
-            const buttonContainer = notificationItem.querySelector('.flex.items-center.justify-between .flex.items-center.space-x-2');
-            buttonContainer.innerHTML = `
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <i class="fas fa-check-circle mr-1 text-xs"></i>
-                    Leída
-                </span>
-            `;
-            
-            showNotification('Notificación marcada como leída', 'success');
+            showNotification(data.message || 'Notificación marcada como leída', 'success');
             actualizarContadores();
         } else {
-            showNotification('Error al marcar la notificación', 'error');
+            showNotification(data.error || 'Error al marcar la notificación', 'error');
         }
     })
     .catch(error => {
-        showNotification('Error al marcar la notificación', 'error');
-        console.error('Error:', error);
+        console.error('Error detallado:', error);
+        showNotification(`Error de conexión: ${error.message}`, 'error');
     });
 }
 
-// Función para eliminar notificación
-function eliminarNotificacion(notificacionId) {
+// Función para eliminar notificación - Hacer global
+window.eliminarNotificacion = function(notificacionId) {
     if (confirm('¿Estás seguro de que deseas eliminar esta notificación?')) {
         fetch(`/admin/api/notificaciones/${notificacionId}/eliminar`, {
             method: 'POST',
@@ -297,32 +341,42 @@ function eliminarNotificacion(notificacionId) {
     }
 }
 
-// Función para marcar todas como leídas
-function marcarTodasComoLeidas() {
+// Función para marcar todas como leídas - Hacer global
+window.marcarTodasComoLeidas = function() {
     if (confirm('¿Estás seguro de que deseas marcar todas las notificaciones como leídas?')) {
+        console.log('Marcando todas las notificaciones como leídas...');
+        
         fetch('/admin/api/notificaciones/leer_todas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Respuesta del servidor:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Datos recibidos:', data);
             if (data.success) {
-                location.reload();
+                showNotification(data.message || 'Todas las notificaciones marcadas como leídas', 'success');
+                // Recargar la página para actualizar el estado
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             } else {
-                showNotification('Error al marcar las notificaciones', 'error');
+                showNotification(data.error || 'Error al marcar las notificaciones', 'error');
             }
         })
         .catch(error => {
-            showNotification('Error al marcar las notificaciones', 'error');
+            showNotification('Error de conexión al marcar las notificaciones', 'error');
             console.error('Error:', error);
         });
     }
 }
 
-// Función para eliminar todas las leídas
-function eliminarTodasLeidas() {
+// Función para eliminar todas las leídas - Hacer global
+window.eliminarTodasLeidas = function() {
     if (confirm('¿Estás seguro de que deseas eliminar todas las notificaciones leídas?')) {
         fetch('/admin/api/notificaciones/eliminar_leidas', {
             method: 'POST',
@@ -345,8 +399,8 @@ function eliminarTodasLeidas() {
     }
 }
 
-// Función para mostrar notificaciones toast
-function showNotification(message, type) {
+// Función para mostrar notificaciones toast - Hacer global
+window.showNotification = function(message, type) {
     const notification = document.createElement('div');
     notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
         type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'

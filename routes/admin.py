@@ -335,6 +335,9 @@ def devolucion_prestamos():
 @admin_bp.route('/devolver_prestamo_admin/<int:id>', methods=['POST'])
 @login_required
 def devolver_prestamo_admin(id):
+    print(f"DEBUG: Procesando devolución para préstamo ID: {id}")
+    print(f"DEBUG: Usuario actual: {session.get('user_id')}, Rol: {session.get('rol')}")
+    
     if not is_admin():
         flash('No tienes permisos para acceder a esta página', 'error')
         return redirect('/')
@@ -345,6 +348,8 @@ def devolver_prestamo_admin(id):
         novedad = request.form.get('novedad', 'Ninguna')
         estado_implemento = request.form.get('estado_implemento', 'Bueno')
         observaciones = request.form.get('observaciones', '')
+        
+        print(f"DEBUG: Datos del formulario - Novedad: {novedad}, Estado: {estado_implemento}, Observaciones: {observaciones}")
         
         prestamo = conn.execute('''
             SELECT p.*, i.implemento, i.disponibilidad, u.nombre as usuario_nombre
@@ -432,16 +437,36 @@ def api_notificaciones():
 @admin_bp.route('/api/notificaciones/<int:id>/leer', methods=['POST'])
 @login_required
 def marcar_notificacion_leida(id):
+    print(f"DEBUG: Intentando marcar notificación {id} como leída")
+    print(f"DEBUG: Usuario actual: {session.get('user_id')}, Rol: {session.get('rol')}")
+    
     if not is_admin():
-        return jsonify({'error': 'Sin permisos'}), 403
+        print("DEBUG: Usuario no tiene permisos de admin")
+        return jsonify({'success': False, 'error': 'Sin permisos'}), 403
     
     conn = get_db_connection()
     try:
+        # Verificar que la notificación existe
+        notificacion = conn.execute('SELECT * FROM notificaciones WHERE id = ?', (id,)).fetchone()
+        if not notificacion:
+            print(f"DEBUG: Notificación {id} no encontrada")
+            return jsonify({'success': False, 'error': 'Notificación no encontrada'}), 404
+        
+        print(f"DEBUG: Notificación encontrada: {dict(notificacion)}")
+        
+        # Verificar si ya está marcada como leída
+        if notificacion['leida'] == 1:
+            print(f"DEBUG: Notificación {id} ya está marcada como leída")
+            return jsonify({'success': True, 'message': 'Notificación ya estaba marcada como leída'})
+        
+        # Marcar como leída
         conn.execute('UPDATE notificaciones SET leida = 1 WHERE id = ?', (id,))
         conn.commit()
-        return jsonify({'success': True})
+        print(f"DEBUG: Notificación {id} marcada como leída exitosamente")
+        return jsonify({'success': True, 'message': 'Notificación marcada como leída'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"ERROR: Error al marcar notificación como leída: {e}")
+        return jsonify({'success': False, 'error': f'Error del servidor: {str(e)}'}), 500
     finally:
         conn.close()
 
@@ -454,10 +479,17 @@ def marcar_todas_leidas():
     
     conn = get_db_connection()
     try:
+        # Contar cuántas notificaciones se van a marcar
+        cursor = conn.execute('SELECT COUNT(*) as count FROM notificaciones WHERE leida = 0')
+        count = cursor.fetchone()['count']
+        
+        # Marcar todas como leídas
         conn.execute('UPDATE notificaciones SET leida = 1 WHERE leida = 0')
         conn.commit()
-        return jsonify({'success': True})
+        print(f"{count} notificaciones marcadas como leídas")
+        return jsonify({'success': True, 'message': f'{count} notificaciones marcadas como leídas'})
     except Exception as e:
+        print(f"Error al marcar todas las notificaciones como leídas: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
@@ -1383,6 +1415,261 @@ def api_usuarios_pendientes():
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+# ==================== REPORTES ====================
+
+# Página de reportes
+@admin_bp.route('/reportes')
+@login_required
+def reportes():
+    if not is_admin():
+        flash('No tienes permisos para acceder a esta página', 'error')
+        return redirect('/')
+    
+    conn = get_db_connection()
+    try:
+        # Obtener estadísticas básicas para el dashboard
+        total_prestamos = conn.execute('SELECT COUNT(*) as count FROM prestamos').fetchone()['count']
+        prestamos_activos = conn.execute('SELECT COUNT(*) as count FROM prestamos WHERE fecha_devolucion IS NULL').fetchone()['count']
+        prestamos_devueltos = conn.execute('SELECT COUNT(*) as count FROM prestamos WHERE fecha_devolucion IS NOT NULL').fetchone()['count']
+        
+        # Obtener implementos más prestados
+        implementos_mas_prestados = conn.execute('''
+            SELECT i.implemento, COUNT(p.id) as total_prestamos
+            FROM implementos i
+            LEFT JOIN prestamos p ON i.id = p.fk_implemento
+            GROUP BY i.id, i.implemento
+            ORDER BY total_prestamos DESC
+            LIMIT 10
+        ''').fetchall()
+        
+        # Obtener usuarios más activos
+        usuarios_activos = conn.execute('''
+            SELECT u.nombre, u.email, COUNT(p.id) as total_prestamos
+            FROM usuarios u
+            LEFT JOIN prestamos p ON u.id = p.fk_usuario
+            GROUP BY u.id, u.nombre, u.email
+            ORDER BY total_prestamos DESC
+            LIMIT 10
+        ''').fetchall()
+        
+        conn.close()
+        
+        return render_template('admin/reportes.html',
+                             total_prestamos=total_prestamos,
+                             prestamos_activos=prestamos_activos,
+                             prestamos_devueltos=prestamos_devueltos,
+                             implementos_mas_prestados=implementos_mas_prestados,
+                             usuarios_activos=usuarios_activos)
+    except Exception as e:
+        flash(f'Error al cargar reportes: {str(e)}', 'error')
+        conn.close()
+        return redirect('/admin')
+
+# Generar reporte de préstamos en Excel
+@admin_bp.route('/reportes/prestamos/excel', methods=['POST'])
+@login_required
+def generar_reporte_prestamos_excel():
+    if not is_admin():
+        return jsonify({'error': 'Sin permisos'}), 403
+    
+    try:
+        # Obtener parámetros del formulario
+        fecha_inicio = request.form.get('fecha_inicio')
+        fecha_fin = request.form.get('fecha_fin')
+        tipo_reporte = request.form.get('tipo_reporte', 'todos')  # todos, activos, devueltos
+        formato = request.form.get('formato', 'detallado')  # detallado, resumen
+        
+        print(f"DEBUG: Generando reporte - Tipo: {tipo_reporte}, Formato: {formato}")
+        print(f"DEBUG: Fechas - Inicio: {fecha_inicio}, Fin: {fecha_fin}")
+        
+        # Validar fechas
+        if fecha_inicio and fecha_fin:
+            try:
+                from datetime import datetime
+                datetime.strptime(fecha_inicio, '%Y-%m-%d')
+                datetime.strptime(fecha_fin, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'error': 'Formato de fecha inválido'}), 400
+        
+        # Construir query
+        conn = get_db_connection()
+        
+        query = '''
+            SELECT 
+                p.id,
+                p.tipo_prestamo,
+                p.nombre_prestatario,
+                p.ficha,
+                p.ambiente,
+                p.horario,
+                p.instructor,
+                p.jornada,
+                p.fecha_prestamo,
+                p.fecha_devolucion,
+                p.novedad,
+                p.estado_implemento_devolucion,
+                p.observaciones,
+                i.implemento,
+                i.categoria,
+                u.nombre as usuario_registro,
+                u.email as usuario_email
+            FROM prestamos p
+            JOIN implementos i ON p.fk_implemento = i.id
+            JOIN usuarios u ON p.fk_usuario = u.id
+            WHERE 1=1
+        '''
+        
+        params = []
+        
+        # Filtros de fecha
+        if fecha_inicio:
+            query += " AND DATE(p.fecha_prestamo) >= ?"
+            params.append(fecha_inicio)
+        
+        if fecha_fin:
+            query += " AND DATE(p.fecha_prestamo) <= ?"
+            params.append(fecha_fin)
+        
+        # Filtro de tipo
+        if tipo_reporte == 'activos':
+            query += " AND p.fecha_devolucion IS NULL"
+        elif tipo_reporte == 'devueltos':
+            query += " AND p.fecha_devolucion IS NOT NULL"
+        
+        query += " ORDER BY p.fecha_prestamo DESC"
+        
+        prestamos_raw = conn.execute(query, params).fetchall()
+        conn.close()
+        
+        # Convertir Row objects a diccionarios
+        prestamos = [dict(prestamo) for prestamo in prestamos_raw]
+        print(f"DEBUG: {len(prestamos)} préstamos encontrados para el reporte")
+        
+        # Generar Excel
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
+        import io
+        from datetime import datetime
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Reporte de Préstamos"
+        
+        # Estilos
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Configurar columnas según el formato
+        if formato == 'detallado':
+            headers = [
+                'ID', 'Tipo Préstamo', 'Prestatario', 'Ficha', 'Ambiente', 'Horario',
+                'Instructor', 'Jornada', 'Implemento', 'Categoría', 'Fecha Préstamo',
+                'Fecha Devolución', 'Estado', 'Novedad', 'Observaciones', 'Registrado por'
+            ]
+            columns = [
+                'id', 'tipo_prestamo', 'nombre_prestatario', 'ficha', 'ambiente', 'horario',
+                'instructor', 'jornada', 'implemento', 'categoria', 'fecha_prestamo',
+                'fecha_devolucion', 'estado_implemento_devolucion', 'novedad', 'observaciones', 'usuario_registro'
+            ]
+        else:  # resumen
+            headers = [
+                'ID', 'Prestatario', 'Implemento', 'Fecha Préstamo', 'Fecha Devolución',
+                'Días Transcurridos', 'Estado', 'Registrado por'
+            ]
+            columns = [
+                'id', 'nombre_prestatario', 'implemento', 'fecha_prestamo',
+                'fecha_devolucion', 'dias_transcurridos', 'estado', 'usuario_registro'
+            ]
+        
+        # Escribir encabezados
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
+        
+        # Escribir datos
+        for row, prestamo in enumerate(prestamos, 2):
+            for col, column_name in enumerate(columns, 1):
+                if column_name == 'dias_transcurridos':
+                    # Calcular días transcurridos
+                    if prestamo.get('fecha_devolucion'):
+                        fecha_fin = datetime.strptime(prestamo['fecha_devolucion'][:10], '%Y-%m-%d')
+                        fecha_inicio = datetime.strptime(prestamo['fecha_prestamo'][:10], '%Y-%m-%d')
+                        dias = (fecha_fin - fecha_inicio).days
+                        value = f"{dias} días"
+                    else:
+                        fecha_inicio = datetime.strptime(prestamo['fecha_prestamo'][:10], '%Y-%m-%d')
+                        dias = (datetime.now() - fecha_inicio).days
+                        value = f"{dias} días (activo)"
+                elif column_name == 'estado':
+                    if prestamo.get('fecha_devolucion'):
+                        value = 'Devuelto'
+                    else:
+                        value = 'Activo'
+                else:
+                    # Manejar valores nulos de forma segura
+                    raw_value = prestamo.get(column_name)
+                    if raw_value is None or raw_value == '':
+                        value = ''
+                    else:
+                        value = str(raw_value)
+                
+                cell = ws.cell(row=row, column=col, value=value)
+                cell.border = border
+                cell.alignment = Alignment(vertical='center')
+        
+        # Ajustar ancho de columnas
+        for col in range(1, len(headers) + 1):
+            column_letter = get_column_letter(col)
+            ws.column_dimensions[column_letter].width = 15
+        
+        # Agregar información del reporte
+        ws.cell(row=len(prestamos) + 3, column=1, value="Información del Reporte:")
+        ws.cell(row=len(prestamos) + 4, column=1, value=f"Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        ws.cell(row=len(prestamos) + 5, column=1, value=f"Total de registros: {len(prestamos)}")
+        ws.cell(row=len(prestamos) + 6, column=1, value=f"Tipo de reporte: {tipo_reporte}")
+        ws.cell(row=len(prestamos) + 7, column=1, value=f"Período: {fecha_inicio or 'Inicio'} - {fecha_fin or 'Actual'}")
+        
+        # Guardar en memoria
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # Generar nombre del archivo
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"reporte_prestamos_{tipo_reporte}_{timestamp}.xlsx"
+        
+        from flask import make_response
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+        
+        print(f"DEBUG: Reporte generado exitosamente - {len(prestamos)} registros")
+        return response
+        
+    except Exception as e:
+        print(f"ERROR: Error al generar reporte: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Mensaje de error más amigable
+        error_message = str(e)
+        if "'sqlite3.Row' object has no attribute 'get'" in error_message:
+            error_message = "Error interno del sistema. Por favor, contacte al administrador."
+        elif "openpyxl" in error_message.lower():
+            error_message = "Error al generar el archivo Excel. Verifique que la librería esté instalada correctamente."
+        
+        return jsonify({'error': f'Error al generar reporte: {error_message}'}), 500
 
 # API para obtener instructores disponibles
 @admin_bp.route('/api/instructores_disponibles')

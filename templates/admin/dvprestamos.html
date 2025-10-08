@@ -180,7 +180,6 @@
     </div>
 </div>
 {% endif %}
-{% endblock %}
 
 <!-- Modal para devolución -->
 <div id="modalDevolucion" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
@@ -192,7 +191,7 @@
                     Registrar Devolución
                 </h3>
             </div>
-            <form id="formDevolucion" method="POST" class="px-6 py-6 space-y-6">
+            <form id="formDevolucion" method="POST" action="" class="px-6 py-6 space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Implemento a Devolver</label>
                     <input type="text" id="implementoModal" readonly 
@@ -247,6 +246,7 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
 <script>
@@ -278,20 +278,47 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Funciones para el modal de devolución
-function abrirModalDevolucion(prestamoId, implemento) {
-    document.getElementById('implementoModal').value = implemento;
-    document.getElementById('formDevolucion').action = `/admin/devolver_prestamo_admin/${prestamoId}`;
-    document.getElementById('modalDevolucion').classList.remove('hidden');
-    
-    // Agregar animación de entrada
-    setTimeout(() => {
+// Funciones para el modal de devolución - Hacerlas globales
+window.abrirModalDevolucion = function(prestamoId, implemento) {
+    try {
+        console.log('Abriendo modal para préstamo:', prestamoId, 'implemento:', implemento);
+        
+        // Verificar que los elementos existan
+        const implementoModal = document.getElementById('implementoModal');
+        const form = document.getElementById('formDevolucion');
         const modal = document.getElementById('modalDevolucion');
-        modal.style.opacity = '1';
-    }, 10);
+        
+        console.log('Elementos encontrados:', {
+            implementoModal: !!implementoModal,
+            form: !!form,
+            modal: !!modal
+        });
+        
+        if (!implementoModal || !form || !modal) {
+            console.error('Error: No se encontraron elementos del modal');
+            alert('Error: No se pudo abrir el modal de devolución. Por favor, recarga la página.');
+            return;
+        }
+        
+        implementoModal.value = implemento;
+        form.action = `/admin/devolver_prestamo_admin/${prestamoId}`;
+        
+        console.log('Form action establecido a:', form.action);
+        
+        modal.classList.remove('hidden');
+        
+        // Agregar animación de entrada
+        setTimeout(() => {
+            modal.style.opacity = '1';
+        }, 10);
+        
+    } catch (error) {
+        console.error('Error al abrir modal:', error);
+        alert('Error al abrir el modal de devolución. Por favor, intente nuevamente.');
+    }
 }
 
-function cerrarModalDevolucion() {
+window.cerrarModalDevolucion = function() {
     const modal = document.getElementById('modalDevolucion');
     modal.style.opacity = '0';
     setTimeout(() => {
@@ -299,29 +326,46 @@ function cerrarModalDevolucion() {
     }, 300);
 }
 
-// Cerrar modal al hacer clic fuera
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('modalDevolucion');
-    if (event.target === modal) {
-        cerrarModalDevolucion();
-    }
-});
+// Asegurar que el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal al hacer clic fuera
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('modalDevolucion');
+        if (event.target === modal) {
+            cerrarModalDevolucion();
+        }
+    });
 
-// Cerrar modal con tecla ESC
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        cerrarModalDevolucion();
-    }
-});
+    // Cerrar modal con tecla ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            cerrarModalDevolucion();
+        }
+    });
 
-// Validación del formulario de devolución
-document.getElementById('formDevolucion').addEventListener('submit', function(e) {
+    // Validación del formulario de devolución
+    const formDevolucion = document.getElementById('formDevolucion');
+    if (formDevolucion) {
+        formDevolucion.addEventListener('submit', function(e) {
+    console.log('Formulario enviado');
+    console.log('Form action:', this.action);
+    
     const novedad = this.querySelector('select[name="novedad"]').value;
     const observaciones = this.querySelector('textarea[name="observaciones"]').value;
+    
+    console.log('Novedad:', novedad);
+    console.log('Observaciones:', observaciones);
     
     if (novedad === 'Otra' && !observaciones.trim()) {
         e.preventDefault();
         alert('Por favor, proporcione observaciones cuando seleccione "Otra" como novedad.');
+        return;
+    }
+    
+    // Verificar que el action esté establecido
+    if (!this.action || this.action === '') {
+        e.preventDefault();
+        alert('Error: No se ha establecido la acción del formulario. Por favor, intente nuevamente.');
         return;
     }
     
@@ -331,11 +375,15 @@ document.getElementById('formDevolucion').addEventListener('submit', function(e)
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
     submitBtn.disabled = true;
     
-    // Re-habilitar después de 3 segundos (en caso de que no se redirija)
+    // Re-habilitar después de 5 segundos (en caso de que no se redirija)
     setTimeout(() => {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
-    }, 3000);
+    }, 5000);
+    });
+    } else {
+        console.warn('Formulario de devolución no encontrado');
+    }
 });
 </script>
 {% endblock %}

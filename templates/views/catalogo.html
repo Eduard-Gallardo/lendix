@@ -245,7 +245,23 @@
                 step: 'menu', 
                 loading: false, 
                 tipoPrestamo: '',
-                nombreUsuario: '{{ session.user_nombre or "" }}'
+                nombreUsuario: '{{ session.user_nombre or "" }}',
+                cantidad: 1,
+                disponibilidad: {{ item['disponibilidad'] }},
+                validarCantidad() {
+                    const input = document.querySelector('input[name=cantidad]');
+                    if (input) {
+                        let valor = parseInt(input.value);
+                        if (isNaN(valor) || valor < 1) {
+                            input.value = 1;
+                            this.cantidad = 1;
+                        } else if (valor > this.disponibilidad) {
+                            this.cantidad = valor;
+                        } else {
+                            this.cantidad = valor;
+                        }
+                    }
+                }
             }" class="group">
                 <!-- Tarjeta del implemento mejorada -->
                 <div class="card-hover bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full flex flex-col border border-gray-100 group-hover:border-green-300 group-hover:scale-105"
@@ -440,6 +456,36 @@
                                         </div>
                                     </div>
 
+                                    <!-- Cantidad de implementos -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-3">Cantidad a prestar *</label>
+                                        <div class="relative">
+                                            <i class="fas fa-layer-group absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                            <input type="number" name="cantidad" min="1" max="{{ item['disponibilidad'] }}" value="1" required
+                                                x-model="cantidad" @input="validarCantidad()" @change="validarCantidad()"
+                                                class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white">
+                                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
+                                                de {{ item['disponibilidad'] }} disp.
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Máximo {{ item['disponibilidad'] }} unidad{{ 'es' if item['disponibilidad'] > 1 else '' }} disponible{{ 's' if item['disponibilidad'] > 1 else '' }}
+                                        </p>
+                                        
+                                        <!-- Alerta de stock insuficiente -->
+                                        <div x-show="cantidad > disponibilidad" x-transition
+                                             class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                                                <div class="text-sm">
+                                                    <p class="font-medium text-red-800">Sin stock suficiente</p>
+                                                    <p class="text-red-600">Solo hay {{ item['disponibilidad'] }} unidad{{ 'es' if item['disponibilidad'] > 1 else '' }} disponible{{ 's' if item['disponibilidad'] > 1 else '' }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Campo de nombre del prestatario -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-3">Nombre del prestatario * <span class="text-xs text-gray-500">(Se llena automáticamente)</span></label>
@@ -533,10 +579,15 @@
                                             <i class="fas fa-arrow-left mr-2"></i>
                                             Volver al Menú
                                         </button>
-                                        <button type="submit" :disabled="loading"
+                                        <button type="submit" :disabled="loading || cantidad > disponibilidad || cantidad <= 0"
                                             class="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 disabled:opacity-50 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                                             <i class="fas fa-spinner fa-spin mr-2" x-show="loading"></i>
-                                            <span x-show="!loading">Confirmar Préstamo</span>
+                                            <span x-show="!loading && cantidad <= disponibilidad">
+                                                Confirmar Préstamo de <span x-text="cantidad"></span> unidad<span x-text="cantidad > 1 ? 'es' : ''"></span>
+                                            </span>
+                                            <span x-show="!loading && cantidad > disponibilidad">
+                                                Sin stock suficiente
+                                            </span>
                                             <span x-show="loading">Procesando...</span>
                                         </button>
                                     </div>

@@ -15,11 +15,9 @@ def crear_notificacion(tipo, titulo, mensaje, fk_usuario=None, fk_prestamo=None)
         ''', (tipo, titulo, mensaje, fk_usuario, fk_prestamo))
         conn.commit()
     except Exception as e:
-        flash(f'Error al procesar la devolución: {str(e)}', 'error')
+        print(f'Error al crear notificación: {e}')
     finally:
         conn.close()
-
-    return redirect(url_for('prestamos.prestamos'))
 
 # Obtener detalles de un préstamo (para modal)
 @prestamos_bp.route('/detalle_prestamo/<int:id>', methods=['GET'])

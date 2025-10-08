@@ -1,0 +1,369 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Reportes - Panel Administrador - Lendix{% endblock %}
+
+{% block page_title %}Centro de Reportes{% endblock %}
+{% block page_subtitle %}Genera reportes detallados de préstamos y análisis del sistema{% endblock %}
+
+{% block content %}
+<!-- Estadísticas generales -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Total Préstamos -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Total Préstamos</p>
+                <p class="text-3xl font-bold text-gray-900">{{ total_prestamos }}</p>
+                <p class="text-xs text-blue-600 mt-1">
+                    <i class="fas fa-hand-holding mr-1"></i>
+                    Registros históricos
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-hand-holding text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Préstamos Activos -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.1s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Préstamos Activos</p>
+                <p class="text-3xl font-bold text-gray-900">{{ prestamos_activos }}</p>
+                <p class="text-xs text-green-600 mt-1">
+                    <i class="fas fa-clock mr-1"></i>
+                    Pendientes de devolución
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-clock text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Préstamos Devueltos -->
+    <div class="card-hover bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fade-in-up" style="animation-delay: 0.2s">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600 mb-1">Préstamos Devueltos</p>
+                <p class="text-3xl font-bold text-gray-900">{{ prestamos_devueltos }}</p>
+                <p class="text-xs text-purple-600 mt-1">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    Completados
+                </p>
+            </div>
+            <div class="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center">
+                <i class="fas fa-check-circle text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generador de Reportes -->
+<div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8 animate-fade-in-up">
+    <div class="flex items-center mb-6">
+        <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mr-4">
+            <i class="fas fa-file-excel text-white text-xl"></i>
+        </div>
+        <div>
+            <h3 class="text-xl font-semibold text-gray-900">Generar Reporte de Préstamos</h3>
+            <p class="text-gray-600">Exporta datos de préstamos a Excel con filtros personalizados</p>
+        </div>
+    </div>
+    
+    <form id="formReporte" method="POST" action="{{ url_for('admin.generar_reporte_prestamos_excel') }}" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Fecha Inicio -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar-alt mr-1"></i>
+                    Fecha Inicio
+                </label>
+                <input type="date" name="fecha_inicio" id="fecha_inicio"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
+            </div>
+            
+            <!-- Fecha Fin -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-calendar-alt mr-1"></i>
+                    Fecha Fin
+                </label>
+                <input type="date" name="fecha_fin" id="fecha_fin"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
+            </div>
+            
+            <!-- Tipo de Reporte -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-filter mr-1"></i>
+                    Tipo de Reporte
+                </label>
+                <select name="tipo_reporte" id="tipo_reporte"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
+                    <option value="todos">Todos los préstamos</option>
+                    <option value="activos">Solo préstamos activos</option>
+                    <option value="devueltos">Solo préstamos devueltos</option>
+                </select>
+            </div>
+            
+            <!-- Formato -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-cog mr-1"></i>
+                    Formato
+                </label>
+                <select name="formato" id="formato"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
+                    <option value="detallado">Reporte Detallado</option>
+                    <option value="resumen">Reporte Resumen</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Botones de Acción -->
+        <div class="flex justify-center space-x-4 pt-4">
+            <button type="button" onclick="limpiarFiltros()" 
+                    class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium">
+                <i class="fas fa-eraser mr-2"></i>
+                Limpiar Filtros
+            </button>
+            <button type="submit" id="btnGenerarReporte"
+                    class="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 font-medium">
+                <i class="fas fa-file-excel mr-2"></i>
+                Generar Reporte Excel
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Estadísticas Adicionales -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Implementos Más Prestados -->
+    <div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <h3 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-chart-bar mr-3"></i>
+                Implementos Más Prestados
+            </h3>
+        </div>
+        <div class="p-6">
+            {% if implementos_mas_prestados %}
+                <div class="space-y-4">
+                    {% for implemento in implementos_mas_prestados %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-box text-white"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">{{ implemento.implemento }}</p>
+                                <p class="text-sm text-gray-500">{{ implemento.total_prestamos }} préstamo{{ 's' if implemento.total_prestamos != 1 else '' }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                #{{ loop.index }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-chart-bar text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No hay datos de préstamos disponibles</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Usuarios Más Activos -->
+    <div class="card-hover bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up">
+        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <h3 class="text-lg font-semibold flex items-center">
+                <i class="fas fa-users mr-3"></i>
+                Usuarios Más Activos
+            </h3>
+        </div>
+        <div class="p-6">
+            {% if usuarios_activos %}
+                <div class="space-y-4">
+                    {% for usuario in usuarios_activos %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">{{ usuario.nombre }}</p>
+                                <p class="text-sm text-gray-500">{{ usuario.email }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-gray-900">{{ usuario.total_prestamos }}</p>
+                            <p class="text-xs text-gray-500">préstamo{{ 's' if usuario.total_prestamos != 1 else '' }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No hay usuarios con préstamos registrados</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Información Adicional -->
+<div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 animate-fade-in-up">
+    <div class="flex items-start space-x-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-info-circle text-white text-xl"></i>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-blue-900 mb-2">Información sobre los Reportes</h3>
+            <ul class="text-blue-700 space-y-1">
+                <li><strong>Reporte Detallado:</strong> Incluye toda la información disponible de cada préstamo</li>
+                <li><strong>Reporte Resumen:</strong> Incluye solo la información esencial para análisis rápido</li>
+                <li><strong>Filtros de Fecha:</strong> Permite generar reportes por períodos específicos</li>
+                <li><strong>Formato Excel:</strong> Compatible con Microsoft Excel y Google Sheets</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Establecer fecha actual como fecha fin por defecto
+document.addEventListener('DOMContentLoaded', function() {
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha_fin').value = hoy;
+});
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+    document.getElementById('fecha_inicio').value = '';
+    document.getElementById('fecha_fin').value = '';
+    document.getElementById('tipo_reporte').value = 'todos';
+    document.getElementById('formato').value = 'detallado';
+    
+    showNotification('Filtros limpiados', 'success');
+}
+
+// Función para mostrar notificaciones toast
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animación de entrada
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Validación del formulario
+document.getElementById('formReporte').addEventListener('submit', function(e) {
+    const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaFin = document.getElementById('fecha_fin').value;
+    
+    // Validar fechas
+    if (fechaInicio && fechaFin) {
+        const inicio = new Date(fechaInicio);
+        const fin = new Date(fechaFin);
+        
+        if (inicio > fin) {
+            e.preventDefault();
+            showNotification('La fecha de inicio no puede ser mayor a la fecha fin', 'error');
+            return;
+        }
+    }
+    
+    // Mostrar indicador de carga
+    const submitBtn = document.getElementById('btnGenerarReporte');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generando...';
+    submitBtn.disabled = true;
+    
+    // Re-habilitar después de 10 segundos (en caso de que no se descargue)
+    setTimeout(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }, 10000);
+    
+    // Manejar errores de respuesta
+    fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        // Verificar si es un archivo Excel o un error JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+            });
+        }
+        
+        // Si es un archivo Excel, descargarlo
+        return response.blob().then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reporte_prestamos_${new Date().toISOString().slice(0,10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('Reporte generado y descargado exitosamente', 'success');
+        });
+    })
+    .catch(error => {
+        console.error('Error al generar reporte:', error);
+        showNotification(`Error: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+    
+    // Prevenir envío normal del formulario
+    e.preventDefault();
+});
+
+// Función para establecer fechas rápidas
+function setQuickDate(days) {
+    const hoy = new Date();
+    const fechaInicio = new Date(hoy.getTime() - (days * 24 * 60 * 60 * 1000));
+    
+    document.getElementById('fecha_inicio').value = fechaInicio.toISOString().split('T')[0];
+    document.getElementById('fecha_fin').value = hoy.toISOString().split('T')[0];
+}
+</script>
+{% endblock %}
