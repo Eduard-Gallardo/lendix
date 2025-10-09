@@ -48,7 +48,129 @@
                 {% endif %}
             {% endwith %}
 
-            <form class="p-6 space-y-6" action="{{ url_for('registro.registro_usuario') }}" method="POST" x-data="registrationForm()">
+            <form class="p-6 space-y-6" action="{{ url_for('registro.registro_usuario') }}" method="POST" x-data="{
+                formData: {
+                    nombre: '',
+                    email: '',
+                    telefono: '',
+                    password: '',
+                    confirmPassword: ''
+                },
+                errors: {},
+                showPassword: false,
+                showConfirmPassword: false,
+                passwordMatch: '',
+                emailStatus: '',
+                
+                togglePassword(field) {
+                    if (field === 'password') {
+                        this.showPassword = !this.showPassword;
+                        document.getElementById('password').type = this.showPassword ? 'text' : 'password';
+                    } else {
+                        this.showConfirmPassword = !this.showConfirmPassword;
+                        document.getElementById('confirm-password').type = this.showConfirmPassword ? 'text' : 'password';
+                    }
+                },
+                
+                validateField(field) {
+                    const value = this.formData[field];
+                    
+                    switch(field) {
+                        case 'nombre':
+                            if (!value || value.length < 2) {
+                                this.errors.nombre = 'El nombre debe tener al menos 2 caracteres';
+                            } else {
+                                delete this.errors.nombre;
+                            }
+                            break;
+                            
+                        case 'email':
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!value || !emailRegex.test(value)) {
+                                this.errors.email = 'Ingresa un correo electrónico válido';
+                            } else {
+                                delete this.errors.email;
+                                this.checkEmailAvailability(value);
+                            }
+                            break;
+                            
+                        case 'telefono':
+                            if (!value || value.length < 10) {
+                                this.errors.telefono = 'El teléfono debe tener al menos 10 caracteres';
+                            } else {
+                                delete this.errors.telefono;
+                            }
+                            break;
+                            
+                        case 'password':
+                            if (!value || value.length < 8) {
+                                this.errors.password = 'La contraseña debe tener al menos 8 caracteres';
+                            } else {
+                                delete this.errors.password;
+                            }
+                            break;
+                            
+                        case 'confirmPassword':
+                            if (value !== this.formData.password) {
+                                this.errors.confirmPassword = 'Las contraseñas no coinciden';
+                            } else {
+                                delete this.errors.confirmPassword;
+                            }
+                            break;
+                    }
+                },
+                
+                validatePasswordMatch() {
+                    if (this.formData.confirmPassword && this.formData.password) {
+                        if (this.formData.confirmPassword === this.formData.password) {
+                            this.passwordMatch = 'match';
+                            delete this.errors.confirmPassword;
+                        } else {
+                            this.passwordMatch = 'mismatch';
+                            this.errors.confirmPassword = 'Las contraseñas no coinciden';
+                        }
+                    } else {
+                        this.passwordMatch = '';
+                    }
+                },
+                
+                async checkEmailAvailability(email) {
+                    if (!email) return;
+                    
+                    try {
+                        const response = await fetch('/registro/api/verificar-email', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email: email })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.disponible) {
+                            this.emailStatus = 'available';
+                        } else {
+                            this.emailStatus = 'taken';
+                            this.errors.email = data.mensaje;
+                        }
+                    } catch (error) {
+                        console.error('Error checking email:', error);
+                        this.emailStatus = '';
+                    }
+                },
+                
+                isFormValid() {
+                    return Object.keys(this.errors).length === 0 && 
+                           this.formData.nombre && 
+                           this.formData.email && 
+                           this.formData.telefono && 
+                           this.formData.password && 
+                           this.formData.confirmPassword &&
+                           this.passwordMatch === 'match' &&
+                           document.getElementById('terms').checked;
+                }
+            }"
                 
                 <!-- Campos del formulario -->
                 <div class="space-y-4">
@@ -230,132 +352,6 @@
     <!-- Scripts simplificados -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
-        function registrationForm() {
-            return {
-                formData: {
-                    nombre: '',
-                    email: '',
-                    telefono: '',
-                    password: '',
-                    confirmPassword: ''
-                },
-                errors: {},
-                showPassword: false,
-                showConfirmPassword: false,
-                passwordMatch: '',
-                emailStatus: '',
-                
-                togglePassword(field) {
-                    if (field === 'password') {
-                        this.showPassword = !this.showPassword;
-                        document.getElementById('password').type = this.showPassword ? 'text' : 'password';
-                    } else {
-                        this.showConfirmPassword = !this.showConfirmPassword;
-                        document.getElementById('confirm-password').type = this.showConfirmPassword ? 'text' : 'password';
-                    }
-                },
-                
-                validateField(field) {
-                    const value = this.formData[field];
-                    
-                    switch(field) {
-                        case 'nombre':
-                            if (!value || value.length < 2) {
-                                this.errors.nombre = 'El nombre debe tener al menos 2 caracteres';
-                            } else {
-                                delete this.errors.nombre;
-                            }
-                            break;
-                            
-                        case 'email':
-                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                            if (!value || !emailRegex.test(value)) {
-                                this.errors.email = 'Ingresa un correo electrónico válido';
-                            } else {
-                                delete this.errors.email;
-                                this.checkEmailAvailability(value);
-                            }
-                            break;
-                            
-                        case 'telefono':
-                            if (!value || value.length < 10) {
-                                this.errors.telefono = 'El teléfono debe tener al menos 10 caracteres';
-                            } else {
-                                delete this.errors.telefono;
-                            }
-                            break;
-                            
-                        case 'password':
-                            if (!value || value.length < 8) {
-                                this.errors.password = 'La contraseña debe tener al menos 8 caracteres';
-                            } else {
-                                delete this.errors.password;
-                            }
-                            break;
-                            
-                        case 'confirmPassword':
-                            if (value !== this.formData.password) {
-                                this.errors.confirmPassword = 'Las contraseñas no coinciden';
-                            } else {
-                                delete this.errors.confirmPassword;
-                            }
-                            break;
-                    }
-                },
-                
-                validatePasswordMatch() {
-                    if (this.formData.confirmPassword && this.formData.password) {
-                        if (this.formData.confirmPassword === this.formData.password) {
-                            this.passwordMatch = 'match';
-                            delete this.errors.confirmPassword;
-                        } else {
-                            this.passwordMatch = 'mismatch';
-                            this.errors.confirmPassword = 'Las contraseñas no coinciden';
-                        }
-                    } else {
-                        this.passwordMatch = '';
-                    }
-                },
-                
-                async checkEmailAvailability(email) {
-                    if (!email) return;
-                    
-                    try {
-                        const response = await fetch('/registro/api/verificar-email', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ email: email })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (data.disponible) {
-                            this.emailStatus = 'available';
-                        } else {
-                            this.emailStatus = 'taken';
-                            this.errors.email = data.mensaje;
-                        }
-                    } catch (error) {
-                        console.error('Error checking email:', error);
-                        this.emailStatus = '';
-                    }
-                },
-                
-                isFormValid() {
-                    return Object.keys(this.errors).length === 0 && 
-                           this.formData.nombre && 
-                           this.formData.email && 
-                           this.formData.telefono && 
-                           this.formData.password && 
-                           this.formData.confirmPassword &&
-                           this.passwordMatch === 'match' &&
-                           document.getElementById('terms').checked;
-                }
-            }
-        }
-        
         // Animación de entrada para el contenedor
         document.addEventListener('DOMContentLoaded', function() {
             const container = document.querySelector('.registro-container');
