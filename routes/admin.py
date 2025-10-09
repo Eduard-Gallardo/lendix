@@ -1670,7 +1670,7 @@ def generar_reporte_prestamos_excel():
             error_message = "Error al generar el archivo Excel. Verifique que la librería esté instalada correctamente."
         
         return jsonify({'error': f'Error al generar reporte: {error_message}'}), 500
-
+        
 # API para obtener instructores disponibles
 @admin_bp.route('/api/instructores_disponibles')
 @login_required
