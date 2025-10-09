@@ -240,29 +240,7 @@
         <!-- Grid de implementos mejorado -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {% for item in catalogo %}
-            <div x-data="{ 
-                open: false, 
-                step: 'menu', 
-                loading: false, 
-                tipoPrestamo: '',
-                nombreUsuario: '{{ session.user_nombre or "" }}',
-                cantidad: 1,
-                disponibilidad: {{ item['disponibilidad'] }},
-                validarCantidad() {
-                    const input = document.querySelector('input[name=cantidad]');
-                    if (input) {
-                        let valor = parseInt(input.value);
-                        if (isNaN(valor) || valor < 1) {
-                            input.value = 1;
-                            this.cantidad = 1;
-                        } else if (valor > this.disponibilidad) {
-                            this.cantidad = valor;
-                        } else {
-                            this.cantidad = valor;
-                        }
-                    }
-                }
-            }" class="group">
+            <div x-data="catalogoItem({{ item['disponibilidad'] }}, '{{ session.user_nombre or "" }}')" class="group">
                 <!-- Tarjeta del implemento mejorada -->
                 <div class="card-hover bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full flex flex-col border border-gray-100 group-hover:border-green-300 group-hover:scale-105"
                      @click="if(!loading) { open = true; step = 'menu' }">
@@ -401,7 +379,7 @@
 
                                 <!-- Botón de préstamo -->
                                 {% if item['disponibilidad'] > 0 %}
-                                    <button @click="step = 'prestamo'" :disabled="loading"
+                                    <button @click="step = 'prestamo'; setTimeout(() => actualizarCampos(), 100)" :disabled="loading"
                                             class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-2xl flex items-center justify-center hover:from-green-600 hover:to-green-700 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                                         <i class="fas fa-hand-holding mr-3 text-lg"></i>
                                         <span class="font-semibold">Registrar Préstamo</span>
@@ -447,7 +425,7 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-3">Tipo de Préstamo *</label>
                                         <div class="relative">
                                             <i class="fas fa-list absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                                            <select name="tipo_prestamo" required x-model="tipoPrestamo" @change="actualizarCampos()"
+                                            <select name="tipo_prestamo" required x-model="tipoPrestamo" @change="actualizarCampos(); actualizarHorarioPorJornada(document.querySelector('select[name=jornada]').value)"
                                                 class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white">
                                                 <option value="">-- Seleccionar tipo --</option>
                                                 <option value="individual">👤 Préstamo Individual</option>
@@ -459,11 +437,25 @@
                                     <!-- Cantidad de implementos -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-3">Cantidad a prestar *</label>
-                                        <div class="relative">
-                                            <i class="fas fa-layer-group absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                        <div class="relative flex items-center">
+                                            <i class="fas fa-layer-group absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"></i>
+                                            <!-- Botón decrementar -->
+                                            <button type="button" @click="decrementarCantidad()" 
+                                                    :disabled="cantidad <= 1"
+                                                    class="absolute left-10 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-300 rounded-l-lg flex items-center justify-center transition-colors z-10">
+                                                <i class="fas fa-minus text-sm"></i>
+                                            </button>
+                                            <!-- Input de cantidad -->
                                             <input type="number" name="cantidad" min="1" max="{{ item['disponibilidad'] }}" value="1" required
                                                 x-model="cantidad" @input="validarCantidad()" @change="validarCantidad()"
-                                                class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white">
+                                                class="w-full px-4 py-3 pl-20 pr-16 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-center font-semibold">
+                                            <!-- Botón incrementar -->
+                                            <button type="button" @click="incrementarCantidad()" 
+                                                    :disabled="cantidad >= disponibilidad"
+                                                    class="absolute right-12 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-300 rounded-r-lg flex items-center justify-center transition-colors z-10">
+                                                <i class="fas fa-plus text-sm"></i>
+                                            </button>
+                                            <!-- Texto de disponibilidad -->
                                             <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
                                                 de {{ item['disponibilidad'] }} disp.
                                             </div>
@@ -492,6 +484,7 @@
                                         <div class="relative">
                                             <i class="fas fa-user absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                                             <input type="text" name="nombre_prestatario" placeholder="Se llenará automáticamente con tu nombre" required 
+                                                x-model="nombreUsuario" @input="actualizarCampos()"
                                                 class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-blue-50">
                                             <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
                                                 <i class="fas fa-magic text-blue-500 text-sm" title="Campo auto-rellenado"></i>
@@ -827,6 +820,79 @@
 
 <!-- Script para funcionalidades del modal -->
 <script>
+// Función Alpine.js para manejar los elementos del catálogo
+function catalogoItem(disponibilidad, nombreUsuario) {
+    return {
+        open: false,
+        step: 'menu',
+        loading: false,
+        tipoPrestamo: '',
+        nombreUsuario: nombreUsuario,
+        cantidad: 1,
+        disponibilidad: disponibilidad,
+        actualizarCampos() {
+            // Auto-rellenar nombre del prestatario cuando se abre el formulario
+            setTimeout(() => {
+                const nombreField = document.querySelector('input[name="nombre_prestatario"]');
+                if (nombreField && this.nombreUsuario) {
+                    nombreField.value = this.nombreUsuario;
+                }
+            }, 50);
+        },
+        actualizarHorarioPorJornada(jornada) {
+            const horarioField = document.querySelector('input[name="horario"]');
+            if (horarioField) {
+                switch(jornada) {
+                    case 'Mañana':
+                        horarioField.value = '7:00 AM - 11:45 AM';
+                        break;
+                    case 'Tarde':
+                        horarioField.value = '12:00 PM - 5:45 PM';
+                        break;
+                    case 'Noche':
+                        horarioField.value = '6:00 PM - 11:45 PM';
+                        break;
+                    default:
+                        horarioField.value = '';
+                }
+            }
+        },
+        validarCantidad() {
+            const input = document.querySelector('input[name="cantidad"]');
+            if (input) {
+                let valor = parseInt(input.value);
+                if (isNaN(valor) || valor < 1) {
+                    input.value = 1;
+                    this.cantidad = 1;
+                } else if (valor > this.disponibilidad) {
+                    input.value = this.disponibilidad;
+                    this.cantidad = this.disponibilidad;
+                } else {
+                    this.cantidad = valor;
+                }
+            }
+        },
+        incrementarCantidad() {
+            if (this.cantidad < this.disponibilidad) {
+                this.cantidad++;
+                const input = document.querySelector('input[name="cantidad"]');
+                if (input) {
+                    input.value = this.cantidad;
+                }
+            }
+        },
+        decrementarCantidad() {
+            if (this.cantidad > 1) {
+                this.cantidad--;
+                const input = document.querySelector('input[name="cantidad"]');
+                if (input) {
+                    input.value = this.cantidad;
+                }
+            }
+        }
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-rellenar nombre del prestatario cuando se abre el formulario
     function autoRellenarNombre() {
@@ -867,7 +933,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.textContent && e.target.textContent.includes('Registrar Préstamo')) {
             setTimeout(() => {
                 autoRellenarNombre();
-            }, 200);
+            }, 300);
+        }
+    });
+    
+    // Auto-rellenar cuando se cambia el tipo de préstamo
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'tipo_prestamo') {
+            setTimeout(() => {
+                autoRellenarNombre();
+            }, 100);
         }
     });
     
