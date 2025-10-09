@@ -21,7 +21,7 @@ def ensure_upload_folder():
         os.makedirs(UPLOAD_FOLDER)
 
 def is_admin():
-    return session.get('user_email') == 'Eduard@gmail.com' or session.get('rol') == 'admin'
+    return session.get('rol') == 'admin'
 
 def crear_notificacion(tipo, titulo, mensaje, fk_usuario=None, fk_prestamo=None):
     """Crea una notificación en el sistema"""

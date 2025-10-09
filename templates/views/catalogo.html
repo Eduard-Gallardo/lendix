@@ -98,11 +98,11 @@
                             <select name="categoria" 
                                     class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 bg-white">
                                 <option value="">Todas las categorías</option>
-                                <option value="Libros" {% if request.args.get('categoria') == 'Libros' %}selected{% endif %}>📚 Libros</option>
-                                <option value="Computadores" {% if request.args.get('categoria') == 'Computadores' %}selected{% endif %}>💻 Computadores</option>
-                                <option value="Mouses" {% if request.args.get('categoria') == 'Mouses' %}selected{% endif %}>🖱️ Mouses</option>
-                                <option value="Teclados" {% if request.args.get('categoria') == 'Teclados' %}selected{% endif %}>⌨️ Teclados</option>
-                                <option value="Otros" {% if request.args.get('categoria') == 'Otros' %}selected{% endif %}>🔧 Otros</option>
+                                <option value="libros" {% if request.args.get('categoria') == 'libros' %}selected{% endif %}>📚 Libros</option>
+                                <option value="computadores" {% if request.args.get('categoria') == 'computadores' %}selected{% endif %}>💻 Computadores</option>
+                                <option value="mouses" {% if request.args.get('categoria') == 'mouses' %}selected{% endif %}>🖱️ Mouses</option>
+                                <option value="teclados" {% if request.args.get('categoria') == 'teclados' %}selected{% endif %}>⌨️ Teclados</option>
+                                <option value="otros" {% if request.args.get('categoria') == 'otros' %}selected{% endif %}>🔧 Otros</option>
                             </select>
                         </div>
                     </div>
@@ -203,11 +203,11 @@
                                 <select name="categoria" required
                                         class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white">
                                     <option value="">Seleccionar categoría</option>
-                                    <option value="Libros">📚 Libros</option>
-                                    <option value="Computadores">💻 Computadores</option>
-                                    <option value="Mouses">🖱️ Mouses</option>
-                                    <option value="Teclados">⌨️ Teclados</option>
-                                    <option value="Otros">🔧 Otros</option>
+                                    <option value="libros">📚 Libros</option>
+                                    <option value="computadores">💻 Computadores</option>
+                                    <option value="mouses">🖱️ Mouses</option>
+                                    <option value="teclados">⌨️ Teclados</option>
+                                    <option value="otros">🔧 Otros</option>
                                 </select>
                             </div>
                         </div>
@@ -234,24 +234,24 @@
                     </div>
                 </form>
             </div>
-    </div>
-    {% endif %}
+        </div>
+        {% endif %}
 
         <!-- Grid de implementos mejorado -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div class="catalog-grid">
             {% for item in catalogo %}
-            <div x-data="catalogoItem({{ item['disponibilidad'] }}, '{{ session.user_nombre or "" }}')" class="group">
+            <div x-data="catalogoItem({{ item['disponibilidad'] }}, '{{ session.user_nombre or "" }}')" class="catalog-item">
                 <!-- Tarjeta del implemento mejorada -->
-                <div class="card-hover bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden h-full flex flex-col border border-gray-100 group-hover:border-green-300 group-hover:scale-105"
+                <div class="catalog-card card-hover bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden border border-gray-100 group-hover:border-green-300 group-hover:scale-105"
                      @click="if(!loading) { open = true; step = 'menu' }">
                     
                     <!-- Imagen mejorada -->
-                    <div class="h-64 relative overflow-hidden">
+                    <div class="image-section catalog-image-container">
                         <img 
-                            src="{{ url_for('static', filename=(('uploads/' + item.imagen_url) if item.imagen_url else 'img/default.jpg')) }}"
+                            src="{{ url_for('static', filename=('uploads/' + item.imagen_url) if item.imagen_url else 'img/default.jpg') }}"
                             alt="{{ item.implemento }}"
-                            class="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-110"
-                            onerror="this.src='https://via.placeholder.com/400x300/f3f4f6/6b7280?text=Imagen+No+Disponible'"
+                            class="catalog-image"
+                            onerror="this.src='{{ url_for('static', filename='img/default.jpg') }}'"
                         >
                         
                         <!-- Overlay con gradiente -->
@@ -289,11 +289,11 @@
                     </div>
 
                     <!-- Contenido de la tarjeta mejorado -->
-                    <div class="p-6 flex-1 flex flex-col">
+                    <div class="content-section">
                         <h3 class="font-bold text-xl mb-3 text-gray-900 line-clamp-1 group-hover:text-green-700 transition-colors">
                             {{ item['implemento'] }}
                         </h3>
-                        <p class="text-gray-600 text-sm mb-4 flex-1 line-clamp-2">{{ item['descripcion'] }}</p>
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">{{ item['descripcion'] }}</p>
                         
                         <!-- Información adicional -->
                         <div class="mt-auto pt-4 border-t border-gray-100">
@@ -590,8 +590,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-
             {% else %}
             <!-- Mensaje cuando no hay implementos mejorado -->
             <div class="col-span-full text-center py-20">
@@ -815,8 +813,264 @@
     .modal-content-scroll {
         min-height: 0; /* Importante para que funcione flex-1 */
     }
+    
+    /* Mejoras para las imágenes del catálogo */
+    .catalog-image-container {
+        position: relative;
+        width: 100%;
+        height: 200px; /* Altura fija para consistencia */
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 1rem 1rem 0 0; /* Redondear solo la parte superior */
+    }
+    
+    .catalog-image {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        object-position: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: block;
+        margin: 0 auto;
+    }
+    
+    .catalog-image:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Asegurar que las imágenes mantengan su proporción */
+    .catalog-image-container img {
+        display: block;
+        margin: auto;
+        width: auto !important;
+        height: auto !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+        object-position: center !important;
+    }
+    
+    /* Forzar que las imágenes mantengan su aspecto ratio natural */
+    .catalog-image-container {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Grid del catálogo mejorado con tamaños fijos */
+    .catalog-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 1rem 0;
+        justify-content: center;
+        align-items: start;
+        width: 100%;
+    }
+    
+    @media (max-width: 640px) {
+        .catalog-grid {
+            grid-template-columns: 1fr;
+            max-width: 400px;
+            margin: 0 auto;
+            gap: 1.5rem;
+        }
+    }
+    
+    @media (min-width: 641px) and (max-width: 768px) {
+        .catalog-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .catalog-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.75rem;
+        }
+    }
+    
+    @media (min-width: 1025px) and (max-width: 1400px) {
+        .catalog-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+    }
+    
+    @media (min-width: 1401px) {
+        .catalog-grid {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2rem;
+        }
+    }
+    
+    /* Items del catálogo con dimensiones fijas */
+    .catalog-item {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 450px;
+        margin: 0 auto;
+    }
+    
+    /* Mejorar la presentación de imágenes con diferentes proporciones */
+    .catalog-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .catalog-card .image-section {
+        flex-shrink: 0;
+        width: 100%;
+        height: 200px;
+    }
+    
+    .catalog-card .content-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+        height: 250px;
+        overflow: hidden;
+    }
+    
+    /* Mejoras específicas para diferentes tipos de imágenes */
+    .catalog-image-container img[src*=".jpg"],
+    .catalog-image-container img[src*=".jpeg"],
+    .catalog-image-container img[src*=".png"],
+    .catalog-image-container img[src*=".gif"] {
+        filter: brightness(1.02) contrast(1.05);
+    }
+    
+    /* Asegurar que las imágenes se vean bien en diferentes tamaños de pantalla */
+    @media (max-width: 768px) {
+        .catalog-image-container {
+            height: 12rem; /* Reducir altura en móviles */
+        }
+        
+        .catalog-image {
+            max-width: 85%;
+            max-height: 85%;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .catalog-item {
+            width: 100%;
+            height: 420px;
+        }
+        
+        .catalog-image-container {
+            height: 180px;
+        }
+        
+        .catalog-card .content-section {
+            height: 240px;
+            padding: 1rem;
+        }
+    }
+    
+    /* CSS específico para prevenir estiramiento horizontal */
+    .catalog-image-container img.catalog-image {
+        aspect-ratio: auto !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        flex-shrink: 0;
+    }
+    
+    /* Asegurar que el contenedor no fuerce el ancho */
+    .catalog-image-container {
+        min-height: 200px;
+        max-height: 200px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    /* Mejoras adicionales para alineación y dimensiones fijas */
+    .catalog-card .content-section h3 {
+        height: 1.5rem;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .catalog-card .content-section p {
+        height: 4.5rem;
+        display: flex;
+        align-items: flex-start;
+        overflow: hidden;
+        line-height: 1.4;
+    }
+    
+    /* Asegurar que los badges se alineen correctamente */
+    .catalog-card .absolute {
+        z-index: 10;
+    }
+    
+    /* Mejorar el espaciado entre elementos */
+    .catalog-card .content-section > * {
+        margin-bottom: 0.75rem;
+    }
+    
+    .catalog-card .content-section > *:last-child {
+        margin-bottom: 0;
+    }
+    
+    /* Asegurar que el contenido no se desborde */
+    .catalog-card .content-section {
+        box-sizing: border-box;
+    }
+    
+    /* Forzar dimensiones exactas */
+    .catalog-item,
+    .catalog-card,
+    .catalog-card .image-section,
+    .catalog-card .content-section {
+        box-sizing: border-box;
+    }
+    
+    /* Prevenir que las tarjetas cambien de tamaño */
+    .catalog-item {
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+    
+    /* Asegurar que el grid se centre correctamente */
+    .catalog-grid {
+        justify-items: center;
+    }
+    
+    /* Mejorar la responsividad del grid */
+    @media (max-width: 380px) {
+        .catalog-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .catalog-item {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
 </style>
-
 
 <!-- Script para funcionalidades del modal -->
 <script>
@@ -909,6 +1163,32 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para actualizar horario según jornada
     function actualizarHorario(jornada) {
+        const horarioField = document.querySelector('input[name="horario"]');
+        if (horarioField) {
+            switch(jornada) {
+                case 'Mañana':
+                    horarioField.value = '7:00 AM - 11:45 AM';
+                    break;
+                case 'Tarde':
+                    horarioField.value = '12:00 PM - 5:45 PM';
+                    break;
+                case 'Noche':
+                    horarioField.value = '6:00 PM - 11:45 PM';
+                    break;
+                default:
+                    horarioField.value = '';
+            }
+        }
+    }
+    
+    // Función para actualizar campos según tipo de préstamo
+    function actualizarCampos() {
+        // Esta función se puede expandir si se necesitan más validaciones
+        console.log('Tipo de préstamo actualizado');
+    }
+    
+    // Función para actualizar horario por jornada (usada en Alpine.js)
+    function actualizarHorarioPorJornada(jornada) {
         const horarioField = document.querySelector('input[name="horario"]');
         if (horarioField) {
             switch(jornada) {
