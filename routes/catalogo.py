@@ -21,6 +21,7 @@ def crear_notificacion(tipo, titulo, mensaje, fk_usuario=None, fk_prestamo=None)
 
 # Vista principal del catálogo
 @catalogo_bp.route('/catalogo', methods=['GET', 'POST'])
+@login_required
 def catalogo():
     if request.method == 'POST':
         # Solo admin puede agregar implementos
