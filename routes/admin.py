@@ -247,9 +247,19 @@ def gestion_usuarios():
     
     conn = get_db_connection()
     try:
-        # Obtener filtros
+        # Obtener y validar filtros
         filtro_estado = request.args.get('estado', 'todos')
         filtro_rol = request.args.get('rol', 'todos')
+        
+        # Validar valores de filtro
+        estados_validos = ['todos', 'activos', 'pendientes']
+        roles_validos = ['todos', 'admin', 'instructor', 'funcionario']
+        
+        if filtro_estado not in estados_validos:
+            filtro_estado = 'todos'
+        
+        if filtro_rol not in roles_validos:
+            filtro_rol = 'todos'
         
         # Construir query base
         query = "SELECT * FROM usuarios WHERE 1=1"
@@ -569,9 +579,22 @@ def gestion_prestamos():
             ORDER BY implemento
         ''').fetchall()
         
-        # Obtener préstamos con filtros
+        # Obtener y validar filtros
         filtro_estado = request.args.get('estado', 'todos')
-        filtro_dias = int(request.args.get('dias', 30))
+        filtro_dias = request.args.get('dias', '30')
+        
+        # Validar valores de filtro
+        estados_validos = ['todos', 'activos', 'devueltos']
+        if filtro_estado not in estados_validos:
+            filtro_estado = 'todos'
+        
+        # Validar días
+        try:
+            filtro_dias = int(filtro_dias)
+            if filtro_dias < 0:
+                filtro_dias = 30
+        except (ValueError, TypeError):
+            filtro_dias = 30
         
         # Construir query base para préstamos
         query = '''
@@ -858,8 +881,13 @@ def gestion_prestamos_instructores():
     
     conn = get_db_connection()
     try:
-        # Obtener préstamos del usuario actual con filtros
+        # Obtener y validar filtros
         filtro_estado = request.args.get('estado', 'todos')
+        
+        # Validar valores de filtro
+        estados_validos = ['todos', 'activos', 'devueltos']
+        if filtro_estado not in estados_validos:
+            filtro_estado = 'todos'
         
         # Construir query base para préstamos del usuario actual
         query = '''
@@ -970,9 +998,22 @@ def gestion_prestamos_admin():
             ORDER BY implemento
         ''').fetchall()
         
-        # Obtener préstamos con filtros
+        # Obtener y validar filtros
         filtro_estado = request.args.get('estado', 'todos')
-        filtro_dias = int(request.args.get('dias', 30))
+        filtro_dias = request.args.get('dias', '30')
+        
+        # Validar valores de filtro
+        estados_validos = ['todos', 'activos', 'devueltos']
+        if filtro_estado not in estados_validos:
+            filtro_estado = 'todos'
+        
+        # Validar días
+        try:
+            filtro_dias = int(filtro_dias)
+            if filtro_dias < 0:
+                filtro_dias = 30
+        except (ValueError, TypeError):
+            filtro_dias = 30
         
         # Construir query base para préstamos
         query = '''

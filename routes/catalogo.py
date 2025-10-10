@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from routes.login import login_required
-from utils.db import get_db_connection
+from utils.db import get_db_connection, obtener_siguiente_id_consecutivo, reordenar_ids_implementos
 from datetime import datetime
 
 catalogo_bp = Blueprint('catalogo', __name__, template_folder='templates')
@@ -51,10 +51,13 @@ def catalogo():
 
         conn = get_db_connection()
         try:
+            # Obtener el siguiente ID consecutivo
+            siguiente_id = obtener_siguiente_id_consecutivo()
+            
             conn.execute(
-                '''INSERT INTO implementos (implemento, descripcion, disponibilidad, categoria, imagen_url)
-                   VALUES (?, ?, ?, ?, ?)''',
-                (implemento, descripcion, disponibilidad, categoria, imagen_url)
+                '''INSERT INTO implementos (id, implemento, descripcion, disponibilidad, categoria, imagen_url)
+                   VALUES (?, ?, ?, ?, ?, ?)''',
+                (siguiente_id, implemento, descripcion, disponibilidad, categoria, imagen_url)
             )
             conn.commit()
             
@@ -83,46 +86,58 @@ def catalogo():
 @catalogo_bp.route('/catalogo/filtrar', methods=['GET'])
 @login_required
 def filtrar_catalogo():
-    filtro = request.args.get('filtro', '').strip()
-    categoria = request.args.get('categoria', '').strip()
-    disponibilidad = request.args.get('disponibilidad', '').strip()
-
-    conn = get_db_connection()
-    query = "SELECT * FROM implementos WHERE 1=1"
-    params = []
-
-    # Filtrar por categoría (case-insensitive)
-    if categoria:
-        query += " AND LOWER(categoria) = LOWER(?)"
-        params.append(categoria)
-
-    # Filtrar por disponibilidad
-    if disponibilidad == 'disponible':
-        query += " AND disponibilidad > 0"
-    elif disponibilidad == 'agotado':
-        query += " AND disponibilidad = 0"
-
-    # Filtrar por texto (case-insensitive)
-    if filtro:
-        query += " AND (LOWER(implemento) LIKE LOWER(?) OR LOWER(descripcion) LIKE LOWER(?))"
-        params.extend([f'%{filtro}%', f'%{filtro}%'])
-
-    query += " ORDER BY implemento"
-    
     try:
-        catalogo_items = conn.execute(query, params).fetchall()
-    except Exception as e:
-        print(f"Error en filtro de catálogo: {e}")
-        # Si hay error, mostrar todos los elementos
-        catalogo_items = conn.execute("SELECT * FROM implementos ORDER BY implemento").fetchall()
-    
-    conn.close()
+        # Obtener y validar parámetros de filtro
+        filtro = request.args.get('filtro', '').strip()
+        categoria = request.args.get('categoria', '').strip()
+        disponibilidad = request.args.get('disponibilidad', '').strip()
 
-    return render_template('views/catalogo.html',
-                           catalogo=catalogo_items,
-                           filtro=filtro,
-                           categoria=categoria,
-                           disponibilidad=disponibilidad)
+        conn = get_db_connection()
+        query = "SELECT * FROM implementos WHERE 1=1"
+        params = []
+
+        # Filtrar por categoría (case-insensitive) - validar valores permitidos
+        categorias_validas = ['libros', 'computadores', 'mouses', 'teclados', 'otros']
+        if categoria and categoria in categorias_validas:
+            query += " AND LOWER(categoria) = LOWER(?)"
+            params.append(categoria)
+
+        # Filtrar por disponibilidad - validar valores permitidos
+        if disponibilidad == 'disponible':
+            query += " AND disponibilidad > 0"
+        elif disponibilidad == 'agotado':
+            query += " AND disponibilidad = 0"
+
+        # Filtrar por texto (case-insensitive) - sanitizar entrada
+        if filtro:
+            # Limpiar el filtro de caracteres especiales peligrosos
+            filtro_limpio = filtro.replace('%', '').replace('_', '')
+            if filtro_limpio:  # Solo aplicar si queda algo después de limpiar
+                query += " AND (LOWER(implemento) LIKE LOWER(?) OR LOWER(descripcion) LIKE LOWER(?))"
+                params.extend([f'%{filtro_limpio}%', f'%{filtro_limpio}%'])
+
+        query += " ORDER BY implemento"
+        
+        try:
+            catalogo_items = conn.execute(query, params).fetchall()
+        except Exception as e:
+            print(f"Error en filtro de catálogo: {e}")
+            flash('Error al aplicar filtros. Mostrando todos los elementos.', 'warning')
+            # Si hay error, mostrar todos los elementos
+            catalogo_items = conn.execute("SELECT * FROM implementos ORDER BY implemento").fetchall()
+        
+        conn.close()
+
+        return render_template('views/catalogo.html',
+                               catalogo=catalogo_items,
+                               filtro=filtro,
+                               categoria=categoria,
+                               disponibilidad=disponibilidad)
+    
+    except Exception as e:
+        print(f"Error general en filtrar_catalogo: {e}")
+        flash('Error al procesar la solicitud de filtrado.', 'error')
+        return redirect(url_for('catalogo.catalogo'))
 
 # Registrar préstamo
 @catalogo_bp.route('/prestar/<int:id>', methods=['POST'])
@@ -407,6 +422,10 @@ def eliminar_implemento(id):
 
         conn.execute('DELETE FROM implementos WHERE id = ?', (id,))
         conn.commit()
+        
+        # Reordenar IDs para mantener secuencia consecutiva
+        reordenar_ids_implementos()
+        
         flash('Implemento eliminado exitosamente.', 'success')
         
     except Exception as e:

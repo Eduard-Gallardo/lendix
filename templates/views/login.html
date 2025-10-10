@@ -101,7 +101,7 @@
                 </div>
 
                 <div class="text-sm">
-                    <a href="#" class="font-semibold text-green-600 hover:text-green-500 transition-colors duration-200 hover:underline">
+                    <a href="#" onclick="mostrarMensajeRecuperacion()" class="font-semibold text-green-600 hover:text-green-500 transition-colors duration-200 hover:underline">
                         ¿Contraseña olvidada?
                     </a>
                 </div>
@@ -131,6 +131,48 @@
             </div>
         </form>
 
+        <!-- Modal para recuperación de contraseña -->
+        <div id="modalRecuperacion" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+                <div class="p-8">
+                    <!-- Header del modal -->
+                    <div class="text-center mb-6">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
+                            <i class="fas fa-tools text-orange-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Funcionalidad en Desarrollo</h3>
+                        <p class="text-gray-600">Estamos trabajando en esta característica</p>
+                    </div>
+
+                    <!-- Contenido del mensaje -->
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-info-circle text-orange-600 text-lg"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-semibold text-orange-800 mb-2">
+                                    Recuperación de Contraseña
+                                </h4>
+                                <p class="text-sm text-orange-700 leading-relaxed">
+                                    Actualmente estamos en proceso de habilitar la sección de recuperación de contraseña. 
+                                    Esta funcionalidad estará disponible próximamente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones del modal -->
+                    <div class="flex space-x-3">
+                        <button onclick="cerrarModalRecuperacion()" 
+                                class="flex-1 bg-gray-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            <i class="fas fa-times mr-2"></i>
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     
     </div>
 
@@ -213,6 +255,56 @@
                 container.style.opacity = '1';
                 container.style.transform = 'translateY(0)';
             }, 100);
+        });
+
+        // Funciones para el modal de recuperación de contraseña
+        function mostrarMensajeRecuperacion() {
+            const modal = document.getElementById('modalRecuperacion');
+            const modalContent = document.getElementById('modalContent');
+            
+            modal.classList.remove('hidden');
+            
+            // Animación de entrada
+            setTimeout(() => {
+                modalContent.style.transform = 'scale(1)';
+                modalContent.style.opacity = '1';
+            }, 10);
+        }
+
+        function cerrarModalRecuperacion() {
+            const modal = document.getElementById('modalRecuperacion');
+            const modalContent = document.getElementById('modalContent');
+            
+            // Animación de salida
+            modalContent.style.transform = 'scale(0.95)';
+            modalContent.style.opacity = '0';
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function contactarAdmin() {
+            // Aquí podrías redirigir a una página de contacto o mostrar información del admin
+            alert('Para contactar al administrador, envía un correo a: admin@lendix.com o llama al: +57 300 123 4567');
+            cerrarModalRecuperacion();
+        }
+
+        // Cerrar modal al hacer clic fuera de él
+        document.getElementById('modalRecuperacion').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalRecuperacion();
+            }
+        });
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('modalRecuperacion');
+                if (!modal.classList.contains('hidden')) {
+                    cerrarModalRecuperacion();
+                }
+            }
         });
     </script>
 </body>

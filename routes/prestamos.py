@@ -59,9 +59,22 @@ def prestamos():
     conn = get_db_connection()
     
     try:
-        # Obtener filtros
+        # Obtener y validar filtros
         filtro_estado = request.args.get('estado', 'todos')
-        filtro_dias = int(request.args.get('dias', 30))
+        filtro_dias = request.args.get('dias', '30')
+        
+        # Validar valores de filtro
+        estados_validos = ['todos', 'activos', 'devueltos']
+        if filtro_estado not in estados_validos:
+            filtro_estado = 'todos'
+        
+        # Validar días
+        try:
+            filtro_dias = int(filtro_dias)
+            if filtro_dias < 0:
+                filtro_dias = 30
+        except (ValueError, TypeError):
+            filtro_dias = 30
         
         # Construir query base
         query = '''
