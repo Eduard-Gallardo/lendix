@@ -143,8 +143,8 @@ def filtrar_catalogo():
 @catalogo_bp.route('/prestar/<int:id>', methods=['POST'])
 @login_required
 def prestar(id):
-    # Solo instructores y funcionarios pueden hacer préstamos
-    if session.get('rol') not in ['instructor', 'funcionario']:
+    # Solo instructores, funcionarios y administradores pueden hacer préstamos
+    if session.get('rol') not in ['instructor', 'funcionario', 'admin']:
         flash('No tienes permiso para realizar préstamos.', 'error')
         return redirect(url_for('catalogo.catalogo'))
     
@@ -264,8 +264,8 @@ def prestar(id):
 @catalogo_bp.route('/prestar_multiple/<int:id>', methods=['POST'])
 @login_required
 def prestar_multiple(id):
-    # Solo instructores y funcionarios pueden hacer préstamos
-    if session.get('rol') not in ['instructor', 'funcionario']:
+    # Solo instructores, funcionarios y administradores pueden hacer préstamos
+    if session.get('rol') not in ['instructor', 'funcionario', 'admin']:
         flash('No tienes permiso para realizar préstamos.', 'error')
         return redirect(url_for('catalogo.catalogo'))
     

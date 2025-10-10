@@ -168,8 +168,21 @@ def devolver_prestamo(id):
             WHERE id = ?
         ''', (fecha_devolucion, novedad, estado_implemento, observaciones, id))
 
-        # Actualizar disponibilidad del implemento
-        nueva_disponibilidad = prestamo['disponibilidad'] + 1
+        # Actualizar disponibilidad del implemento según la novedad
+        novedades_que_reducen_cantidad = ['Daño', 'Robo', 'Desgaste excesivo', 'Pérdida']
+        cantidad_a_reducir = 0
+        
+        if novedad in novedades_que_reducen_cantidad:
+            cantidad_a_reducir = 1
+            print(f"DEBUG: Novedad '{novedad}' detectada - reduciendo cantidad en {cantidad_a_reducir}")
+        
+        # Calcular nueva disponibilidad (normalmente +1, pero -1 si hay novedad grave)
+        nueva_disponibilidad = prestamo['disponibilidad'] + 1 - cantidad_a_reducir
+        
+        # Asegurar que la disponibilidad no sea negativa
+        if nueva_disponibilidad < 0:
+            nueva_disponibilidad = 0
+        
         conn.execute(
             'UPDATE implementos SET disponibilidad = ? WHERE id = ?',
             (nueva_disponibilidad, prestamo['fk_implemento'])
@@ -184,10 +197,12 @@ def devolver_prestamo(id):
 
         conn.commit()
         
-        # Crear notificación
+        # Crear notificación con información sobre la novedad
         mensaje_notif = f'Devolución de {prestamo["implemento"]} por {prestamo["usuario_nombre"]}'
         if novedad != 'Ninguna':
             mensaje_notif += f' - Novedad: {novedad}'
+            if novedad in novedades_que_reducen_cantidad:
+                mensaje_notif += ' - Se redujo la cantidad disponible del implemento'
         if estado_implemento != 'Bueno':
             mensaje_notif += f' - Estado: {estado_implemento}'
         
