@@ -83,29 +83,39 @@ def catalogo():
 @catalogo_bp.route('/catalogo/filtrar', methods=['GET'])
 @login_required
 def filtrar_catalogo():
-    filtro = request.args.get('filtro', '')
-    categoria = request.args.get('categoria', '')
-    disponibilidad = request.args.get('disponibilidad', '')
+    filtro = request.args.get('filtro', '').strip()
+    categoria = request.args.get('categoria', '').strip()
+    disponibilidad = request.args.get('disponibilidad', '').strip()
 
     conn = get_db_connection()
     query = "SELECT * FROM implementos WHERE 1=1"
     params = []
 
+    # Filtrar por categoría (case-insensitive)
     if categoria:
-        query += " AND categoria = ?"
+        query += " AND LOWER(categoria) = LOWER(?)"
         params.append(categoria)
 
+    # Filtrar por disponibilidad
     if disponibilidad == 'disponible':
         query += " AND disponibilidad > 0"
     elif disponibilidad == 'agotado':
         query += " AND disponibilidad = 0"
 
+    # Filtrar por texto (case-insensitive)
     if filtro:
-        query += " AND (implemento LIKE ? OR descripcion LIKE ?)"
+        query += " AND (LOWER(implemento) LIKE LOWER(?) OR LOWER(descripcion) LIKE LOWER(?))"
         params.extend([f'%{filtro}%', f'%{filtro}%'])
 
     query += " ORDER BY implemento"
-    catalogo_items = conn.execute(query, params).fetchall()
+    
+    try:
+        catalogo_items = conn.execute(query, params).fetchall()
+    except Exception as e:
+        print(f"Error en filtro de catálogo: {e}")
+        # Si hay error, mostrar todos los elementos
+        catalogo_items = conn.execute("SELECT * FROM implementos ORDER BY implemento").fetchall()
+    
     conn.close()
 
     return render_template('views/catalogo.html',
