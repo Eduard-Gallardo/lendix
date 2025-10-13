@@ -189,3 +189,95 @@ def migrar_base_datos():
         print(f"Error al migrar base de datos: {e}")
     finally:
         conn.close()
+
+def reordenar_ids_implementos():
+    """Reordena los IDs de los implementos para que sean consecutivos"""
+    conn = get_db_connection()
+    try:
+        # Obtener todos los implementos ordenados por ID actual
+        implementos = conn.execute('SELECT * FROM implementos ORDER BY id').fetchall()
+        
+        if not implementos:
+            return
+        
+        # Crear tabla temporal con los mismos datos
+        conn.execute('''
+            CREATE TEMPORARY TABLE implementos_temp (
+                id INTEGER PRIMARY KEY,
+                implemento TEXT NOT NULL,
+                descripcion TEXT NOT NULL,
+                disponibilidad INTEGER NOT NULL DEFAULT 0,
+                categoria TEXT,
+                imagen_url TEXT,
+                estado TEXT DEFAULT 'Bueno' CHECK(estado IN ('Bueno', 'Desgaste notable', 'Dañado')),
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Insertar datos con nuevos IDs consecutivos
+        nuevo_id = 1
+        for implemento in implementos:
+            conn.execute('''
+                INSERT INTO implementos_temp (id, implemento, descripcion, disponibilidad, categoria, imagen_url, estado, fecha_creacion, fecha_actualizacion)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                nuevo_id,
+                implemento['implemento'],
+                implemento['descripcion'],
+                implemento['disponibilidad'],
+                implemento['categoria'],
+                implemento['imagen_url'],
+                implemento['estado'],
+                implemento['fecha_creacion'],
+                implemento['fecha_actualizacion']
+            ))
+            
+            # Actualizar referencias en préstamos si el ID cambió
+            if implemento['id'] != nuevo_id:
+                conn.execute('''
+                    UPDATE prestamos SET fk_implemento = ? WHERE fk_implemento = ?
+                ''', (nuevo_id, implemento['id']))
+            
+            nuevo_id += 1
+        
+        # Eliminar tabla original y renombrar la temporal
+        conn.execute('DROP TABLE implementos')
+        conn.execute('ALTER TABLE implementos_temp RENAME TO implementos')
+        
+        # Recrear la secuencia de autoincremento
+        conn.execute('DELETE FROM sqlite_sequence WHERE name = "implementos"')
+        conn.execute('INSERT INTO sqlite_sequence (name, seq) VALUES ("implementos", ?)', (nuevo_id - 1,))
+        
+        conn.commit()
+        print(f"IDs de implementos reordenados exitosamente. Nuevo último ID: {nuevo_id - 1}")
+        
+    except Exception as e:
+        print(f"Error al reordenar IDs: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
+def obtener_siguiente_id_consecutivo():
+    """Obtiene el siguiente ID consecutivo para implementos"""
+    conn = get_db_connection()
+    try:
+        # Obtener el último ID actual
+        resultado = conn.execute('SELECT MAX(id) as max_id FROM implementos').fetchone()
+        ultimo_id = resultado['max_id'] if resultado['max_id'] else 0
+        
+        # Verificar si hay gaps en los IDs
+        total_implementos = conn.execute('SELECT COUNT(*) as count FROM implementos').fetchone()['count']
+        
+        if ultimo_id != total_implementos:
+            # Hay gaps, reordenar
+            reordenar_ids_implementos()
+            ultimo_id = conn.execute('SELECT MAX(id) as max_id FROM implementos').fetchone()['max_id']
+        
+        return ultimo_id + 1
+        
+    except Exception as e:
+        print(f"Error al obtener siguiente ID: {e}")
+        return 1
+    finally:
+        conn.close()
